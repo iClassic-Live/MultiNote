@@ -31,9 +31,7 @@
     var whatCameraNote; //创建用于获取当前拍照记事上一次创建状态的标识
 
   //设置闹钟提醒数据初始化
-    var date = new Date();
-    var thisMonth, thisDate, thisHour, thisMinute, startDate, startTime, timeSet //创建本月、本日、本时、本分、日期选择器的初始选择、时刻选择器的初始选择、闹钟提醒设置中的时间设定可读化字样承接变量
-    var makeAlarmSet = "unset"; //创建闹钟提醒设置创建状态的标识，值有unset、goSetDate、goSetTime和done，分别对应状态：未设定、将设定日期、将设定时刻、完成，初始值为unset
+    var date, thisMonth, thisDate, thisHour, thisMinute, startDate, startTime, timeSet //创建时间方法、本月、本日、本时、本分、日期选择器的初始选择、时刻选择器的初始选择、闹钟提醒设置中的时间设定可读化字样承接变量    var makeAlarmSet = "unset"; //创建闹钟提醒设置创建状态的标识，值有unset、goSetDate、goSetTime和done，分别对应状态：未设定、将设定日期、将设定时刻、完成，初始值为unset
     var whatAlarmSet; //创建用于获取当前闹钟提醒上一次设置状态的标识
     var timeSync; //创建用于实时同步当前时间数据的定时器标识
 
@@ -103,6 +101,7 @@ Page({
       //设置闹钟提醒功能初始化
         var that = this;
         timeSync = setInterval(() => {
+          date = new Date();
           thisMonth = date.getMonth() + 1;
           thisDate = date.getDate();
           thisHour = date.getHours();
