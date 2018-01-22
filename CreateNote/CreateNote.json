@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "../Home/index",
+    "CreateNote",
+    "../ShowNote/ShowNote"
+  ],
+  "navigationBarTitleText": "MultiNote 记事撰写"
+}

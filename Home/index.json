@@ -1,0 +1,7 @@
+{
+  "pages": [
+    "index",
+    "../CreateNote/CreateNote",
+    "../ShowNote/ShowNote"
+  ]
+}
