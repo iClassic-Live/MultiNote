@@ -6,12 +6,17 @@
 
   <view class="searchZone common">
     <view class="mask" style="height:{{maskHeight}}%"></view>
-    <input class="search" placeholder="{{searchNote}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote"></input>
+    <input class="search" placeholder="{{searchNote}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+    <scroll-view class="result" scroll-y="{{resultScrolling}}">
+      <view class="showResult" wx:if="{{canISearch}}" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.info.timeStamp}}">
+        <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
+      </view>
+    </scroll-view>
   </view>
 
-  <scroll-view class="readingZone common" scroll-y="true">
-    <view id="{{item.id}}" class="note" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.info.marginTop}}%" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancelOperation" bindlongpress="editNote">
-      <input class="title" disabled="true" placeholder="{{defaultTitle}}" value="{{item.note.title}}"></input>
+  <scroll-view class="readingZone common" scroll-y="{{noteScrolling}}" scroll-with-animation="true" scroll-into-view="{{scrollToResult}}">
+    <view id="{{item.id}}" class="note" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.info.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.info.marginTop}}%" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancelOperation" bindlongpress="editNote">
+      <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.info.opacity}}"></input>
       <view class="menu" style="right:{{item.info.pullOutMenu}}%">
         <image id="text_{{item.id}}" src="../images/text.png" bindtap="readText"></image>
         <image id="record_{{item.id}}"  src="../images/voice.png" bindtap="listenRecord"></image>
@@ -22,7 +27,7 @@
       </view>
     </view>
     <view class="text" wx:if="{{textDisplay}}">
-      <textarea disabled="true" placeholder="{{defaultText}}" value="{{text}}"  bindlongpress="textCheck"></textarea>
+      <textarea disabled="true" value="{{text}}"  bindlongpress="textCheck"></textarea>
     </view>
   </scroll-view>
 
