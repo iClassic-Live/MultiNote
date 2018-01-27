@@ -4,5 +4,5 @@
     "CreateNote",
     "../ShowNote/ShowNote"
   ],
-  "navigationBarTitleText": "MultiNote 记事撰写"
+  "navigationBarTitleText": "MultiNote 写记事"
 }
