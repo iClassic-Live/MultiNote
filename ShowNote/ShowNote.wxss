@@ -1,0 +1,129 @@
+pgae {
+  height: 100%;
+  width: 100%;
+}
+
+#mianFn {
+  height: 100%;
+  width: 100%;
+}
+
+.background {
+  position: absolute;
+  height: 99.2%;
+  width: 100%;
+}
+.background image {
+  height: 100%;
+  width: 100%;
+}
+
+.searchZone {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+.searchZone input {
+  position: absolute;
+  height: 6.7%;
+  width: 96.6%;
+  padding: 0 1%;
+  border: 6rpx solid #f40;
+}
+.searchZone .mask {
+  position: absolute;
+  width: 100%;
+  background-color: #fff;
+  opacity: 0.5;
+}
+
+
+.readingZone {
+  position: absolute;
+  margin-top: 12%;
+  height: 84.6%;
+  width: 100%;
+}
+.readingZone .note {
+  position: absolute; 
+  height: 6%;
+  width: 100%;
+}
+.readingZone .note input {
+  position: absolute;
+  height: 100%;
+  width: 96.8%;
+  padding: 0 1%;  
+  border: 4.5rpx solid black;
+}
+.readingZone .note .delete {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  left: -18%;
+  height: 100%;
+  z-index: 10;
+}
+.readingZone .note .delete button {
+  margin-top: 5rpx;
+  height: 100%;
+  line-height: 200%;
+  background-color: red;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  font-weight: bold;
+}
+.readingZone .note .menu {
+  position: absolute;
+  display: flex;
+  flex-direction: row; 
+  height: 100%;
+  width: 30%;
+  z-index: 10;
+}
+.readingZone .note .menu image {
+  margin: 5rpx 10rpx 0;
+  height: 60rpx;
+  width: 60rpx;
+  line-height: 200%;
+  border-radius: 0;
+  font-weight: bold;
+}
+.readingZone .text {
+  height: 100%;
+  width: 100%;
+}
+.readingZone .text textarea {
+  height: 98.9%;
+  width: 96.4%;
+  padding: 0 1%;
+  border: 6rpx solid black;
+}
+
+.creatingZone {
+  position: absolute;
+  height: 8%;
+  width: 100%;
+  bottom: 0;
+}
+.creatingZone button {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  bottom: 0;
+  font-weight: bold;
+  border: 9rpx solid #66ffff;
+}
+
+
+  /* 录像记事查看组件  */
+    #videoFn {
+      position: absolute;
+      z-index: 999;
+      width: 100%;
+      height: 100%;
+    }
+    #videoFn video {
+      width: 100%;
+      height: 100%;
+    }
