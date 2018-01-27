@@ -105,6 +105,7 @@ Page({
             noteType: null,
             timeStamp: null,            
             marginTop: wx.getStorageSync("note").length * 9,
+            opacity: 1,
             pullOutDelete: -18,
             pullOutMenu: -30
           },
@@ -274,7 +275,7 @@ Page({
             console.log("用户成功进行语音记事");
             toShowNoteCargo.note.recordPath = res.tempFilePath;
             console.log("当前语音记事路径为", toShowNoteCargo.note.recordPath);
-            makeRecordNote = !makeRecordNote;
+            makeRecordNote = true;
           });
           console.log("动画：创建并实例化强制截停呼吸效果的动画效果");
           var that = this;
@@ -334,10 +335,13 @@ Page({
             cameraTakingSet(res) {
               console.log("用户正在对成像画质、闪光灯闪光类型和摄像头前置后置进行选择");
               var Arr = res.detail.value;
-              Arr[0] == 0 ? this.setData({ Quality: "hight" }) : Arr[0] == 1 ? this.setData({ Quality: "normal" }) : 
-              this.setData({ Quality: "low" })
-              Arr[1] == 0 ? this.setData({ Flash: "auto" }) : Arr[1] == 1 ? this.setData({ Flash: "on" }) : 
-              this.setData({ Flash: "off" });
+
+              Arr[0] == 0 ? this.setData({ Quality: "hight" }) : Arr[0] == 1 ?
+              this.setData({ Quality: "normal" }) : this.setData({ Quality: "low" });
+
+              Arr[1] == 0 ? this.setData({ Flash: "auto" }) : Arr[1] == 1 ? 
+              this.setData({ Flash: "on" }) : this.setData({ Flash: "off" });
+
               Arr[2] == 0 ? this.setData({ Cam: "back" }) : this.setData({ Cam: "front" });
             },
           //拍摄记事功能按钮的功能设定
@@ -352,6 +356,7 @@ Page({
                   ctx.takePhoto({
                     quality: this.data.Quality[this.data.value[0]],
                     success(res) {
+                      wx.vibrateShort();
                       console.log("用户拍照记事成功");
                       makeCameraNote = !makeCameraNote;
                       toShowNoteCargo.note.photoPath = res.tempImagePath;
@@ -379,6 +384,7 @@ Page({
                     ctx.startRecord({
                       success(res) {
                         console.log("用户成功开始录像记事");
+                        wx.vibrateShort();                        
                         console.log("动画：创建并实例化按钮的呼吸动画效果")
                         that.animation = wx.createAnimation({
                           duration: 1000,
@@ -410,12 +416,14 @@ Page({
                       },
                       fail(res) {
                         console.log("录像记事出错：无法进行录像记事");
+                        wx.vibrateLong();
                         makeCameraNote = false;                        
                         wx.showToast({
                           title: '无法录像记事!',
                           image: '../images/error.png',
                           mask: true
                         });
+                        ctx.stopRecord();                        
                         wx.redirectTo({
                           url: '../Home/index',
                         })
@@ -427,6 +435,7 @@ Page({
                     ctx.stopRecord({
                       success(res) {
                         console.log("用户成功停止录像记事");
+                        wx.vibrateLong();
                         makeCameraNote = !makeCameraNote;                        
                         toShowNoteCargo.note.videoPath = res.tempVideoPath;
                         console.log("当前录像记事暂存, 暂存路径为", toShowNoteCargo.note.videoPath);
@@ -448,6 +457,7 @@ Page({
                       },
                       fail(res) {
                         console.log("录像记事出错：未能成功停止录像记事！");
+                        wx.vibrateLong();
                         makeCameraNote = false;
                         wx.showToast({
                           title: '录像记事出错！',
@@ -462,7 +472,8 @@ Page({
                   }
                 } else {
                   console.log("拍摄记事出错：系统崩溃！");
-                  makeCameraNote = false;                  
+                  wx.vibrateLong();
+                  makeCameraNote = false;
                   wx.showToast({
                     title: '拍摄记事出错!',
                     image: '../images/error.png',
