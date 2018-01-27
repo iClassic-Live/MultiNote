@@ -19,22 +19,30 @@ Page({
       mainFnDisplay: true,
       videoCheckFnDisplay: false,
 
+
     //主功能区功能初始化
       searchNote: "记事检索",
+      resultKey: null,
       maskHeight: 6.7,
+      canISearch: false,
+      resultScrolling: false,
+      result: null,
+
+      noteScrolling: false,
+      scrollToResult: null,
       note: note,
       noteDisplay: true,
       textDisplay: false,
       title: null,
-      defaultTitle: "空白记事",
-      defaultText: "空白文本",
       deleteNote: "删除",
       anchor: 0,
       ifHasText: true,
       ifHasRecord: true,
       ifHasCamera: true,
-      text: null,      
+      text: null,
+
       createNote: "新\xa0\xa0建\xa0\xa0记\xa0\xa0事",
+
 
     //录像记事查看组件功能初始化
       videoSrc: null, //视频播放地址，默认为空;
@@ -98,6 +106,14 @@ Page({
         videoPath: null
       }
     }
+    let that = this;
+    let timer = setInterval(() => {
+      if (note.length > 15) {
+        that.data.noteScrolling ? "" : that.setData({ noteScrolling: true });
+      }else {
+        that.data.noteScrolling ? that.setData({ noteScrolling: false }) : "";
+      }
+    })
   },
 
   /**
@@ -143,15 +159,67 @@ Page({
     if (res.type == "focus") {
       this.setData({
         maskHeight: 100,
+        canISearch: true,
+        noteDisplay: false,
+        textDisplay: false
       });
     }else if (res.type == "blur") {
       this.setData({
-        maskHeight: 6.7
-      })
+        maskHeight: 6.7,
+        canISearch: false,
+        noteDisplay: true,
+        resultKey: null
+      });
     }
     if (this.data.canISearch) {
-
+      var result = [];
+      var reg = /\s/g;
+      reg.compile(res.detail.value, "g");
+      if (res.detail.value) {
+        note.forEach((ele, index, origin) => {        
+          if (ele.note.title.match(reg)) {
+            result.push({
+              id: ele.id,
+              info: ele.info,
+              note: ele.note
+            })
+          }
+        })
+      }
+      this.setData({
+        result: result
+      });
+      if (this.data.result.length >= 16) {
+        this.setData({ resultScrolling: true });
+      }else {
+        this.setData({ resultScrolling: false });
+      }
     }
+  },
+  gotoResult (res) {
+    let that = this;
+    let id = res.currentTarget.id;
+    id = id.split("")[id.split("").length - 1];
+    if (this.data.noteScrolling) {
+      this.setData({
+        scrollToResult: id
+      });
+    }
+    this.data.note[id].info.opacity = 0.5;
+    this.setData({ note: this.data.note });
+    console.log(this.data.note[id]);    
+    setTimeout(() => {
+      that.data.note[id].info.opacity = 1;
+      that.setData({ note: that.data.note });
+      setTimeout(() => {
+        that.data.note[id].info.opacity = 0.5;
+        that.setData({ note: that.data.note });
+        setTimeout(() => {
+          that.data.note[id].info.opacity = 1;
+          that.setData({ note: that.data.note });
+        }, 300);
+      }, 300);
+    }, 300);
   },
 
   /* 读记事区 */
