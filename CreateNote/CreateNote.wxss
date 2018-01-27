@@ -1,11 +1,23 @@
-/* JustNote/JustNote/JustNote.wxss */
+/* 写记事页 */
 
 /* 视口 */
 page {
    height: 100%;
    width: 100%;
 }
-#wrapper {
+
+#background {
+  position: absolute;
+  height: 78.8%;
+  width: 100%;
+}
+#background image {
+  height: 100%;
+  width: 100%;
+}
+
+#mainFn {
+  position: absolute;
   width: 100%;
   height: 100%;
 }
@@ -25,10 +37,17 @@ page {
 
   /* 标题区与记事区 */
     .title-text {
-      height: 71.8%;
+      height: 78.8%;
       width: 100%;
-      background-image: url('https://github.com/iClassic-Live/EasyNote/blob/master/images/background-image.jpg?raw=true'); 
-      background-size: 100% 100%;
+    }
+    .title-text .background {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+    }
+    .title-text .background image {
+      height: 100%;
+      width: 100%;
     }
 
     /* 标题区 */
@@ -45,7 +64,7 @@ page {
     }
     .title-text .textZone .text {
       width: 98%;
-      height: 92.6%;
+      height: 93.4%;
       padding: 0 1%;
       border-bottom: 3px solid black;
     }
@@ -74,24 +93,14 @@ page {
       text-align: center;
       width: 100%;
     }
-    .cameraZone .videoPreview {
-      position: absolute;
-      width: 100%;
+    .cameraFnChoice {
       height: 100%;
-      background-color: black;    
     }
   
-  /* 闹铃创建区 */
-    .alarmZone {
-      height: 7%;
-    }
-    .setAlarm {
-      text-align: center;
-      width: 100%;
-    }
 
-  /* 记事保存区 */
-    .saveZone {
+
+  /* 记事保存/取消区 */
+    .save_cancelZone {
       position: absolute;
       display: flex;
       flex-direction: row;
@@ -99,7 +108,7 @@ page {
       height: 7%;
       bottom: 0;
     } 
-    .saveSet {
+    .save_cancel {
       width: 100%;
       height: 100%;
     }
