@@ -23,18 +23,36 @@ pgae {
   height: 100%;
   width: 100%;
 }
-.searchZone input {
+.searchZone .search {
   position: absolute;
   height: 6.7%;
   width: 96.6%;
   padding: 0 1%;
-  border: 6rpx solid #f40;
+  border: 6rpx solid #cc0000;
 }
 .searchZone .mask {
   position: absolute;
   width: 100%;
   background-color: #fff;
   opacity: 0.5;
+}
+.searchZone .result {
+  position: absolute;
+  margin-top: 12%;
+  height: 84.6%;
+  width: 100%;
+}
+.searchZone .result .showResult {
+  height: 6%;
+  width: 100%;
+  margin-top: 6rpx;
+}
+.searchZone .result .showResult input {
+  height: 6.7%;
+  width: 96.4%;
+  padding: 0 1%;
+  border: 6rpx solid blue;
+  border-radius: 25rpx;
 }
 
 
