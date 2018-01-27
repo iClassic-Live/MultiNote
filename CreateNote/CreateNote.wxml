@@ -1,15 +1,21 @@
-<!--记事-->
-<view id="wrapper" bindtouchstart='timeSync' style="display:{{mainFnDisplay}}">
+<!-- 写记事页 -->
+
+
+<view id="background">
+  <image src="../images/background-image.jpg"></image>
+</view>
+
+<view id="mainFn" wx:if="{{mainFnDisplay}}">
 
   <view class="upperMask mask" style="height:{{upperMaskHeight}}%"></view>
   <view class="buttomMask mask" style="height:{{bottomMaskHeight}}%"></view>
 
   <view class="title-text">
     <view class="titleZone">
-      <input class="title" placeholder="{{titleDefault}}" bindblur="titleContent" value="{{title}}"></input>
+      <input class="title" placeholder="{{titleDefault}}" bindinput="titleContent" value="{{title}}"></input>
     </view>
     <view class="textZone">
-       <textarea class="text" placeholder="{{textDefault}}" disabled="{{isDisabled}}" show-confirm-bar="false" bindblur="textContent" value="{{text}}" maxlength="450"></textarea>
+       <textarea class="text" placeholder="{{textDefault}}" disabled="{{isDisabled}}" bindinput="textContent" value="{{text}}" maxlength="450"></textarea>
     </view>
   </view>
 
@@ -18,58 +24,34 @@
   </view>
 
   <view class="cameraZone">
-    <swiper class="outerSwiper" current="{{cameraOuterSwiperCurrentSet}}" bindchange="ifChoiceCamera">
-      <swiper-item class="outerSwiperItem1">
-        <swiper vertical="true" current="{{cameraInnerSwiperCurrentSet}}">
-          <swiper-item class="innerSwiperItem1">
-            <button class="setCamera" bindtap="letPhoto" bindlongpress="cancelCamera">{{photo}}</button>
-          </swiper-item>
-          <swiper-item class="innerSwiperItem2">
-            <button class="setCamera" bindtap="letShoot" bindlongpress="cancelCamera">{{shoot}}</button>
-          </swiper-item>
-        </swiper>
-      </swiper-item>
-      <swiper-item class="outerSwiperItem2">
-        <button class="setCamera" bindtap="setCamera" bindlongpress="check_deleteCamera">{{camera}}</button>
-      </swiper-item>
-    </swiper>
+    <view class="cameraFnEnter" wx:if="{{cameraFnEnterDisplay}}">
+      <button class="setCamera" bindtap="setCamera" bindlongpress="check_deleteCamera">{{camera}}</button>
+    </view>
+    <view class="cameraFnChoice" wx:if="{{cameraFnChoiceDisplay}}">
+      <swiper vertical="true" current="{{cameraFnChoice}}">
+        <swiper-item class="photo">
+        <button class="setCamera" bindtap="letPhoto" bindlongpress="cancelCamera">{{photo}}</button>
+        </swiper-item>
+        <swiper-item class="shoot">
+        <button class="setCamera" bindtap="letShoot" bindlongpress="cancelCamera">{{shoot}}</button>
+        </swiper-item>
+      </swiper>
+    </view>
   </view>
 
-  <view class="alarmZone">
-    <swiper class="outerSwiper" current="{{alarmOuterSwiperCurrentSet}}" bindchange="ifAlarmGetSet">
-      <swiper-item class="outerSwiperItem1">
-          <button class="setAlarm" bindtap="setAlarm" bindlongpress="check_delteAlarm">{{setAlarm}}</button> 
-      </swiper-item>
-      <swiper-item class="outerSwiperItem2">
-        <swiper vertical="true" current="{{alarmInnerSwiperCurrentSet}}" bindchange="ifDateGetSet">
-          <swiper-item class="innerSwiperItem1">
-            <picker mode="date" start="{{startDate}}" bindchange="bindDateChange">
-              <button class="setAlarm" bindlongpress="check_delteAlarm">{{setDate}}</button>
-            </picker>
-          </swiper-item>
-          <swiper-item class="innerSwiperItem2">
-            <picker mode="time" start="{{startTime}}" bindchange="bindTimeChange">
-              <button class="setAlarm" bindlongpress="check_delteAlarm">{{setTime}}</button>
-            </picker>
-          </swiper-item>
-        </swiper>
-      </swiper-item>
-    </swiper>
-  </view>
-
-  <view class="saveZone"> 
-    <button class="save saveSet" bindlongpress="saveToSend">{{save}}</button>
+  <view class="save_cancelZone"> 
+    <button class="save_cancel" disabled="{{canISave}}" bindlongpress="save_cancel">{{save_cancel}}</button>
   </view>
   
 </view>
 
-<view id="cameraFn" style="display:{{cameraFnDisplay}}">
+<view id="cameraFn" wx:if="{{cameraFnDisplay}}">
   <camera device-position="{{Cam}}" flash="{{Flash}}"></camera>
   <picker-view mask-class="picker_view_mask" indicator-class="indicator"  value="{{value}}" bindchange="cameraTakingSet">
-    <picker-view-column  style="display:{{ifPhoto}}">
+    <picker-view-column wx:if="{{ifPhoto}}">
       <view class="picker-view-column" wx:for="{{quality}}" wx:key="">{{item}}</view>
     </picker-view-column>
-    <picker-view-column  style="display:{{ifPhoto}}">
+    <picker-view-column wx:if="{{ifPhoto}}">
       <view class="picker-view-column" wx:for="{{flash}}" wx:key="">{{item}}</view>
     </picker-view-column>
     <picker-view-column>
@@ -79,6 +61,6 @@
   <button class="set" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="useCamera" animation="{{breathingEffection}}">{{useCamera}}</button>
 </view>
 
-<view id="videoFn" style="display:{{videoPreviewFnDisplay}}" bindlongpress="videoPreview">
+<view id="videoFn" wx:if="{{videoPreviewFnDisplay}}" bindlongpress="videoPreview">
   <video src="{{videoSrc}}"></video>
 </view>
