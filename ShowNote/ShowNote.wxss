@@ -29,12 +29,14 @@ pgae {
   width: 96.6%;
   padding: 0 1%;
   border: 6rpx solid #cc0000;
+  border-radius: 20rpx;
 }
 .searchZone .mask {
   position: absolute;
   width: 100%;
   background-color: #fff;
   opacity: 0.5;
+  border-radius: 20rpx;  
 }
 .searchZone .result {
   position: absolute;
@@ -72,7 +74,8 @@ pgae {
   height: 100%;
   width: 96.8%;
   padding: 0 1%;  
-  border: 4.5rpx solid black;
+  border: 4.5rpx solid #8B4513;
+  border-radius: 30rpx;
 }
 .readingZone .note .delete {
   position: absolute;
@@ -87,8 +90,8 @@ pgae {
   height: 100%;
   line-height: 200%;
   background-color: red;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  border-top-left-radius: 30rpx;
+  border-bottom-left-radius: 30rpx;
   font-weight: bold;
 }
 .readingZone .note .menu {
@@ -130,7 +133,8 @@ pgae {
   width: 100%;
   bottom: 0;
   font-weight: bold;
-  border: 9rpx solid #66ffff;
+  background-color: #F5F5DC;
+  border: 9rpx solid #33BB99;
 }
 
 

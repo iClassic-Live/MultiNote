@@ -30,13 +30,13 @@
 			"list": [
 				{
 					"id": 0,
-					"name": "记事撰写",
+					"name": "写记事",
 					"pathName": "CreateNote/CreateNote",
 					"query": ""
 				},
 				{
-					"id": 1,
-					"name": "记事显示",
+					"id": 2,
+					"name": "读记事",
 					"pathName": "ShowNote/ShowNote",
 					"query": ""
 				}

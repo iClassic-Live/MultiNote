@@ -113,7 +113,7 @@ Page({
       }else {
         that.data.noteScrolling ? that.setData({ noteScrolling: false }) : "";
       }
-    })
+    });
   },
 
   /**
@@ -157,12 +157,18 @@ Page({
   /* 记事检索区 */
   searchNote (res) {
     if (res.type == "focus") {
+      let that = this;
+      this.data.note.forEach((ele, index, origin) => {
+        this.data.note[index].info.pullOutDelete = -18;
+        this.data.note[index].info.pullOutMenu = -30;
+      })
       this.setData({
         maskHeight: 100,
         canISearch: true,
         noteDisplay: false,
-        textDisplay: false
+        note: that.data.note
       });
+      this.data.textDisplay ? this.setData({ textDisplay: false }) : "";
     }else if (res.type == "blur") {
       this.setData({
         maskHeight: 6.7,
@@ -310,10 +316,12 @@ Page({
     let index = str.split("")[str.split("").length - 1];
     let text = note[index].note.text;
     if (text) {
+      this.data.note[index].info.pullOutMenu = -30;
       this.setData({
         text: text,
         noteDisplay: false,
-        textDisplay: true
+        textDisplay: true,
+        note: this.data.note
       })
     }else {
       wx.showModal({
@@ -359,6 +367,8 @@ Page({
     let index = str.split("")[str.split("").length - 1];
     let recordPath = note[index].note.recordPath;
     if (recordPath) {
+      this.data.note[index].info.pullOutMenu = -30;
+      this.setData({ note: this.data.note });
       innerAudioContext.autoplay = true
       innerAudioContext.src = recordPath;
     } else {
@@ -374,22 +384,21 @@ Page({
     let index = str.split("")[str.split("").length - 1];
     let photoPath = note[index].note.photoPath;
     let videoPath = note[index].note.videoPath;
-    if (photoPath || videoPath) {
-      if (photoPath) {
-        wx.previewImage({
-          urls: [photoPath]
-        });
-        note[index].note.videoPath = null;
-      } else {
-        console.log("!");        
-        this.setData({
-          mainFnDisplay: false,
-          videoCheckFnDisplay: true,
-          videoSrc: videoPath
-        });
-        note[index].note.photoPath = null;        
-      }
-    } else {
+    if (note[index].note.cameraFnChoice == "photo") {
+      this.data.note[index].info.pullOutMenu = -30;
+      this.setData({ note: this.data.note });
+      wx.previewImage({
+        urls: [note[index].note.photoPath]
+      });
+    }else if (note[index].note.cameraFnChoice == "video") {
+      this.data.note[index].info.pullOutMenu = -30;
+      this.setData({ note: this.data.note });
+      this.setData({
+        mainFnDisplay: false,
+        videoCheckFnDisplay: true,
+        videoSrc: note[index].note.videoPath
+      });
+    }else {
       wx.showModal({
         title: '读记事',
         content: '该条目没有拍摄记事',

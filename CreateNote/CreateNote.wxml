@@ -1,9 +1,9 @@
 <!-- 写记事页 -->
 
 
-<view id="background">
-  <image src="../images/background-image.jpg"></image>
-</view>
+<scroll-view id="background">
+  <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+</scroll-view>
 
 <view id="mainFn" wx:if="{{mainFnDisplay}}">
 
@@ -49,13 +49,13 @@
   <camera device-position="{{Cam}}" flash="{{Flash}}"></camera>
   <picker-view mask-class="picker_view_mask" indicator-class="indicator"  value="{{value}}" bindchange="cameraTakingSet">
     <picker-view-column wx:if="{{ifPhoto}}">
-      <view class="picker-view-column" wx:for="{{quality}}" wx:key="">{{item}}</view>
+      <view class="selection" wx:for="{{quality}}" wx:key="">{{item}}</view>
     </picker-view-column>
     <picker-view-column wx:if="{{ifPhoto}}">
-      <view class="picker-view-column" wx:for="{{flash}}" wx:key="">{{item}}</view>
+      <view class="selection" wx:for="{{flash}}" wx:key="">{{item}}</view>
     </picker-view-column>
     <picker-view-column>
-      <view  class="picker-view-column" wx:for="{{cam}}" wx:key="">{{item}}</view>
+      <view class="selection" wx:for="{{cam}}" wx:key="">{{item}}</view>
     </picker-view-column>
   </picker-view>
   <button class="set" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="useCamera" animation="{{breathingEffection}}">{{useCamera}}</button>

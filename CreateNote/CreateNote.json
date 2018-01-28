@@ -1,6 +1,6 @@
 {
   "pages": [
-    "../Home/index",
+    "../Home/Home",
     "CreateNote",
     "../ShowNote/ShowNote"
   ],

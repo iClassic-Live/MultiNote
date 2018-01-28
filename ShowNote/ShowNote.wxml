@@ -1,12 +1,12 @@
 <view id="mianFn" wx:if="{{mainFnDisplay}}">
 
-  <view class="background">
-    <image src="../images/background-image.jpg"></image>
-  </view>
+  <scroll-view class="background">
+    <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+  </scroll-view>
 
   <view class="searchZone common">
     <view class="mask" style="height:{{maskHeight}}%"></view>
-    <input class="search" placeholder="{{searchNote}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+    <input class="search" type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
     <scroll-view class="result" scroll-y="{{resultScrolling}}">
       <view class="showResult" wx:if="{{canISearch}}" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.info.timeStamp}}">
         <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
@@ -20,7 +20,7 @@
       <view class="menu" style="right:{{item.info.pullOutMenu}}%">
         <image id="text_{{item.id}}" src="../images/text.png" bindtap="readText"></image>
         <image id="record_{{item.id}}"  src="../images/voice.png" bindtap="listenRecord"></image>
-        <image id="camera_{{item.id}}"  src="../images/camera.png" bindtap="viewCamera"></image>        
+        <image id="camera_{{item.id}}"  src="../images/camera.png" bindtap="viewCamera"></image>
       </view>
       <view class="delete" style="left:{{item.info.pullOutDelete}}%">
         <button id="deleteNote_{{item.id}}" class="deleteNote" bindtap="deleteNote">{{deleteNote}}</button>
