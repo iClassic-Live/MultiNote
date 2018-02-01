@@ -1,15 +1,13 @@
 /* 写记事页 */
-
-/* 视口 */
 page {
-   height: 100%;
-   width: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 #background {
   position: absolute;
-  height: 78.8%;
-  width: 100%;
+  height: 93.4%;
+  width: 100%; 
 }
 #background image {
   height: 100%;
@@ -18,139 +16,199 @@ page {
 
 #mainFn {
   position: absolute;
-  width: 100%;
   height: 100%;
+  width: 100%;
 }
-
-/* 防误触蒙层 */
-  .mask {
-    position: absolute;
-    width: 100%;
-    z-index: 999;
-  }
-  .buttomMask {
-    bottom: 0;
-  }
 
 /* 记事创建区 */
 
 
   /* 标题区与记事区 */
-    .title-text {
-      height: 78.8%;
-      width: 100%;
-    }
-    .title-text .background {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-    }
-    .title-text .background image {
-      height: 100%;
+    .notingZone {
+      height: 45%;
       width: 100%;
     }
 
     /* 标题区 */
-    .title-text .titleZone .title {
+    .titleZone .title {
       border-bottom: 3px solid #f40; 
       width: 98%;
       height: 5%;
       padding: 0 1%;
     }
     /* 文本记事区 */
-    .title-text .textZone {
-      height: 100%;
+    .textZone {
+      height: 90%;
       width: 100%;      
     }
-    .title-text .textZone .text {
+    .textZone .text {
       width: 98%;
-      height: 93.4%;
+      height: 100%;
       padding: 0 1%;
-      border-bottom: 3px solid #f40;
-    }
+    }  
 
-  /* 语音记事区 */
-    .recordZone {
-      height: 7%;
-    }
-    .record {
+    /* 其他记事区 */
+      .otherNoteZone {
+      height: 46%;
       width: 100%;
-      background-color: #F5F5DC;
     }
+      /* 语音记事区 */
+      .recordZone {
+        height: 31.6%;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+      }
+      .recordTakingBtn image {
+        margin: 30rpx 0 0 15rpx;
+        height: 120rpx;
+        width: 120rpx;
+      }
+      .takingRecord {
+        margin: 20rpx 0 0 225rpx;
+        height: 120rpx;
+        width: 120rpx;
+        border-radius: 50%;
+        background-color: #F5F5DC;
+      }
+      .playback {
+        margin: 35rpx 0 0 15rpx;
+        width: 560rpx;
+        display: flex;
+        flex-direction: row;
+        justify-content:center;
+      }
+      .playback button {
+        height: 80rpx;
+        line-height: 80rpx;
+        width: 80rpx;
+        margin: 0 20rpx;
+        border-radius: 50%;
+        background-color: #F5F5DC;
+      }
 
+      /* 拍照记事区 */
+      .photoZone {
+        height: 31.6%;
+        display: flex;
+        flex-direction: row;
+      }
+      .getCameraFn image {
+        height: 150rpx;
+        width: 150rpx;
+      }
+      .photo {
+        margin-left: 25rpx;
+        width: 560rpx;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
 
-  /* 拍摄记事区 */
-    .cameraZone {
-      height: 7%;
-    }
-    .setCamera {
-      width: 100%;
-      background-color: #F5F5DC;      
-    }
-    swiper {
-      height: 100%;
-    }
-    swiper-item {
-      height: 100%;     
-    }
-    .cameraFnChoice {
-      height: 100%;
-      background-color: #F5F5DC;
-    }
-  
+      }
+      .photo .photoPreview {
+        height: 150rpx;
+        width: 150rpx;
+        margin: 0 20rpx;        
+      }
+      .photo .photoPreview image {
+        height: 150rpx;
+        width: 150rpx;
+      }
+
+      /* 录像记事区 */
+      .shootZone {
+        height: 31.6%;
+        display: flex;
+        flex-direction: row;
+      }
+      .shootZone image {
+        margin: 30rpx 0 0 20rpx;
+        height: 110rpx;
+        width: 110rpx;
+      }
 
 
   /* 记事保存/取消区 */
     .save_cancelZone {
       position: absolute;
-      display: flex;
-      flex-direction: row;
       width: 100%;
-      height: 7%;
+      height: 8%;
       bottom: 0;
     } 
     .save_cancel {
       width: 100%;
       height: 100%;
-      background-color: #F5F5DC;
+      line-height: 240%;
+      background-color: #F0F8FF;
+      border: 9rpx solid #708090;
+      border-radius: 0;
     }
 
 /* 组件区 */
   /* 拍摄记事相机组件 */
     #cameraFn {
+      position: absolute;
+      width: 100%;
+    }
+    #cameraFn .camera {
+      height: 80%;
+      width: 100%;
+    }
+    #cameraFn .camera camera {
       height: 100%;
       width: 100%;
-      background-color: #336699;     
+      background-color: #000;
     }
-    picker-view {
-      height: 8%;
-      line-height: 150%;
+    #cameraFn .cameraSetting {
+      height: 11.5%;
+      width: 98.4%;
+      border: 6rpx solid #708090;
+    }
+    #cameraFn .cameraSetting picker-view {
+      height: 100%;
+      width: 100;
+      background-color: #708090;
       text-align: center;
+      justify-content: center;
     }
-    picker-view-column {
+    #cameraFn .cameraSetting picker-view .indicator {
+      border: 5rpx solid black;
+    }
+    #cameraFn .cameraSetting picker-view .indicatorA {
+      width: 97.3%;
+    }
+    #cameraFn .cameraSetting picker-view .indicatorB {
+      width: 99%;
+    }
+    #cameraFn .cameraSetting picker-view picker-view-column {
+      height: 100%;
       border: 3rpx solid black;
     }
-    .selection {
-      border: 3rpx solid black;
+    #cameraFn .cameraSetting picker-view picker-view-column view {
+      height: 100%;
+      line-height: 180%;
     }
-    .indicator {
-      border: 3rpx solid black; 
+    #cameraFn .cameraSet {
+      height: 7.8%;
+      width: 100%;
     }
-    camera {
-      height: 82.5%;
-    }
-    .set {
-      font-weight: bolder;
+    #cameraFn .cameraSet button {
+      height: 99%;
+      line-height: 198%;
+      width: 100%;
       font-size: 40rpx;
-      border: 6rpx solid #003366;
-      background-color: #EEE8AA;
+      font-weight: bolder;
+      border-radius: 0;
+      border: 6rpx solid black;
+      background-color: #C0C0C0;
     }
+
+
   /* 录像记事预览组件  */
     #videoFn {
       position: absolute;
       z-index: 999;
       width: 100%;
-      height: 100%;
     }
     video {
       width: 100%;

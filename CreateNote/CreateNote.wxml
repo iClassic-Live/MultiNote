@@ -1,42 +1,48 @@
 <!-- 写记事页 -->
-
-
 <scroll-view id="background">
   <image mode="scaleToFill" src="../images/background-image.jpg"></image>
 </scroll-view>
 
 <view id="mainFn" wx:if="{{mainFnDisplay}}">
 
-  <view class="upperMask mask" style="height:{{upperMaskHeight}}%"></view>
-  <view class="buttomMask mask" style="height:{{bottomMaskHeight}}%"></view>
-
-  <view class="title-text">
+  <view class="notingZone">
     <view class="titleZone">
-      <input class="title" placeholder="{{titleDefault}}" bindinput="titleContent" value="{{title}}"></input>
+      <input class="title" placeholder="{{titleDefault}}" bindinput="titleContent" bindfocus="titleContent" bindblur="titleContent" value="{{title}}"></input>
     </view>
     <view class="textZone">
-       <textarea class="text" placeholder="{{textDefault}}" disabled="{{isDisabled}}" bindinput="textContent" value="{{text}}" maxlength="450"></textarea>
+       <textarea class="text" placeholder="{{textDefault}}" disabled="{{isDisabled}}" bindinput="textContent" bindfocus="textContent" bindblur="textContent" value="{{text}}" maxlength="264"></textarea>
     </view>
   </view>
 
-  <view class="recordZone">
-      <button class="record" animation="{{breathingEffection}}" bindtouchstart='tapStart' bindtouchend='tapEnd' bindtap="recordFn">{{record}}</button>
-  </view>
+  <view class="otherNoteZone">
 
-  <view class="cameraZone">
-    <view class="cameraFnEnter" wx:if="{{cameraFnEnterDisplay}}">
-      <button class="setCamera" bindtap="setCamera" bindlongpress="check_deleteCamera">{{camera}}</button>
+    <view class="recordZone">
+      <view class="recordTakingBtn" bindtap="getRecordFn" bindlongpress="getRecordFn">
+        <image src="../images/microphone.png"></image>
+      </view>
+      <view class="recordTaking" wx:if="{{recordAccess}}">
+        <button class="takingRecord" animation="{{breathingEffection}}" bindtouchstart="startRecord" bindtouchend="stopRecord"></button>
+      </view>
+      <view class="playback" wx:if="{{playbackAccess}}">
+        <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}" bindtap="playback_delete" bindlongpress="playback_delete">{{index + 1}}</button>
+      </view>
     </view>
-    <view class="cameraFnChoice" wx:if="{{cameraFnChoiceDisplay}}">
-      <swiper vertical="true" current="{{cameraFnChoice}}">
-        <swiper-item class="photo">
-        <button class="setCamera" bindtap="letPhoto" bindlongpress="cancelCamera">{{photo}}</button>
-        </swiper-item>
-        <swiper-item class="shoot">
-        <button class="setCamera" bindtap="letShoot" bindlongpress="cancelCamera">{{shoot}}</button>
-        </swiper-item>
-      </swiper>
+
+    <view class="photoZone">
+      <view class="getCameraFn" bindtap="getCameraFn" bindlongpress="getCameraFn">
+        <image src="../images/photo.png"></image>
+      </view>
+      <view class="photo" wx:if="{{photoPreviewAccess}}">
+        <view class="photoPreview" wx:for="{{img}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}">
+            <image id="photo_{{item.photo_index}}" mode="aspectFit" style="" src="{{item.url}}" bindtap="check_deletePhoto" bindlongpress="check_deletePhoto"></image>
+        </view>
+      </view>
     </view>
+
+    <view class="shootZone">
+      <image src="../images/shoot.png" bindtap="getShootFn"></image>
+    </view>
+
   </view>
 
   <view class="save_cancelZone"> 
@@ -45,22 +51,38 @@
   
 </view>
 
-<view id="cameraFn" wx:if="{{cameraFnDisplay}}">
-  <camera device-position="{{Cam}}" flash="{{Flash}}"></camera>
-  <picker-view mask-class="picker_view_mask" indicator-class="indicator"  value="{{value}}" bindchange="cameraTakingSet">
-    <picker-view-column wx:if="{{ifPhoto}}">
-      <view class="selection" wx:for="{{quality}}" wx:key="">{{item}}</view>
-    </picker-view-column>
-    <picker-view-column wx:if="{{ifPhoto}}">
-      <view class="selection" wx:for="{{flash}}" wx:key="">{{item}}</view>
-    </picker-view-column>
-    <picker-view-column>
-      <view class="selection" wx:for="{{cam}}" wx:key="">{{item}}</view>
-    </picker-view-column>
-  </picker-view>
-  <button class="set" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="useCamera" animation="{{breathingEffection}}">{{useCamera}}</button>
-</view>
 
-<view id="videoFn" wx:if="{{videoPreviewFnDisplay}}" bindlongpress="videoPreview">
+<view id="cameraFn" style="height:{{height}}rpx" wx:if="{{cameraFnDisplay}}">
+  <view class="camera">
+    <camera device-position="{{cam}}" flash="{{flash}}"></camera>
+  </view>
+  <view class="cameraSetting">
+    <picker-view indicator-class="{{indicator}} indicator" mask-class="mask" value="{{cameraSetting}}" bindchange="cameraSetting">
+      <picker-view-column wx:if="{{ifPhoto}}">
+        <view wx:for="{{Quality}}" wx:for-item="item" wx:key="{{item}}">
+          <view>{{item}}</view>
+        </view>
+      </picker-view-column>
+      <picker-view-column wx:if="{{ifPhoto}}">
+        <view wx:for="{{Flash}}" wx:for-item="item" wx:key="{{item}}">
+          <view>{{item}}</view>
+        </view>
+      </picker-view-column>
+      <picker-view-column>
+        <view wx:for="{{Cam}}" wx:for-item="item" wx:key="{{item}}">
+          <view>{{item}}</view>
+        </view>
+      </picker-view-column>
+    </picker-view>
+  </view>
+  <view class="cameraSet">
+    <button animation="{{breathingEffection}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="cameraSet">
+      {{cameraSet}}
+    </button>
+  </view>
+ </view> 
+
+
+<view id="videoFn"  style="height:{{height}}rpx" wx:if="{{videoPreviewFnDisplay}}" bindlongpress="videoPreview">
   <video src="{{videoSrc}}"></video>
 </view>

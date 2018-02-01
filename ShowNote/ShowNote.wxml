@@ -4,6 +4,9 @@
     <image mode="scaleToFill" src="../images/background-image.jpg"></image>
   </scroll-view>
 
+  <view class="upperMask" style="height:{{upperMaskHeight}}%"></view>
+  <view class="bottomMask" style="height:{{bottomMaskHeight}}%"></view>
+
   <view class="searchZone common">
     <view class="mask" style="height:{{maskHeight}}%"></view>
     <input class="search" type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
@@ -15,19 +18,30 @@
   </view>
 
   <scroll-view class="readingZone common" scroll-y="{{noteScrolling}}" scroll-with-animation="true" scroll-into-view="{{scrollToResult}}">
-    <view id="{{item.id}}" class="note" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.info.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.info.marginTop}}%" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancelOperation" bindlongpress="editNote">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.info.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.info.marginTop}}%; opacity:{{item.info.opacity}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancelOperation" bindlongpress="editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.info.opacity}}"></input>
       <view class="menu" style="right:{{item.info.pullOutMenu}}%">
         <image id="text_{{item.id}}" src="../images/text.png" bindtap="readText"></image>
         <image id="record_{{item.id}}"  src="../images/voice.png" bindtap="listenRecord"></image>
-        <image id="camera_{{item.id}}"  src="../images/camera.png" bindtap="viewCamera"></image>
+        <image id="camera_{{item.id}}"  src="../images/camera.png" bindtap="seePhoto"></image>
+        <image id="shoot_{{item.id}}" src="../images/VCR.png" bindtap="watchVideo"></image>
       </view>
       <view class="delete" style="left:{{item.info.pullOutDelete}}%">
         <button id="deleteNote_{{item.id}}" class="deleteNote" bindtap="deleteNote">{{deleteNote}}</button>
       </view>
     </view>
-    <view class="text" wx:if="{{textDisplay}}">
-      <textarea disabled="true" value="{{text}}"  bindlongpress="textCheck"></textarea>
+    <view class="text component" wx:if="{{textDisplay}}">
+      <textarea disabled="true" value="{{text}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="textCheck"></textarea>
+    </view>
+    <view class="record component" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck">
+      <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" bindtap="recordCheck">{{index + 1}}</button>
+    </view>
+    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="photoCheck">
+      <swiper>
+        <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
+          <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" bindtap="photoCheck"></image>
+        </swiper-item>
+      </swiper>
     </view>
   </scroll-view>
 
