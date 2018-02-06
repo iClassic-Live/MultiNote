@@ -71,7 +71,7 @@ Page({
         "\n记事标题：" + this.data.title,
         "\n记事文本：" + this.data.title,
         "\n语音记事：" + toShowNoteCargo.note.record,
-        "\n拍照记事: " + toShowNoteCargo.note.photo,
+        "\n图片记事：" + toShowNoteCargo.note.photo,
         "\n视频记事：" + toShowNoteCargo.note.video);
     } else {
       console.log("用户开始新建记事");
@@ -500,6 +500,7 @@ Page({
         });
       } else if (toShowNoteCargo.note.photo.length < 3) {
         if (res.type === "tap") {
+          if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
           wx.chooseImage({
             count: 3 - toShowNoteCargo.note.photo.length,
             sourceType: ["camera", "album"],
@@ -591,9 +592,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.split("")[index.split("").length - 1];
     if (res.type === "tap") {
-      wx.previewImage({
-        urls: [toShowNoteCargo.note.photo[index].url],
-      });
+      wx.previewImage({ urls: [toShowNoteCargo.note.photo[index].url] });
     } else if (res.type === "longpress") {
       var that = this;
       wx.showActionSheet({
@@ -638,8 +637,7 @@ Page({
             setTimeout(() => {
               clearInterval(interval);
               that.setData({ img: toShowNoteCargo.note.photo });
-              toShowNoteCargo.note.photo.length === 0 ?
-                that.setData({ photoPreviewAccess: false }) : "";
+              if (toShowNoteCargo.note.photo.length === 0) that.setData({ photoPreviewAccess: false });
             }, 500);
           }
         }
@@ -767,12 +765,10 @@ Page({
           if (res.confirm) {
             console.log("MultiNote开始保存当前记事");
             //为当前记事创建同步缓存并跳转到记事显示页
-            var ifSaveSuccessfully = false;
             if (toShowNoteCargo.info.noteType !== "edit") {
               toShowNoteCargo.info.noteType = "new";
               toShowNoteCargo.info.timeStamp = new Date().getTime();
               wx.setStorageSync("newNote", toShowNoteCargo);
-              ifSaveSuccessfully = !!wx.getStorageSync("newNote");
               console.log("MultiNote为当前记事创建时间戳并记录当前记事记录状态");
               console.log("当前记事的时间戳为 " + toShowNoteCargo.timeStamp);
               console.log("当前记事的记录状态为 " + toShowNoteCargo.info.noteType);
@@ -780,11 +776,10 @@ Page({
               console.log("toShowNoteCargo", toShowNoteCargo);
               wx.setStorageSync("editNote", toShowNoteCargo);
               console.log("需要修改的记事", wx.getStorageSync("editNote"));
-              ifSaveSuccessfully = !!wx.getStorageSync("editNote");
               console.log("MultiNote记录当前记事记录状态，记录状态为 " +
                 toShowNoteCargo.info.noteType);
             }
-            if (ifSaveSuccessfully) {
+            if (!!wx.getStorageSync("newNote") || !!wx.getStorageSync("editNote")) {
               console.log("用户记事保存成功");
               console.log("toShowNoteCargo的记事存储状态", toShowNoteCargo);
               wx.showToast({
@@ -815,7 +810,6 @@ Page({
                   wx.redirectTo({
                     url: "../ShowNote/ShowNote",
                   });
-                  toShowNoteCargo = null;
                 }
               }
             });
@@ -837,9 +831,7 @@ Page({
           title: "取消记事",
           content: "是否取消当前记事？",
           success(res) {
-            res.confirm ? wx.redirectTo({
-              url: "../ShowNote/ShowNote",
-            }) : "";
+            if (res.confirm) wx.redirectTo({ url: "../ShowNote/ShowNote" });
           }
         });
       }
