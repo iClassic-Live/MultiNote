@@ -11,22 +11,22 @@
     <view class="mask" style="height:{{maskHeight}}%"></view>
     <input class="search" type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
     <scroll-view class="result" scroll-y="{{resultScrolling}}">
-      <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.info.timeStamp}}">
+      <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
         <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
       </view>
     </scroll-view>
   </view>
 
   <scroll-view class="readingZone common" scroll-y="{{noteScrolling}}" scroll-with-animation="true" scroll-into-view="{{scrollToResult}}">
-    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.info.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.info.marginTop}}%; opacity:{{item.info.opacity}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancelOperation" bindlongpress="editNote">
-      <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.info.opacity}}"></input>
-      <view class="menu" style="right:{{item.info.pullOutMenu}}%">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.style.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.style.marginTop}}%; opacity:{{item.style.opacity}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
+      <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}}"></input>
+      <view class="menu" style="right:{{item.style.pullOutMenu}}%">
         <image id="text_{{item.id}}" src="../images/text.png" bindtap="readText"></image>
         <image id="record_{{item.id}}"  src="../images/voice.png" bindtap="listenRecord"></image>
         <image id="camera_{{item.id}}"  src="../images/camera.png" bindtap="seePhoto"></image>
         <image id="shoot_{{item.id}}" src="../images/VCR.png" bindtap="watchVideo"></image>
       </view>
-      <view class="delete" style="left:{{item.info.pullOutDelete}}%">
+      <view class="delete" style="left:{{item.style.pullOutDelete}}%">
         <button id="deleteNote_{{item.id}}" class="deleteNote" bindtap="deleteNote">{{deleteNote}}</button>
       </view>
     </view>

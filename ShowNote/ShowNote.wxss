@@ -80,35 +80,36 @@ page {
 .readingZone .note {
   position: absolute; 
   height: 6%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   width: 100%;
 }
 .readingZone .note input {
   position: absolute;
   height: 100%;
   width: 96.8%;
-  padding: 0 1%;  
+  padding: 0 1%;
   border: 4.5rpx solid #8B4513;
   border-radius: 15rpx;
 }
 .readingZone .note .delete {
   position: absolute;
-  display: flex;
-  flex-direction: row;
-  left: -18%;
   height: 100%;
   z-index: 10;
 }
 .readingZone .note .delete button {
-  margin-top: 5rpx;
   height: 100%;
-  line-height: 200%;
+  display: flex;
+  align-items: center;
   background-color: red;
   font-weight: bold;
 }
 .readingZone .note .menu {
   position: absolute;
   display: flex;
-  flex-direction: row; 
+  flex-direction: row;
+  align-items: center; 
   height: 100%;
   width: 40%;
   z-index: 10;

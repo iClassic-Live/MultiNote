@@ -10,7 +10,7 @@
       <input class="title" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent" value="{{title}}"></input>
     </view>
     <view class="textZone">
-       <textarea class="text" placeholder="{{textDefault}}" bindfocus="textContent" bindinput="textContent" value="{{text}}"></textarea>
+       <textarea class="text" placeholder="{{textDefault}}" bindfocus="textContent" bindinput="textContent" bindblur="textContent" value="{{text}}"></textarea>
     </view>
   </view>
 
