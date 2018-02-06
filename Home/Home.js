@@ -20,5 +20,5 @@ Page({
         url: "../CreateNote/CreateNote"
       });
     }
-  },
-})
+  }
+});
