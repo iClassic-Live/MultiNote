@@ -11,7 +11,7 @@
     <view class="mask" style="height:{{maskHeight}}%"></view>
     <input class="search" type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
     <scroll-view class="result" scroll-y="{{resultScrolling}}">
-      <view class="showResult" wx:if="{{canISearch}}" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.info.timeStamp}}">
+      <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.info.timeStamp}}">
         <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
       </view>
     </scroll-view>

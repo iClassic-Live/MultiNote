@@ -7,10 +7,10 @@
 
   <view class="notingZone">
     <view class="titleZone">
-      <input class="title" placeholder="{{titleDefault}}" bindinput="titleContent" bindfocus="titleContent" bindblur="titleContent" value="{{title}}"></input>
+      <input class="title" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent" value="{{title}}"></input>
     </view>
     <view class="textZone">
-       <textarea class="text" placeholder="{{textDefault}}" disabled="{{isDisabled}}" bindinput="textContent" bindfocus="textContent" bindblur="textContent" value="{{text}}" maxlength="264"></textarea>
+       <textarea class="text" placeholder="{{textDefault}}" bindfocus="textContent" bindinput="textContent" value="{{text}}"></textarea>
     </view>
   </view>
 

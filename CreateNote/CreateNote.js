@@ -41,7 +41,6 @@ Page({
     titleDefault: "记事标题", //标题文本为空时的字样，默认为记事标题
 
     textDefault: "记事文本", //记事文本为空时的字样，默认为记事文本
-    isDisabled: false, //由于textarea层级优先度过高，当其他记事功能正在使用时要使其失效
 
     recordAccess: false, //语音记事权限，默认false，权限关闭
     breathingEffection: null, //录音按钮的呼吸效果，默认无效果
@@ -204,86 +203,70 @@ Page({
 
   /* 记事标题 */
   titleContent(res) {
-    this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
-    this.data.playbackAccess ? this.setData({ playbackAccess: false }) : "";
-    this.data.photoPreviewAccess ? this.setData({ photoPreviewAccess: false }) : "";
-    res.type === "input" ? toShowNoteCargo.note.title = res.detail.value : ""
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
+    if (res.type === "input") toShowNoteCargo.note.title = res.detail.value;
   },
 
   /* 文本记事 */
   textContent(res) {
-    this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
-    this.data.playbackAccess ? this.setData({ playbackAccess: false }) : "";
-    this.data.photoPreviewAccess ? this.setData({ photoPreviewAccess: false }) : "";
-    res.type === "input" ? toShowNoteCargo.note.text = res.detail.value : "";
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
+    if (res.type === "input") toShowNoteCargo.note.text = res.detail.value;
   },
 
   /* 语音记事 */
   getRecordFn(res) {
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     if (getRecordAccess) {
-      if (res.type === "tap") {
-        if (toShowNoteCargo.note.record.length < 5) {
-          if (!this.data.playbackAccess) {
-            this.data.recordAccess ?
-              this.setData({ recordAccess: false }) :
-              this.setData({ recordAccess: true });
-          } else {
-            this.setData({
-              playbackAccess: false,
-              recordAccess: true
-            });
-          }
-        } else {
-          wx.showModal({
-            title: "语音记事",
-            content: "语音记事条目已达上限",
-            showCancel: false
-          });
+      if (toShowNoteCargo.note.record.length === 0) {
+        this.data.recordAccess ?
+          this.setData({ recordAccess: false }) :
+          this.setData({ recordAccess: true });
+      }else if (toShowNoteCargo.note.length < 5) {
+        if (res.type === "tap") {
+          if (this.data.playbackAccess) this.setData({ playbackAccess: false });
+          this.data.recordAccess ?
+            this.setData({ recordAccess: false }) :
+            this.setData({ recordAccess: true });
+        }else if (res.type === "longpress") {
+          if (this.data.recordAccess) this.setData({ recordAccess: false});
+          this.data.playbackAccess ?
+            this.setData({ playbackAccess: false }) :
+            this.setData({ playbackAccess: true });
         }
-      } else if (res.type === "longpress") {
-        if (toShowNoteCargo.note.record.length !== 0) {
-          if (!this.data.recordAccess) {
-            this.data.playbackAccess ?
-              this.setData({ playbackAccess: false }) :
-              this.setData({ playbackAccess: true });
-          } else {
-            this.setData({
-              recordAccess: false,
-              playbackAccess: true
-            });
-          }
-        } else {
-          wx.showToast({
-            title: "没有语音记事",
-            image: "../images/warning.png",
-            mask: true
-          });
-          if (this.data.recordAccess) this.setData({ recordAccess: false });
-        }
+      }else {
+        this.data.playbackAccess ?
+          this.setData({ playbackAccess: false }) :
+          this.setData({ playbackAccess: true });
       }
-    } else {
+    }else {
       if (toShowNoteCargo.note.record.length > 0) {
+        var that = this;
         if (this.data.playbackAccess) {
-          this.setData({ playbackAccess: false })
-        }else {
           wx.showModal({
             title: "语音记事",
             content: "无录音权限，只能查看已有语音记事",
             success(res) {
-              if (res.confirm) this.setData({ playbackAccess: true });
+              if (res.confirm) {
+                that.setData({ playbackAccess: true });
+              }
             }
           });
-        }
+        }else this.setData({ playbackAccess: false });
       }else {
         wx.showToast({
           title: "无录音权限！",
-          image: "../images/error.png",
+          image: "../images.error.png",
           mask: true
         });
       }
     }
   },
   startRecord(res) {
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     var that = this;
     if (canIRecord && toShowNoteCargo.note.record.length < 5) {
       recorderManager.start({
@@ -351,10 +334,10 @@ Page({
               that.setData({ recordAccess: false });
               wx.showModal({
                 title: "语音记事",
-                content: "温馨提醒：语音记事条目已达上限",
+                content: "温馨提醒：语音记事数目已达上限",
                 showCancel: false
               });
-            }, 1000)
+            }, 1000);
           } else {
             wx.vibrateShort();
           }
@@ -407,10 +390,10 @@ Page({
             that.setData({ recordAccess: false });
             wx.showModal({
               title: "语音记事",
-              content: "温馨提醒：语音记事条目已达上限",
+              content: "温馨提醒：语音记事数目已达上限",
               showCancel: false
             });
-          }, 1000)
+          }, 1000);
         } else {
           wx.vibrateShort();
         }
@@ -433,6 +416,7 @@ Page({
     }
   },
   playback_delete(res) {
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     var that = this;
     var index = res.currentTarget.id;
     index = index.split("")[index.split("").length - 1];
@@ -495,6 +479,8 @@ Page({
   /* 图片记事 */
   //图片记事创建及查看
   getCameraFn(res) {
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
     var that = this;
     if (getCameraAccess) {
       if (toShowNoteCargo.note.photo.length === 0) {
@@ -600,6 +586,8 @@ Page({
   },
   //图片记事全屏查看、保存到手机相册与删除
   check_deletePhoto(res) {
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
     var index = res.currentTarget.id;
     index = index.split("")[index.split("").length - 1];
     if (res.type === "tap") {
@@ -662,10 +650,10 @@ Page({
   /* 视频记事 */
   //视频记事创建及查看
   getShootFn(res) {
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     var that = this;
-    this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
-    this.data.playbackAccess ? this.setData({ playbackAccess: false }) : "";
-    this.data.photoPreviewAccess ? this.setData({ photoPreviewAccess: false }) : "";
     if (getCameraAccess) {
       if (!toShowNoteCargo.note.video) {
         wx.chooseVideo({
@@ -764,6 +752,9 @@ Page({
 
   /* 保存和取消记事区 */
   save_cancel(res) {
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     console.log("用户试图保存或取消当前记事");
     console.log("toShowNoteCargo的记事存储状态", toShowNoteCargo);
     //保存记事点击事件：保存当前记事数据并向显示页发送当前记事数据

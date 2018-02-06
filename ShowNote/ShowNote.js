@@ -1,6 +1,6 @@
 // ShowNote/ShowNote.js
 
-var note; //永久保存所有记事的载体
+var note = []; //永久保存所有记事的载体
 var fromCreateNoteCargo; //接收来自写记事页的数据的载体
 
 var tapTime; //监测相应按钮的按下时长
@@ -26,14 +26,13 @@ Page({
     upperMaskHeight: 0, //上部蒙层高度
     bottomeMaskHeight: 0, //下部蒙层高度
 
-    searchNote: "记事检索",
+    searchNote: "记事检索", //输入框为空时的提示内容
     resultKey: null, //检索信息的key值
     maskHeight: 6.7, //记事检索区背部的蒙层高度，未进入检索时为6.7，进入检索后为100
-    canISearch: false,
-    resultScrolling: false,
-    result: null,
+    resultScrolling: false, //记事检索结果滚动权限，默认关闭
+    result: [], //记事检索结果汇总，默认为空
 
-    noteScrolling: false,
+    noteScrolling: false, //
     scrollToResult: null,
     note: note, //全部记事信息的渲染
     noteIndex: null,
@@ -62,22 +61,21 @@ Page({
     console.log("ShowNote onLoad");
     //页面显示时如果有记事则加载记事
     if (!(wx.getStorageSync("note"))) {
-      note = [];
-      wx.setStorageSync("note", note);
+      wx.setStorageSync("note", []);
     } else {
       note = wx.getStorageSync("note");
       this.setData({ note: note });
     }
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     if (!!wx.getStorageSync("newNote")) {
+      note = wx.getStorageSync("note");
       fromCreateNoteCargo = wx.getStorageSync("newNote");
       wx.removeStorageSync("newNote");
-      note = wx.getStorageSync("note");
       note.push(fromCreateNoteCargo);
     } else if (!!wx.getStorageSync("editNote")) {
+      note = wx.getStorageSync("note");
       fromCreateNoteCargo = wx.getStorageSync("editNote");
       wx.removeStorageSync("editNote");
-      note = wx.getStorageSync("note");
       note[fromCreateNoteCargo.id] = fromCreateNoteCargo;
     }
     wx.setStorageSync("note", note);
@@ -157,36 +155,24 @@ Page({
 
   /* 记事检索区 */
   searchNote(res) {
-    if (res.type === "focus") { //记事检索框聚焦的时候关闭未关闭的记事的删除和菜单栏、
+    if (res.type === "focus") { //记事检索框聚焦时关闭未关闭的记事的删除和菜单栏、
       //隐藏记事展示，开启检索功能
-      var that = this;
       this.data.note.forEach((ele, index, origin) => {
         this.data.note[index].info.pullOutDelete = -18;
         this.data.note[index].info.pullOutMenu = -40;
       });
       this.setData({
         maskHeight: 100,
-        canISearch: true,
         noteDisplay: false,
-        note: that.data.note
+        note: this.data.note
       });
-    } else if (res.type === "blur") { //记事检索功能失焦时关闭记事检索功能并恢复记事展示
-      if (this.data.result.length < 15) {
-        this.setData({
-          maskHeight: 6.7,
-          canISearch: false,
-          noteDisplay: true,
-          resultKey: null
-        });
-      }
-    }
-    if (this.data.canISearch) { //当获取检索功能呢权限时开始进行记事检索
+    }else if (res.type === "input") { //记事检索框正在键入时展示与键入值相关的记事条目标题
       //使用简单的正则表达式对记事进行相应检索
-      var result = [];
-      var reg = /\s/g;
-      reg.compile(res.detail.value, "g");
-      if (res.detail.value) {
-        note.forEach((ele, index, origin) => {
+      if (!!res.detail.value) {
+        var reg = /\s/g;
+        reg.compile(res.detail.value, "g");
+        var result = [];
+        this.data.note.forEach((ele, index, origin) => {
           if (ele.note.title.match(reg)) {
             result.push({
               id: ele.id,
@@ -195,15 +181,22 @@ Page({
             });
           }
         });
-      }
-      this.setData({
-        result: result
-      });
-      //若检索到的记事超过或等于15条时使检索结果可以滚动查看
+        this.setData({ result: result });
+      }else this.setData({ result: [] });
+      //若检索到的记事等于或超过15条时使检索结果可以滚动查看
       if (this.data.result.length >= 15) {
         this.setData({ resultScrolling: true });
       } else {
         this.setData({ resultScrolling: false });
+      }
+    }else if (res.type === "blur") { //记事检索功能失焦时关闭记事检索功能并恢复记事展示
+      if (this.data.result.length < 15) {
+        this.setData({
+          maskHeight: 6.7,
+          noteDisplay: true,
+          resultKey: null,
+          result: []
+        });
       }
     }
   },
@@ -215,9 +208,9 @@ Page({
     if (this.data.resultScrolling) {
       this.setData({
         maskHeight: 6.7,
-        canISearch: false,
         noteDisplay: true,
         resultKey: null,
+        result: [],
         resultScrolling: false
       });
     };
