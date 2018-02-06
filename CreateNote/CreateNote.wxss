@@ -144,66 +144,6 @@ page {
       border-radius: 0;
     }
 
-/* 组件区 */
-  /* 拍摄记事相机组件 */
-    #cameraFn {
-      position: absolute;
-      width: 100%;
-    }
-    #cameraFn .camera {
-      height: 80%;
-      width: 100%;
-    }
-    #cameraFn .camera camera {
-      height: 100%;
-      width: 100%;
-      background-color: #000;
-    }
-    #cameraFn .cameraSetting {
-      height: 11.5%;
-      width: 98.4%;
-      border: 6rpx solid #708090;
-    }
-    #cameraFn .cameraSetting picker-view {
-      height: 100%;
-      width: 100;
-      background-color: #708090;
-      text-align: center;
-      justify-content: center;
-    }
-    #cameraFn .cameraSetting picker-view .indicator {
-      border: 5rpx solid black;
-    }
-    #cameraFn .cameraSetting picker-view .indicatorA {
-      width: 97.3%;
-    }
-    #cameraFn .cameraSetting picker-view .indicatorB {
-      width: 99%;
-    }
-    #cameraFn .cameraSetting picker-view picker-view-column {
-      height: 100%;
-      border: 3rpx solid black;
-    }
-    #cameraFn .cameraSetting picker-view picker-view-column view {
-      height: 100%;
-      line-height: 180%;
-    }
-    #cameraFn .cameraSet {
-      height: 7.8%;
-      width: 100%;
-    }
-    #cameraFn .cameraSet button {
-      height: 99%;
-      line-height: 198%;
-      width: 100%;
-      font-size: 40rpx;
-      font-weight: bolder;
-      border-radius: 0;
-      border: 6rpx solid black;
-      background-color: #C0C0C0;
-    }
-
-
   /* 录像记事预览组件  */
     #videoFn {
       position: absolute;

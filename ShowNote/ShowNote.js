@@ -2,12 +2,11 @@
 
 var note; //永久保存所有记事的载体
 var fromCreateNoteCargo; //接收来自写记事页的数据的载体
-var toCreateNoteCargo; //向写记事页发送数据的载体
-
-var shade; //监测是否需要遮挡记事检索和新建记事的定时器
 
 var tapTime; //监测相应按钮的按下时长
 var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
+
+var jumpNow = true; //监测当前是否正在进行同条目下不同记事类型间跳转，进入跳转时为false，否则为true
 
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部 audio 上下文
 
@@ -37,6 +36,7 @@ Page({
     noteScrolling: false,
     scrollToResult: null,
     note: note, //全部记事信息的渲染
+    noteIndex: null,
     noteDisplay: true, //记事区Display，默认展示，其他记事查看或记事检索时隐藏
     textDisplay: false, //文本记事Display，默认隐藏
     text: null, //文本记事内容，默认为空
@@ -60,13 +60,45 @@ Page({
    */
   onLoad: function (options) {
     console.log("ShowNote onLoad");
-    shade = setInterval(() => {
-      if (!this.data.noteDisplay) {
-        this.data.upperMaskHeight === 7.6 ? "" : this.setData({ upperMaskHeight: 7.6 });
-        this.data.bottomMaskHeight === 8 ? "" : this.setData({ bottomMaskHeight: 8 });
+    //页面显示时如果有记事则加载记事
+    if (!(wx.getStorageSync("note"))) {
+      note = [];
+      wx.setStorageSync("note", note);
+    } else {
+      note = wx.getStorageSync("note");
+      this.setData({ note: note });
+    }
+    //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
+    if (!!wx.getStorageSync("newNote")) {
+      fromCreateNoteCargo = wx.getStorageSync("newNote");
+      wx.removeStorageSync("newNote");
+      note = wx.getStorageSync("note");
+      note.push(fromCreateNoteCargo);
+    } else if (!!wx.getStorageSync("editNote")) {
+      fromCreateNoteCargo = wx.getStorageSync("editNote");
+      wx.removeStorageSync("editNote");
+      note = wx.getStorageSync("note");
+      note[fromCreateNoteCargo.id] = fromCreateNoteCargo;
+    }
+    wx.setStorageSync("note", note);
+    this.setData({ note: note });
+    console.log("当前记事存储状况", note);
+    /* 使用定时器进行扫描操作：
+       1. 监测当前记事是否已经超过15条，有则开启滚动查看功能，否则关闭；
+       2. 监测当前是否在查看记事，是则屏蔽记事检索功能和新建记事功能，并置记事条目索引为空，否则取消屏蔽 */
+    var timer = setInterval(() => {
+      if (note.length > 15) {
+        if (!this.data.noteScrolling) this.setData({ noteScrolling: true });
       } else {
-        this.data.upperMaskHeight === 0 ? "" : this.setData({ upperMaskHeight: 0 });
-        this.data.bottomMaskHeight === 0 ? "" : this.setData({ bottomMaskHeight: 0 });
+        if (this.data.noteScrolling) this.setData({ noteScrolling: false });
+      }
+      if (!this.data.noteDisplay) {
+        if (this.data.upperMaskHeight !== 7.6) this.setData({ upperMaskHeight: 7.6 });
+        if (this.data.bottomMaskHeight !== 8) this.setData({ bottomMaskHeight: 8 });
+      } else {
+        if (this.data.upperMaskHeight !== 0) this.setData({ upperMaskHeight: 0 });
+        if (this.data.bottomMaskHeight !== 0) this.setData({ bottomMaskHeight: 0 });
+        if (!!this.data.noteIndex) this.setData({ noteIndex: null });
       }
     }, 10);
   },
@@ -83,54 +115,6 @@ Page({
    */
   onShow: function () {
     console.log("ShowNote onShow");
-    //页面显示时如果有记事则加载记事
-    if (!(wx.getStorageSync("note"))) {
-      note = [];
-      wx.setStorageSync("note", note);
-    } else {
-      note = wx.getStorageSync("note");
-      this.setData({ note: note });
-    }
-    //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
-    if (!!wx.getStorageSync("newNote")) {
-      fromCreateNoteCargo = wx.getStorageSync("newNote");
-      wx.removeStorageSync("newNote");
-      note = wx.getStorageSync("note");
-      note.push(fromCreateNoteCargo);
-    } else {
-      fromCreateNoteCargo = wx.getStorageSync("editNote");
-      wx.removeStorageSync("editNote");
-      note = wx.getStorageSync("note");
-      note[fromCreateNoteCargo.id] = fromCreateNoteCargo;
-    }
-    wx.setStorageSync("note", note);
-    this.setData({ note: note });
-    console.log("当前记事存储状况", note);
-    //初始化向写记事页传递数据的载体，为修改记事做准备
-    toCreateNoteCargo = {
-      id: null,
-      timeStamp: null,
-      info: {
-        marginTop: null,
-        pullOutDelete: -18,
-        pullOutMenu: -40
-      },
-      note: {
-        title: null,
-        text: null,
-        recordPath: null,
-        photoPath: null,
-        videoPath: null
-      }
-    }
-    //使用定时器进行扫描操作，监测当前记事是否已经超过15条，有则开启滚动查看功能，否则关闭
-    var timer = setInterval(() => {
-      if (note.length > 15) {
-        this.data.noteScrolling ? "" : this.setData({ noteScrolling: true });
-      } else {
-        this.data.noteScrolling ? this.setData({ noteScrolling: false }) : "";
-      }
-    });
   },
 
   /**
@@ -145,7 +129,6 @@ Page({
    */
   onUnload: function () {
     console.log("ShowNote onUnload");
-    clearInterval(shade);
   },
 
   /**
@@ -165,7 +148,7 @@ Page({
   /**
    * 用户点击右上角分享
    */
-  onShareAppMessage: function () {
+  onShareAppMessage: function (res) {
     console.log("ShowNote onShareAppMessage");
   },
 
@@ -261,13 +244,14 @@ Page({
   },
   tapEnd(res) {
     tapTime = new Date().getTime() - tapTime;
+    lock = true;
+    jumpNow = true;
     var index = res.currentTarget.id;
     if (!!index) {
-      lock = true;
       var pullOutDelete = this.data.note[index].info.pullOutDelete;
       var pullOutMenu = this.data.note[index].info.pullOutMenu;
       if (pullOutDelete > -12) {
-        this.data.note[index].info.pullOutDelete = 0;
+        this.data.note[index].info.pullOutDelete = 0.5;
         this.setData({ note: this.data.note });
       } else {
         this.data.note[index].info.pullOutDelete = -18;
@@ -304,13 +288,67 @@ Page({
   //取消滑动拉出的删除按键或菜单栏的展示
   cancelOperation(res) {
     var index = res.currentTarget.id;
-    var pullOutDelete = this.data.note[index].info.pullOutDelete;
-    var pullOutMenu = this.data.note[index].info.pullOutMenu;
-    if (res.detail.x >= 70 && res.detail.x <= 220) {
-      pullOutDelete === -18 ? "" : this.data.note[index].info.pullOutDelete = -18;
-      pullOutMenu === -40 ? "" : this.data.note[index].info.pullOutMenu = -40;
-      pullOutDelete === -18 && pullOutMenu === -40 ? "" : this.setData({ note: this.data.note });
+    if (res.detail.x >= 70 && this.data.note[index].info.pullOutDelete === 0.5) {
+      this.data.note[index].info.pullOutDelete = -18;
+      this.setData({ note: this.data.note });
     }
+    if (res.detail.x <= 230 && this.data.note[index].info.pullOutMenu === 1) {
+      this.data.note[index].info.pullOutMenu = -40;
+      this.setData({ note: this.data.note });
+    }
+  },
+  //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
+  deleteNote(res) {
+    var str = res.currentTarget.id;
+    var that = this;
+    wx.showModal({
+      title: "读记事",
+      content: "是否删除本条记事？",
+      success(res) {
+        if (res.confirm) {
+          var index = str.split("")[str.split("").length - 1];
+          var timer = setInterval(() => {
+            that.data.note[index].info.pullOutDelete === -18 ? "" :
+              that.data.note[index].info.pullOutDelete = -18;
+            that.data.note[index].info.opacity -= 0.1;
+            that.setData({ note: that.data.note });
+          }, 50);
+          setTimeout(() => {
+            clearInterval(timer);
+            note.splice(index, 1);
+            if (note.length > 0) {
+              note.forEach((ele, index, origin) => {
+                if (ele.id !== index) {
+                  ele.id = index;
+                  ele.info.marginTop = index * 9;
+                }
+              });
+            }
+            that.setData({ note: note });
+            wx.setStorageSync("note", note);
+            wx.showToast({
+              title: "当前记事已删除",
+              image: "../images/success.png",
+              mask: true
+            });
+            if (wx.getStorageSync("note").length === 0) {
+              setTimeout(() => {
+                wx.showModal({
+                  title: "读记事",
+                  content: "当前已无任何记事，将返回写记事",
+                  showCancel: false
+                });
+                setTimeout(() => {
+                  wx.redirectTo({
+                    url: '../CreateNote/CreateNote',
+                  });
+                }, 1500);
+              }, 2000);
+            }
+          }, 500);
+        }
+      }
+    });
   },
   //记事修改功能，长按相应条目可以选择修改相应记事
   editNote(res) {
@@ -326,14 +364,168 @@ Page({
         success(res) {
           if (res.confirm) {
             note[index].info.noteType = "edit";
-            toCreateNoteCargo = note[index];
-            wx.setStorageSync("editNote", toCreateNoteCargo);
+            wx.setStorageSync("editNote", note[index]);
             wx.redirectTo({
               url: "../CreateNote/CreateNote"
             });
           }
         }
       });
+    }
+  },
+  //同条目下不同记事类型快速跳转功能
+  jumpToAnother(res) {
+    var hasText, hasRecord, hasPhoto, hasVideo, canIJump;
+    !!this.data.note[this.data.noteIndex].note.text ? hasText = 1 : hasText = 0;
+    this.data.note[this.data.noteIndex].note.record.length > 0 ? hasRecord = 1 : hasRecord = 0;
+    this.data.note[this.data.noteIndex].note.photo.length > 0 ? hasPhoto = 1 : hasPhoto = 0;
+    !!this.data.note[this.data.noteIndex].note.video ? hasVideo = 1 : hasVideo = 0;
+    hasText + hasRecord + hasPhoto + hasVideo >= 2 && jumpNow ? canIJump = true : canIJump = false;
+    if (lock) {
+      lock = false;
+      this.setData({ anchor: res.changedTouches[0].pageY });
+    }
+    if (res.changedTouches[0].pageY - this.data.anchor >= 200 && canIJump) {
+      console.log("jumpDown");
+      jumpNow = false;
+      if (this.data.textDisplay) {
+        this.setData({
+          textDisplay: false,
+          text: null
+        });
+        if (hasRecord) {
+          this.setData({
+            recordDisplay: true,
+            playback: this.data.note[this.data.noteIndex].note.record
+          });
+        } else if (hasPhoto) {
+          this.setData({
+            photoDisplay: true,
+            img: this.data.note[this.data.noteIndex].note.photo
+          });
+        } else {
+          this.setData({
+            videoDisplay: this,
+            videoSrc: this.data.note[this.data.noteIndex].note.video
+          });
+        }
+      } else if (this.data.recordDisplay) {
+        this.setData({
+          recordDisplay: false,
+          playback: null
+        });
+        if (hasPhoto) {
+          this.setData({
+            photoDisplay: true,
+            img: this.data.note[this.data.noteIndex].note.photo
+          });
+        } else if (hasVideo) {
+          this.setData({
+            videoDisplay: this,
+            videoSrc: this.data.note[this.data.noteIndex].note.video
+          });
+        } else this.setData({ noteDisplay: true });
+      } else if (this.data.photoDisplay) {
+        this.setData({
+          photoDisplay: false,
+          img: null
+        });
+        if (hasVideo) {
+          this.setData({
+            videoDisplay: this,
+            videoSrc: this.data.note[this.data.noteIndex].note.video
+          });
+        } else this.setData({ noteDisplay: true });
+      } else {
+        this.setData({
+          videoDisplay: false,
+          videoSrc: null,
+          noteDisplay: true
+        });
+      }
+    }else if (res.changedTouches[0].pageY - this.data.anchor <= -200 && canIJump) {
+      console.log("JumpUp");
+      jumpNow = false;
+      if (this.data.videoDisplay) {
+        this.setData({
+          videoDisplay: false,
+          videoSrc: null
+        });
+        if (hasPhoto) {
+          this.setData({
+            photoDisplay: true,
+            img: this.data.note[this.data.noteIndex].note.photo
+          });
+        } else if (hasRecord) {
+          this.setData({
+            recordDisplay: true,
+            playback: this.data.note[this.data.noteIndex].note.record
+          });
+        } else {
+          this.setData({
+            textDisplay: true,
+            text: this.data.note[this.data.noteIndex].note.text
+          });
+        }
+      } else if (this.data.photoDisplay) {
+        this.setData({
+          photoDisplay: false,
+          img: null
+        });
+        if (hasRecord) {
+          this.setData({
+            recordDisplay: true,
+            playback: this.data.note[this.data.noteIndex].note.record
+          });
+        } else if (hasText) {
+          this.setData({
+            textDisplay: true,
+            text: this.data.note[this.data.noteIndex].note.text
+          });
+        } else this.setData({ noteDisplay: true });
+      } else if (this.data.recordDisplay) {
+        this.setData({
+          recordDisplay: false,
+          playback: null
+        });
+        if (hasText) {
+          this.setData({
+            textDisplay: true,
+            text: this.data.note[this.data.noteIndex].note.text
+          });
+        } else this.setData({ noteDisplay: true });
+      } else {
+        this.setData({
+          textDisplay: false,
+          text: null,
+          noteDisplay: true
+        });
+      }
+    }else if (Math.abs(res.changedTouches[0].pageY - this.data.anchor) <= 200 && jumpNow) {
+      console.log("jumpOut");
+      jumpNow = false;
+      if (this.data.textDisplay) {
+        this.setData({
+          textDisplay: false,
+          text: null
+        });
+      }else if (this.data.recordDisplay) {
+        this.setData({
+          recordDiplay: false,
+          playback: null
+        });
+      }else if (this.data.photoDisplay) {
+        this.setData({
+          photoDisplay: false,
+          img: null
+        });
+      }else {
+        this.setData({
+          videoDisplay: false,
+          videoSrc: null
+        });
+      }
+      this.setData({ noteDisplay: true });
     }
   },
   //开启读文本记事功能
@@ -347,7 +539,8 @@ Page({
         text: text,
         noteDisplay: false,
         textDisplay: true,
-        note: this.data.note
+        note: this.data.note,
+        noteIndex: index
       });
     } else {
       wx.showModal({
@@ -400,7 +593,8 @@ Page({
         note: this.data.note,
         playback: this.data.note[index].note.record,
         noteDisplay: false,
-        recordDisplay: true
+        recordDisplay: true,
+        noteIndex: index
       });
     } else {
       wx.showModal({
@@ -444,21 +638,16 @@ Page({
   seePhoto(res) {
     var str = res.currentTarget.id;
     var index = str.split("")[str.split("").length - 1];
-    this.data.note[index].info.pullOutMenu = -40;
-    this.setData({ note: this.data.note });
     var photo = this.data.note[index].note.photo;
+    this.data.note[index].info.pullOutMenu = -40;
     if (photo.length > 0) {
-      if (photo.length === 1) {
-        wx.previewImage({
-          urls: [photo[0].url],
-        });
-      } else {
-        this.setData({
-          img: this.data.note[index].note.photo,
-          noteDisplay: false,
-          photoDisplay: true
-        });
-      }
+      this.setData({
+        img: this.data.note[index].note.photo,
+        noteDisplay: false,
+        photoDisplay: true,
+        note: this.data.note,
+        noteIndex: index
+      });
     } else {
       wx.showModal({
         title: "读记事",
@@ -469,14 +658,45 @@ Page({
   },
   //照片记事操作：查看相应条目下的相应照片或退出查看
   photoCheck(res) {
-    var index = res.currentTarget.id;
-    if (tapTime <= 200 && index) {
+    if (res.type === "tap") {
+      var index = res.currentTarget.id;
       index = index.split("")[index.split("").length - 1];
       var that = this;
-      wx.previewImage({
-        urls: [that.data.img[index].url],
+      wx.showActionSheet({
+        itemList: ["全屏查看", "保存图片到手机相册"],
+        success(res) {
+          if (res.tapIndex === 0) {
+            wx.previewImage({
+              urls: [that.data.img[index].url],
+            });
+          } else {
+            wx.getSetting({
+              success(res) {
+                !res.authSetting["scope.writePhotosAlbum"] ?
+                  wx.authorize({ scope: "scope.writePhotosAlbum" }) : "";
+                wx.saveImageToPhotosAlbum({
+                  filePath: that.data.img[index].url,
+                  success(res) {
+                    wx.showToast({
+                      title: "保存操作成功！",
+                      image: "../images/success.png",
+                      mask: true
+                    });
+                  },
+                  fail(res) {
+                    wx.showToast({
+                      title: "保存操作失败！",
+                      image: "../images/error.png",
+                      mask: true
+                    });
+                  }
+                });
+              }
+            });
+          }
+        }
       });
-    } else if (tapTime > 200) {
+    } else if (res.type === "longpress") {
       this.setData({
         img: null,
         noteDisplay: true,
@@ -494,7 +714,8 @@ Page({
         note: this.data.note,
         mainFnDisplay: false,
         videoCheckFnDisplay: true,
-        videoSrc: note[index].note.video
+        videoSrc: note[index].note.video,
+        noteIndex: index
       });
     } else {
       wx.showModal({
@@ -506,61 +727,39 @@ Page({
   },
   //录像记事操作：退出查看(注：相应查看操作在视频浏览组件中进行)
   videoCheck(res) {
-    this.setData({
-      mainFnDisplay: true,
-      videoCheckFnDisplay: false,
-      videoSrc: null
-    });
-  },
-  //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
-  deleteNote(res) {
-    var str = res.currentTarget.id;
-    var that = this;
-    wx.showModal({
-      title: "读记事",
-      content: "是否删除本条记事？",
-      success(res) {
-        if (res.confirm) {
-          var index = str.split("")[str.split("").length - 1];
-          var timer = setInterval(() => {
-            that.data.note[index].info.pullOutDelete === -18 ? "" :
-              that.data.note[index].info.pullOutDelete = -18;
-            that.data.note[index].info.opacity -= 0.1;
-            that.setData({ note: that.data.note });
-          }, 50);
-          setTimeout(() => {
-            clearInterval(timer);
-            note.splice(index, 1);
-            if (note.length > 0) {
-              note.forEach((ele, index, origin) => {
-                if (ele.id !== index) {
-                  ele.id = index;
-                  ele.info.marginTop = index * 9;
+    wx.showActionSheet({
+      itemList: ["退出查看", "保存视频到手机相册"],
+      success: function (res) {
+        if (res.tapIndex === 0) {
+          wx.getSetting({
+            success(res) {
+              !res.authSetting["scope.writePhotosAlbum"] ?
+                wx.authorize({ scope: "scope.writePhotosAlbum" }) : "";
+              wx.saveVideoToPhotosAlbum({
+                filePath: that.data.videoSrc,
+                success(res) {
+                  wx.showToast({
+                    title: "保存操作成功！",
+                    image: "../images/succes.png",
+                    mask: true
+                  });
+                },
+                fail(res) {
+                  wx.showToast({
+                    title: "保存操作失败！",
+                    image: "../images/error.png",
+                    mask: true
+                  });
                 }
               });
             }
-            that.setData({ note: note });
-            wx.setStorageSync("note", note);
-            wx.showToast({
-              title: "当前记事已删除",
-              image: "../images/success.png",
-              mask: true
-            });
-            if (wx.getStorageSync("note").length === 0) {
-              setTimeout(() => {
-                wx.showModal({
-                  title: "读记事",
-                  content: "当前已无任何记事，将返回写记事",
-                  showCancel: false
-                });
-                setTimeout(() => {
-                  wx.redirectTo({
-                    url: '../CreateNote/CreateNote',
-                  });
-                }, 1500);
-              }, 2000);
-            }
-          }, 500);
+          });
+        } else {
+          this.setData({
+            mainFnDisplay: true,
+            videoCheckFnDisplay: false,
+            videoSrc: null
+          });
         }
       }
     });

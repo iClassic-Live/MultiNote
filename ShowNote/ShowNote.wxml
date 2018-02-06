@@ -30,13 +30,13 @@
         <button id="deleteNote_{{item.id}}" class="deleteNote" bindtap="deleteNote">{{deleteNote}}</button>
       </view>
     </view>
-    <view class="text component" wx:if="{{textDisplay}}">
+    <view class="text" wx:if="{{textDisplay}}" bindtouchmove="jumpToAnother">
       <textarea disabled="true" value="{{text}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="textCheck"></textarea>
     </view>
-    <view class="record component" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck">
+    <view class="record" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck" bindtouchmove="jumpToAnother">
       <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" bindtap="recordCheck">{{index + 1}}</button>
     </view>
-    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="photoCheck">
+    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindlongpress="photoCheck" bindtouchmove="jumpToAnother">
       <swiper>
         <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
           <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" bindtap="photoCheck"></image>
@@ -45,12 +45,12 @@
     </view>
   </scroll-view>
 
-  <view class="creatingZone common">
+   <view class="creatingZone common">
      <button class="createNote" bindtap="createNote">{{createNote}}</button> 
-  </view>
+  </view> 
 
 </view>
 
-<view id="videoFn" wx:if="{{videoCheckFnDisplay}}" bindlongpress="videoCheck">
+<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoCheck" bindtouchend="tapEnd" bindtouchmove="jumpToAnother">
   <video src="{{videoSrc}}"></video>
 </view>

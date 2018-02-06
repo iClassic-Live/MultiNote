@@ -34,7 +34,7 @@
       </view>
       <view class="photo" wx:if="{{photoPreviewAccess}}">
         <view class="photoPreview" wx:for="{{img}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}">
-            <image id="photo_{{item.photo_index}}" mode="aspectFit" style="" src="{{item.url}}" bindtap="check_deletePhoto" bindlongpress="check_deletePhoto"></image>
+            <image id="photo_{{item.photo_index}}" mode="aspectFit" style="{{item.url}}" src="{{item.url}}" bindtap="check_deletePhoto" bindlongpress="check_deletePhoto"></image>
         </view>
       </view>
     </view>
@@ -46,43 +46,12 @@
   </view>
 
   <view class="save_cancelZone"> 
-    <button class="save_cancel" disabled="{{canISave}}" bindlongpress="save_cancel">{{save_cancel}}</button>
+    <button class="save_cancel" disabled="{{canISave}}" bindtap="save_cancel">{{save_cancel}}</button>
   </view>
   
 </view>
 
 
-<view id="cameraFn" style="height:{{height}}rpx" wx:if="{{cameraFnDisplay}}">
-  <view class="camera">
-    <camera device-position="{{cam}}" flash="{{flash}}"></camera>
-  </view>
-  <view class="cameraSetting">
-    <picker-view indicator-class="{{indicator}} indicator" mask-class="mask" value="{{cameraSetting}}" bindchange="cameraSetting">
-      <picker-view-column wx:if="{{ifPhoto}}">
-        <view wx:for="{{Quality}}" wx:for-item="item" wx:key="{{item}}">
-          <view>{{item}}</view>
-        </view>
-      </picker-view-column>
-      <picker-view-column wx:if="{{ifPhoto}}">
-        <view wx:for="{{Flash}}" wx:for-item="item" wx:key="{{item}}">
-          <view>{{item}}</view>
-        </view>
-      </picker-view-column>
-      <picker-view-column>
-        <view wx:for="{{Cam}}" wx:for-item="item" wx:key="{{item}}">
-          <view>{{item}}</view>
-        </view>
-      </picker-view-column>
-    </picker-view>
-  </view>
-  <view class="cameraSet">
-    <button animation="{{breathingEffection}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="cameraSet">
-      {{cameraSet}}
-    </button>
-  </view>
- </view> 
-
-
-<view id="videoFn"  style="height:{{height}}rpx" wx:if="{{videoPreviewFnDisplay}}" bindlongpress="videoPreview">
+<view id="videoFn"  style="height:{{height}}rpx" wx:if="{{videoDisplay}}" bindlongpress="videoPreview">
   <video src="{{videoSrc}}"></video>
 </view>

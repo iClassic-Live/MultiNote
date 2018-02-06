@@ -10,26 +10,16 @@ var getCameraAccess = true;
 var toShowNoteCargo; //创建向读记事页发送数据的载体
 var fromShowNoteCargo; //创建接收读记事页发送的数据的载体
 
-//语音记事区与拍摄记事公用动画组件
-var interval, timerA, timerB; //创建承接呼吸效果方法定时器和计时器的标识
+//保存操作初始化
+var scanning; //用于监测当前是否可以保存记事和相关记事是否超出限定数目的定时器标识
+
 
 //语音记事初始化
 const recorderManager = wx.getRecorderManager(); //获取全局唯一的录音管理器 recorderManager
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部audio上下文 innerAudioContext对象
+var interval, timerA, timerB; //创建承接呼吸效果方法定时器和计时器的标识
 var canIRecord = true; //创建用于监测当前是否正在进行语音记事的标识
 var recordTimer; //使语音记事结束的定时器
-
-//相机组件初始化
-var tapTime; //监测相机按钮按下时长的标识
-var lock = true; //录像记事创建状态的监测标识，若未在创建则为false，否则为true
-var shootTimer; //使录像记事结束的计时器
-var cameraUse; //扫描视口高度并实时改变camera元素高度的定时器
-
-//用于监测是否可以保存记事或正在进行某种记事的定时器的标识
-var canISave;
-
-
-
 
 
 Page({
@@ -37,23 +27,11 @@ Page({
   data: {
     height: null,
 
-    //主功能区、拍摄记事相机组件、录像记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
+    //主功能区、拍摄记事相机组件、视频记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
     mainFnDisplay: true,
-    cameraFnDisplay: false,
-    videoPreviewFnDisplay: false,
+    videoDisplay: false,
 
-    //相机组件功能初始化
-    cameraSetting: null,
-    Quality: ["高清画质", "普通画质", "低清画质"],
-    Flash: ["强制闪光", "自动闪光", "关闭闪光"],
-    Cam: ["后置摄像", "前置摄像"],
-    quality: null,
-    cam: null,
-    flash: null,
-    cameraSet: null,
-    indicatotr: null,
-
-    //录像记事预览组件功能初始化
+    //视频记事预览组件功能初始化
     videoSrc: null, //视频播放地址，默认为空;
 
     //主功能区功能初始化
@@ -68,10 +46,10 @@ Page({
     recordAccess: false, //语音记事权限，默认false，权限关闭
     breathingEffection: null, //录音按钮的呼吸效果，默认无效果
     playbackAccess: false, //语音记事返听权限，默认false，权限关闭
-    playback: null,
+    playback: [], //语音记事播放缓存
 
     photoPreviewAccess: false,
-    img: null,
+    img: [], //图片记事预览缓存
 
     save_cancel: "取消记事", //保存/取消按钮的字样
   },
@@ -79,40 +57,7 @@ Page({
   /* 生命周期函数--监听页面加载 */
   onLoad: function (options) {
     console.log("CreateNote onLoad");
-    wx.getSetting({
-      success(res) {
-        if (!res.authSetting['scope.record']) {
-          wx.authorize({
-            scope: "scope.record",
-            fail(res) {
-              getRecordAccess = false;
-              wx.showModal({
-                title: "写记事",
-                content: "获取录音权限失败",
-                showCancel: false
-              });
-            }
-          });
-        } else {
-          getRecordAccess = true;
-        }
-        if (!res.authSetting['scope.camera']) {
-          wx.authorize({
-            scope: "scope.camera",
-            fail(res) {
-              getCameraAccess = false
-              wx.showModal({
-                title: "写记事",
-                content: "获取相机权限失败",
-                showCancel: false
-              });
-            }
-          });
-        } else {
-          getCameraAccess = true
-        }
-      }
-    });
+    //监测当前是修改记事还是新建记事，并相应地为接下来的记事存储做准备
     if (wx.getStorageSync("editNote")) {
       toShowNoteCargo = wx.getStorageSync("editNote");
       wx.removeStorageSync("editNote");
@@ -126,9 +71,9 @@ Page({
       console.log("各项记事存储情况如下",
         "\n记事标题：" + this.data.title,
         "\n记事文本：" + this.data.title,
-        "\n语音记事：" + toShowNoteCargo.note.recordPath,
+        "\n语音记事：" + toShowNoteCargo.note.record,
         "\n拍照记事: " + toShowNoteCargo.note.photo,
-        "\n录像记事：" + toShowNoteCargo.note.video);
+        "\n视频记事：" + toShowNoteCargo.note.video);
     } else {
       console.log("用户开始新建记事");
       //初始化向写记事页发送数据的载体
@@ -152,6 +97,71 @@ Page({
       }
       console.log("toShowNoteCargo初始化情况", toShowNoteCargo);
     }
+    //监测是否获取了设备的录音权限和相机权限
+    wx.getSetting({
+      success(res) {
+        if (!res.authSetting["scope.record"]) {
+          wx.authorize({
+            scope: "scope.record",
+            fail(res) {
+              getRecordAccess = false;
+              wx.showToast({
+                title: "未获取录音权限",
+                image: "../images/warning.png",
+                mask: true
+              });
+            }
+          });
+        } else {
+          getRecordAccess = true;
+        }
+        if (!res.authSetting["scope.camera"]) {
+          wx.authorize({
+            scope: "scope.camera",
+            fail(res) {
+              getCameraAccess = false
+              wx.showToast({
+                title: "未获取相机权限",
+                image: "../images/warning.png",
+                mask: true
+              });
+            }
+          });
+        } else {
+          getCameraAccess = true
+        }
+      }
+    });
+    //定时器扫描监测当前是否可以保存记事和相关记事的数目是否超出限定
+    scanning = setInterval(() => {
+      //监测当前是否可以保存记事
+      var title = toShowNoteCargo.note.title;
+      var text = toShowNoteCargo.note.text;
+      var record = toShowNoteCargo.note.record;
+      var photo = toShowNoteCargo.note.photo;
+      var video = toShowNoteCargo.note.video;
+      if (!!title) { //只有在已写标题的情况下才可以保存记事，否则不允许保存
+        if (((!text && record.length === 0) && photo.length === 0) && !video) { //当有任意一种记事时可以保存记事，否则不允许保存
+          this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
+        } else {
+          this.data.save_cancel === "保存记事" ? "" : this.setData({ save_cancel: "保存记事" })
+        }
+      } else {
+        this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
+      };
+      //进行语音记事时不能同时进行照相记事的操作
+      if (this.data.recordAccess || this.data.playbackAccess) {
+        this.data.photoPreviewAccess ? this.setData({ photoPreviewAccess: false }) : "";
+      } else if (this.data.photoPreviewAccess) {
+        this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
+        this.data.playbackAccess ? this.setData({ playbackAccess: false }) : "";
+      };
+      //出错扫描，若因记事出错导致相应记事的条目数目大于限定值则裁掉限定数目以后的记事
+      toShowNoteCargo.note.record.length > 5 ? 
+        toShowNoteCargo.note.record.splice(6, toShowNoteCargo.note.record.length - 5) : "";
+      toShowNoteCargo.note.photo.length > 3 ?
+        toShowNoteCargo.note.photo.splice(4, toShowNoteCargo.note.photo.length - 3) : "";
+    }, 10);
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
@@ -162,34 +172,6 @@ Page({
   /* 生命周期函数--监听页面显示 */
   onShow: function (res) {
     console.log("CreateNote onShow");
-    canISave = setInterval(() => {
-      var title = toShowNoteCargo.note.title;
-      var text = toShowNoteCargo.note.text;
-      var record = toShowNoteCargo.note.record;
-      var photo = toShowNoteCargo.note.photo;
-      var video = toShowNoteCargo.note.video;
-      if (!!title) {
-        if (((!text && record.length === 0) && photo.length === 0) && !video) {
-          this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
-        } else {
-          this.data.save_cancel === "保存记事" ? "" : this.setData({ save_cancel: "保存记事" })
-        }
-      } else {
-        this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
-      };
-      if (this.data.recordAccess || this.data.playbackAccess) {
-        this.data.photoPreviewAccess ? this.setData({ photoPreviewAccess: false }) : "";
-      } else if (this.data.photoPreviewAccess) {
-        this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
-        this.data.playbackAccess ? this.setData({ playbackAccess: false }) : "";
-      };
-      if (toShowNoteCargo.note.record.length > 5) {
-        toShowNoteCargo.note.record.splice(6, toShowNoteCargo.note.record.length - 5);
-      }
-      if (toShowNoteCargo.note.photo.length > 3) {
-        toShowNoteCargo.note.photo.splice(4, toShowNoteCargo.note.photo.length - 3);
-      }
-    }, 10);
   },
 
   /* 生命周期函数--监听页面隐藏 */
@@ -200,8 +182,7 @@ Page({
   /* 生命周期函数--监听页面卸载 */
   onUnload: function (res) {
     console.log("CreateNote onUnload");
-    clearInterval(canISave);
-    toShowNoteCargo = null;
+    clearInterval(scanning);
   },
 
   /* 页面相关事件处理函数--监听用户下拉动作 */
@@ -277,15 +258,29 @@ Page({
             image: "../images/warning.png",
             mask: true
           });
-          this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
+          if (this.data.recordAccess) this.setData({ recordAccess: false });
         }
       }
     } else {
-      wx.showModal({
-        title: "语音记事",
-        content: "无录音权限，无法进行语音记事",
-        showCancel: false
-      });
+      if (toShowNoteCargo.note.record.length > 0) {
+        if (this.data.playbackAccess) {
+          this.setData({ playbackAccess: false })
+        }else {
+          wx.showModal({
+            title: "语音记事",
+            content: "无录音权限，只能查看已有语音记事",
+            success(res) {
+              if (res.confirm) this.setData({ playbackAccess: true });
+            }
+          });
+        }
+      }else {
+        wx.showToast({
+          title: "无录音权限！",
+          image: "../images/error.png",
+          mask: true
+        });
+      }
     }
   },
   startRecord(res) {
@@ -426,7 +421,7 @@ Page({
       clearTimeout(timerA);
       clearTimeout(timerB);
       that.animation = wx.createAnimation({ duration: 0 });
-      that.animation.backgroundColor("#C0C0C0").step();
+      that.animation.backgroundColor("#F5F5DC").step();
       that.setData({ breathingEffection: that.animation.export() });
       console.log("动画：按钮呼吸状态成功截停");
       wx.vibrateLong();
@@ -497,57 +492,113 @@ Page({
     }
   },
 
-  /* 拍照记事 */
+  /* 图片记事 */
+  //图片记事创建及查看
   getCameraFn(res) {
     var that = this;
     if (getCameraAccess) {
-      if (res.type === "tap") {
-        if (toShowNoteCargo.note.photo.length < 3) {
-          that.setData({
-            mainFnDisplay: false,
-            cameraFnDisplay: true,
-            cameraSetting: [1, 1, 0],
-            quality: "normal",
-            flash: "auto",
-            cam: "back",
-            cameraSet: "拍\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0照",
-            ifPhoto: true,
-            indicator: "indicatorA"
+      if (toShowNoteCargo.note.photo.length === 0) {
+        wx.chooseImage({
+          count: 3 - toShowNoteCargo.note.photo.length,
+          sourceType: ["camera", "album"],
+          success: function (res) {
+            var logs;
+            res.tempFiles.forEach((ele, index, origin) => {
+              logs = { photo_index: index, url: ele.path, opacity: 1 };
+              toShowNoteCargo.note.photo.push(logs);
+              that.data.img.push(logs);
+              that.setData({ img: that.data.img });
+            });
+            that.setData({ photoPreviewAccess: true });
+          },
+        });
+      } else if (toShowNoteCargo.note.photo.length < 3) {
+        if (res.type === "tap") {
+          wx.chooseImage({
+            count: 3 - toShowNoteCargo.note.photo.length,
+            sourceType: ["camera", "album"],
+            success: function (res) {
+              var logs;
+              res.tempFiles.forEach((ele, index, origin) => {
+                logs = { photo_index: index, url: ele.path, opacity: 1 };
+                toShowNoteCargo.note.photo.push(logs);
+                that.data.img.push(logs);
+                that.setData({ img: that.data.img });
+              });
+              that.setData({ photoPreviewAccess: true });
+            },
           });
-          cameraUse = setInterval(() => {
-            var res = wx.getSystemInfoSync();
-            var height = res.windowHeight * 750 / res.screenWidth;
-            this.data.height !== height ? this.setData({ height: height }) : "";
-          }, 50);
-        } else {
-          wx.showModal({
-            title: "拍照记事",
-            content: "拍照记事条目已达上限",
-            showCancel: false
-          })
+        } else if (res.type === "longpress") {
+          this.data.photoPreviewAccess ? 
+           this.setData({ photoPreviewAccess: false }) :
+            this.setData({ photoPreviewAccess: true });
         }
-      } else if (res.type === "longpress") {
-        if (toShowNoteCargo.note.photo.length !== 0) {
-          this.setData({ img: toShowNoteCargo.note.photo });
+      }else {
+        this.data.photoPreviewAccess ?
+          this.setData({ photoPreviewAccess: false }) :
+          this.setData({ photoPreviewAccess: true });
+      }
+    }else {
+      if (toShowNoteCargo.note.photo.length === 0) {
+        wx.showModal({
+          title: "图片记事",
+          content: "无相机权限，只能从手机相册获取图片",
+          success(res) {
+            if (res.confirm) {
+              wx.chooseImage({
+                count: 3,
+                sourceType: ["album"],
+                success: function (res) {
+                  var logs;
+                  res.tempFiles.forEach((ele, index, origin) => {
+                    logs = { photo_index: index, url: ele.path, opacity: 1 };
+                    toShowNoteCargo.note.photo.push(logs);
+                    that.data.img.push(logs);
+                    that.setData({ img: that.data.img });
+                  });
+                  that.setData({ photoPreviewAccess: true });
+                },
+              });
+            }
+          }
+        });
+      } else if (toShowNoteCargo.note.photo.length < 3) {
+        if (res.type === "tap") {
+          wx.showModal({
+            title: "图片记事",
+            content: "无相机权限，只能从手机相册获取图片",
+            success(res) {
+              if (res.confirm) {
+                wx.chooseImage({
+                  count: 3 - toShowNoteCargo.note.photo.length,
+                  sourceType: ["album"],
+                  success: function (res) {
+                    var logs;
+                    res.tempFiles.forEach((ele, index, origin) => {
+                      logs = { photo_index: index, url: ele.path, opacity: 1 };
+                      toShowNoteCargo.note.photo.push(logs);
+                      that.data.img.push(logs);
+                      that.setData({ img: that.data.img });
+                    });
+                    that.setData({ photoPreviewAccess: true });
+                  },
+                });
+              }
+            }
+          });
+        } else if (res.type === "longpress") {
           this.data.photoPreviewAccess ?
             this.setData({ photoPreviewAccess: false }) :
             this.setData({ photoPreviewAccess: true });
-        } else {
-          wx.showToast({
-            title: "没有拍照记事",
-            image: "../images/warning.png",
-            mask: true
-          });
         }
+      } else {
+        this.data.photoPreviewAccess ?
+          this.setData({ photoPreviewAccess: false }) :
+          this.setData({ photoPreviewAccess: true });
       }
-    } else {
-      wx.showModal({
-        title: "拍照记事",
-        content: "无相机权限，无法进行拍照记事",
-        showCancel: false
-      });
     }
   },
+  //图片记事全屏查看、保存到手机相册与删除
   check_deletePhoto(res) {
     var index = res.currentTarget.id;
     index = index.split("")[index.split("").length - 1];
@@ -557,11 +608,28 @@ Page({
       });
     } else if (res.type === "longpress") {
       var that = this;
-      wx.showModal({
-        title: "拍照记事吧",
-        content: "是否删除本张照片",
-        success(res) {
-          if (res.confirm) {
+      wx.showActionSheet({
+        itemList: ["保存图片到手机相册", "删除本张图片"],
+        success (res) {
+          if (res.tapIndex === 0)  {
+            wx.saveImageToPhotosAlbum({
+              filePath: toShowNoteCargo.note.photo[index].url,
+              success(res) {
+                wx.showToast({
+                  title: "保存操作成功！",
+                  image: "../images/success.png",
+                  mask: true
+                });
+              },
+              fail(res) {
+                wx.showToast({
+                  title: "保存操作失败！",
+                  image: "../images/error.png",
+                  mask: true
+                });
+              }
+            });
+          }else {
             toShowNoteCargo.note.photo.splice(index, 1);
             if (toShowNoteCargo.note.photo.length > 0) {
               toShowNoteCargo.note.photo.forEach((ele, index, origin) => {
@@ -591,7 +659,8 @@ Page({
     }
   },
 
-  /* 录像记事 */
+  /* 视频记事 */
+  //视频记事创建及查看
   getShootFn(res) {
     var that = this;
     this.data.recordAccess ? this.setData({ recordAccess: false }) : "";
@@ -599,33 +668,98 @@ Page({
     this.data.photoPreviewAccess ? this.setData({ photoPreviewAccess: false }) : "";
     if (getCameraAccess) {
       if (!toShowNoteCargo.note.video) {
-        this.setData({
-          mainFnDisplay: false,
-          cameraFnDisplay: true,
-          cameraSetting: [0],
-          cam: "back",
-          cameraSet: "录\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0像",
-          indicator: "indicatorB"
+        wx.chooseVideo({
+          sourceType: ["album", "camera"],
+          camera: "back",
+          success (res) {
+            toShowNoteCargo.note.video = res.tempFilePath;
+          }
         });
-        cameraUse = setInterval(() => {
-          var res = wx.getSystemInfoSync();
-          var height = res.windowHeight * 750 / res.screenWidth;
-          this.data.height !== height ? this.setData({ height: height }) : "";
-        }, 50);
       } else {
         this.setData({
           mainFnDisplay: false,
-          videoPreviewFnDisplay: true,
+          videoDisplay: true,
           videoSrc: toShowNoteCargo.note.video
         });
       }
     } else {
-      wx.showModal({
-        title: "录像记事",
-        content: "无相机权限，无法进行录像记事",
-        showCancel: false
-      });
+      if (!!toShowNoteCargo.note.video) {
+        wx.showModal({
+          title: "视频记事",
+          content: "无相机权限，只能查看已有视频记事",
+          showCancel: false,
+          success (res) {
+            if (res.confirm) {
+              this.setData({
+                videoDisplay: true,
+                videoSrc: toShowNoteCargo.note.video
+              });
+            }
+          }
+        });
+      }else {
+        wx.showModal({
+          title: "视频记事",
+          content: "无相机权限，只能从手机相册获取视频",
+          success (res) {
+            if (res.confirm) {
+              wx.chooseVideo({
+                sourceType: ["album"],
+                success(res) {
+                  toShowNoteCargo.note.video = res.tempFilePath;
+                }
+              });
+            }
+          }
+        });
+      }
     }
+  },
+  //视频预览组件：查看、保存到手机相册与删除
+  videoPreview(res) {
+    var that = this;
+    wx.showActionSheet({
+      itemList: ["退出预览", "保存视频到手机相册", "删除视频"],
+      success(res) {
+        if (res.tapIndex === 0) {
+          that.setData({
+            mainFnDisplay: true,
+            videoPreviewFnDisplay: false,
+            videoSrc: null
+          });
+        } else if (res.tapIndex === 1) {
+          wx.saveVideoToPhotosAlbum({
+            filePath: that.data.videoSrc,
+            success(res) {
+              wx.showToast({
+                title: "保存操作成功！",
+                image: "../images/succes.png",
+                mask: true
+              });
+            },
+            fail(res) {
+              wx.showToast({
+                title: "保存操作失败！",
+                image: "../images/error.png",
+                mask: true
+              });
+            }
+          });
+        } else {
+          toShowNoteCargo.note.video = null;
+          that.setData({
+            mainFnDisplay: true,
+            videoPreviewFnDisplay: false,
+            videoSrc: null
+          });
+          wx.showToast({
+            title: "删除成功",
+            image: "../images/success.png",
+            mask: true
+          });
+        }
+      }
+    });
   },
 
   /* 保存和取消记事区 */
@@ -701,20 +835,9 @@ Page({
       if (wx.getStorageSync("note").length === 0) {
         wx.showModal({
           title: "写记事",
-          content: "当前没有任何记事，是否继续写记事?",
-          success(res) {
-            if (res.cancel) {
-              wx.showModal({
-                title: "写记事",
-                content: "MultiNote将返回启动页",
-                showCancel: true
-              });
-              setTimeout(() => {
-                wx.redirectTo({
-                  url: "../Home/Home",
-                });
-              }, 2000);
-            }
+          content: "当前没有任何记事，仍然取消记事?",
+          success (res) {
+            if (res.confirm) wx.redirectTo({ url: "../Home/Home" });
           }
         });
       } else {
@@ -731,222 +854,5 @@ Page({
       }
     }
   },
-
-  /* 组件区 */
-  /* 相机组件 */
-  cameraSetting(res) {
-    var cameraSetting = res.detail.value;
-    if (this.data.ifPhoto) {
-      if (cameraSetting[0] === 0) {
-        this.setData({ quality: "high" });
-      } else if (cameraSetting[0] === 1) {
-        this.setData({ quality: "normal" });
-      } else if (cameraSetting[0] === 2) {
-        this.setData({ quality: "low" });
-      }
-      if (cameraSetting[1] === 0) {
-        this.setData({ flash: "on" });
-      } else if (cameraSetting[1] === 1) {
-        this.setData({ flash: "auto" });
-      } else if (cameraSetting[1] === 2) {
-        this.setData({ flash: "off" });
-      }
-      if (cameraSetting[2] === 0) {
-        this.setData({ cam: "back" });
-      } else if (cameraSetting[2] === 1) {
-        this.setData({ cam: "front" });
-      }
-      console.log("拍照画质为" + this.data.quality,
-        "闪光类型为" + this.data.flash,
-        "摄像头选择" + this.data.cam);
-    } else if (!this.data.ifPhoto) {
-      if (cameraSetting[0] === 0) {
-        this.setData({ cam: "back" });
-      } else if (cameraSetting[0] === 1) {
-        this.setData({ cam: "front" });
-      }
-    }
-  },
-  tapStart(res) {
-    tapTime = new Date().getTime();
-  },
-  tapEnd(res) {
-    tapTime = new Date().getTime() - tapTime;
-  },
-  cameraSet(res) {
-    var that = this;
-    const camera = wx.createCameraContext(); //创建并返回camera上下文cameraContect对象
-    function shutDown() { //事件内自建API：关闭相机组件并启动主功能
-      that.data.ifPhoto ? "" : wx.vibrateLong();
-      that.setData({
-        mainFnDisplay: true,
-        cameraFnDisplay: false,
-        cameraSetting: null,
-        quality: null,
-        flash: null,
-        cam: null,
-        cameraSet: null,
-        ifPhoto: null,
-        indicator: null
-      });
-      clearInterval(cameraUse);
-    };
-    function throwError() { //事件内自建API：抛出故障消息并清空当前记事下的拍照记事
-      wx.showToast({
-        title: "相机组件故障！",
-        image: "../images/error.png",
-        mask: true
-      });
-      if (!this.data.ifPhoto) {
-        //截停呼吸效果动画
-        clearInterval(interval);
-        clearTimeout(timerA);
-        clearTimeout(timerB);
-        that.animation = wx.createAnimation({ duration: 0 });
-        that.animation.backgroundColor("#C0C0C0").step();
-        that.setData({ breathingEffection: that.animation.export() });
-        console.log("动画：按钮呼吸状态成功截停");
-        wx.vibrateLong();
-      }
-      shutDown();
-    };
-    function stopRecord() { //事件内自建API：停止录像记事并保存相应记事
-      camera.stopRecord({
-        success(res) {
-          lock = true;
-          toShowNoteCargo.note.video = res.tempVideoPath;
-          //截停呼吸效果动画
-          clearInterval(interval);
-          clearTimeout(timerA);
-          clearTimeout(timerB);
-          that.animation = wx.createAnimation({ duration: 0 });
-          that.animation.backgroundColor("#C0C0C0").step();
-          that.setData({ breathingEffection: that.animation.export() });
-          console.log("动画：按钮呼吸状态成功截停");
-          wx.vibrateLong();
-          wx.showToast({
-            title: "录像记事成功！",
-            image: "../images/success.png",
-            mask: true
-          });
-          shutDown();
-        },
-        fail(res) {
-          throwError();
-        }
-      });
-    };
-    if (tapTime <= 200) { //当按钮按下时长为200ms时，用户在进行拍照或录像操作
-      if (this.data.ifPhoto) {
-        camera.takePhoto({
-          quality: that.data.quality,
-          success(res) {
-            var logs = {
-              photo_index: toShowNoteCargo.note.photo.length,
-              url: res.tempImagePath,
-              opacity: 1
-            }
-            toShowNoteCargo.note.photo.push(logs);
-            wx.previewImage({
-              urls: [res.tempImagePath],
-            });
-            wx.vibrateShort();
-            wx.showToast({
-              title: "第" + toShowNoteCargo.note.photo.length + "条拍照记事",
-              icon: "none"
-            });
-            that.data.photoPreviewAccess ? "" :
-              that.setData({ photoPreviewAccess: true });
-            that.data.img === toShowNoteCargo.note.photo ? "" :
-              that.setData({ img: toShowNoteCargo.note.photo });
-            if (toShowNoteCargo.note.photo.length === 3) {
-              wx.showModal({
-                title: "拍照记事",
-                content: "当前拍照记事条目已达上限",
-                showCancel: false,
-                compvare(res) { shutDown(); }
-              });
-            }
-          },
-          fail(res) {
-            throwError();
-          }
-        });
-      } else if (!this.data.ifPhoto) {
-        if (lock) {
-          camera.startRecord({
-            success(res) {
-              lock = false;
-              wx.vibrateShort();
-              //创建呼吸效果动画
-              console.log("动画：创建并实例化按钮的呼吸动画效果");
-              that.animation = wx.createAnimation({ duration: 1000 })
-              that.animation.backgroundColor("#FF0000").step();
-              that.setData({ breathingEffection: that.animation.export() });
-              timerA = setTimeout(function () {
-                that.animation.backgroundColor("#C0C0C0").step();
-                that.setData({ breathingEffection: that.animation.export() });
-              }, 1000);
-              interval = setInterval(function () {
-                that.animation.backgroundColor("#FF0000").step();
-                that.setData({ breathingEffection: that.animation.export() });
-                timerB = setTimeout(function () {
-                  that.animation.backgroundColor("#C0C0C0").step();
-                  that.setData({ breathingEffection: that.animation.export() });
-                }, 1000);
-              }, 2000);
-              console.log("动画：按钮呼吸效果创建成功");
-              shootTimer = setTimeout(() => {
-                stopRecord();
-                wx.showModal({
-                  title: "录像记事",
-                  content: "录像记事最长为两分钟",
-                  showCancel: false
-                });
-              }, 120000);
-            },
-            fail(res) { throwError(); }
-          });
-        } else if (!lock) {
-          clearTimeout(shootTimer);
-          stopRecord();
-        }
-      }
-    } else if (tapTime > 200) {
-      lock ? "" : stopRecord();
-      shutDown();
-    }
-  },
-
-  /* 录像预览组件 */
-  videoPreview(res) {
-    var that = this;
-    wx.showActionSheet({
-      itemList: ["退出预览", "删除录像"],
-      success(res) {
-        if (res.tapIndex === 0) {
-          console.log("写记事开始退出录像记事预览组件");
-          that.setData({
-            mainFnDisplay: true,
-            videoPreviewFnDisplay: false,
-            videoSrc: null
-          });
-          console.log("写记事成功退出录像记事预览组件");
-        } else {
-          toShowNoteCargo.note.video = null;
-          that.setData({
-            mainFnDisplay: true,
-            videoPreviewFnDisplay: false,
-            videoSrc: null
-          });
-          wx.showToast({
-            title: "删除成功",
-            image: "../images/success.png",
-            mask: true
-          });
-        }
-      }
-    });
-  }
 
 });
