@@ -465,7 +465,7 @@ Page({
               that.setData({ playback: toShowNoteCargo.note.record });
               if (toShowNoteCargo.note.record.length === 0) {
                 that.setData({
-                  playback: null,
+                  playback: [],
                   playbackAccess: false
                 });
               }
