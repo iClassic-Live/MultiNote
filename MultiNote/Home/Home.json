@@ -1,0 +1,7 @@
+{
+  "pages": [
+    "Home",
+    "../CreateNote/CreateNote",
+    "../ShowNote/ShowNote"
+  ]
+}

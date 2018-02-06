@@ -1,0 +1,34 @@
+/* 启动页 */
+
+#background {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color: #708090;
+}
+#background image {
+  height: 100%;
+  width: 100%;
+}
+
+#mainFn {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+.module {
+  width: 100%;
+  text-align: center;
+}
+.logo image {
+  margin-top: 20%;
+  width: 40%;
+}
+.startUsing image {
+  margin-top: 20%;
+  width: 46%;
+}
+.motto image {
+  margin-top: 30%;
+  width: 96%;  
+}

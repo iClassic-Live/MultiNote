@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "../Home/Home",
+    "CreateNote",
+    "../ShowNote/ShowNote"
+  ],
+  "navigationBarTitleText": "MultiNote 写记事"
+}

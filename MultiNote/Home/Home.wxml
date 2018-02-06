@@ -1,0 +1,16 @@
+<!-- 启动页 -->
+ <scroll-view id="background">
+  <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+</scroll-view> 
+
+<view id="mainFn">
+  <view class="logo module">
+    <image mode="widthFix" src="../images/logo.png"></image>
+  </view>
+  <view class="startUsing module">
+    <image mode="widthFix" src="../images/start.png" bindtap="toNote"></image>
+  </view>
+  <view class="motto module">
+    <image mode="widthFix" src="../images/motto.png"></image>
+  </view>
+</view>

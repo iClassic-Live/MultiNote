@@ -1,0 +1,57 @@
+<!-- 写记事页 -->
+<scroll-view id="background">
+  <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+</scroll-view>
+
+<view id="mainFn" wx:if="{{mainFnDisplay}}">
+
+  <view class="notingZone">
+    <view class="titleZone">
+      <input class="title" placeholder="{{titleDefault}}" bindinput="titleContent" bindfocus="titleContent" bindblur="titleContent" value="{{title}}"></input>
+    </view>
+    <view class="textZone">
+       <textarea class="text" placeholder="{{textDefault}}" disabled="{{isDisabled}}" bindinput="textContent" bindfocus="textContent" bindblur="textContent" value="{{text}}" maxlength="264"></textarea>
+    </view>
+  </view>
+
+  <view class="otherNoteZone">
+
+    <view class="recordZone">
+      <view class="recordTakingBtn" bindtap="getRecordFn" bindlongpress="getRecordFn">
+        <image src="../images/microphone.png"></image>
+      </view>
+      <view class="recordTaking" wx:if="{{recordAccess}}">
+        <button class="takingRecord" animation="{{breathingEffection}}" bindtouchstart="startRecord" bindtouchend="stopRecord"></button>
+      </view>
+      <view class="playback" wx:if="{{playbackAccess}}">
+        <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}" bindtap="playback_delete" bindlongpress="playback_delete">{{index + 1}}</button>
+      </view>
+    </view>
+
+    <view class="photoZone">
+      <view class="getCameraFn" bindtap="getCameraFn" bindlongpress="getCameraFn">
+        <image src="../images/photo.png"></image>
+      </view>
+      <view class="photo" wx:if="{{photoPreviewAccess}}">
+        <view class="photoPreview" wx:for="{{img}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}">
+            <image id="photo_{{item.photo_index}}" mode="aspectFit" style="{{item.url}}" src="{{item.url}}" bindtap="check_deletePhoto" bindlongpress="check_deletePhoto"></image>
+        </view>
+      </view>
+    </view>
+
+    <view class="shootZone">
+      <image src="../images/shoot.png" bindtap="getShootFn"></image>
+    </view>
+
+  </view>
+
+  <view class="save_cancelZone"> 
+    <button class="save_cancel" disabled="{{canISave}}" bindtap="save_cancel">{{save_cancel}}</button>
+  </view>
+  
+</view>
+
+
+<view id="videoFn"  style="height:{{height}}rpx" wx:if="{{videoDisplay}}" bindlongpress="videoPreview">
+  <video src="{{videoSrc}}"></video>
+</view>

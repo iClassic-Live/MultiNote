@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "Home/Home",
+    "CreateNote/CreateNote",
+    "ShowNote/ShowNote"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#66FFFF",
+    "navigationBarTitleText": "MultiNote",
+    "navigationBarTextStyle": "black"
+  }
+}
