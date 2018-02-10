@@ -19,6 +19,7 @@
   var interval, timerA, timerB; //承接呼吸效果方法定时器和计时器的标识
   var canIRecord = true; //用于监测当前是否正在进行语音记事的标识
   var recordTimer; //使语音记事结束的定时器
+  var startRecord; //启动语音记事的定时器，防止因点击语音按钮导致出错
 
 /* 页面构造器：页面功能初始化 */
   Page({
@@ -134,12 +135,12 @@
       scanning = setInterval(() => {
         //监测当前是否可以保存记事
         var title = toShowNoteCargo.note.title;
-        var text = toShowNoteCargo.note.text;
+        var text = toShowNoteCargo.note.text.trim();
         var record = toShowNoteCargo.note.record;
         var photo = toShowNoteCargo.note.photo;
         var video = toShowNoteCargo.note.video;
         if (!!title) { //只有在已写标题的情况下才可以保存记事，否则不允许保存
-          if (((!text.trim() && record.length === 0) && photo.length === 0) && !video) { //当有任意一种记事时可以保存记事，否则不允许保存
+          if (((!text && record.length === 0) && photo.length === 0) && !video) { //当有任意一种记事时可以保存记事，否则不允许保存
             this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
           } else {
             this.data.save_cancel === "保存记事" ? "" : this.setData({ save_cancel: "保存记事" })
@@ -193,7 +194,7 @@
       if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
       if (res.type === "input") {
         if (res.detail.value.length <= 30) {
-          if (/\s/.test(res.detail.value.split("")[0])) {
+          if (/\s/g.test(res.detail.value.split("")[0])) {
             this.setData({ title: "" });
             wx.showToast({
               title: "首字符不能为空",
@@ -203,7 +204,7 @@
         }else {
           this.setData({ title: res.detail.value.split("").slice(0, 30).join("") });
           wx.showToast({
-            title: "标题过长",
+            title: "标题最长三十字",
             image: "../images/warning.png"
           });
         }
@@ -239,7 +240,7 @@
           this.data.recordAccess ?
             this.setData({ recordAccess: false }) :
             this.setData({ recordAccess: true });
-        }else if (toShowNoteCargo.note.length < 5) {
+        }else if (toShowNoteCargo.note.record.length < 5) {
           if (res.type === "tap") {
             if (this.data.playbackAccess) this.setData({ playbackAccess: false });
             this.data.recordAccess ?
@@ -284,100 +285,88 @@
       if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
       var that = this;
       if (canIRecord && toShowNoteCargo.note.record.length < 5) {
-        recorderManager.start({
-          duration: 1200000,
-          sampleRate: 44100,
-          numberOfChannels: 2,
-          encodeBitRate: 192000,
-          format: "aac",
-          frameSize: 50
-        });
-        recorderManager.onStart((res) => {
-          canIRecord = false;
-          //创建呼吸效果动画
-          console.log("动画：创建并实例化按钮的呼吸动画效果");
-          that.animation = wx.createAnimation({ duration: 1000 });
-          that.animation.backgroundColor("#FF0000").step();
-          that.setData({ breathingEffection: that.animation.export() });
-          timerA = setTimeout(function () {
-            that.animation.backgroundColor("#F5F5DC").step();
-            that.setData({ breathingEffection: that.animation.export() });
-          }, 1000);
-          interval = setInterval(function () {
+        startRecord = setTimeout(() => {
+         recorderManager.start({
+            duration: 1200000,
+            sampleRate: 44100,
+            numberOfChannels: 2,
+            encodeBitRate: 192000,
+            format: "aac",
+            frameSize: 50
+          });
+          recorderManager.onStart((res) => {
+            canIRecord = false;
+            //创建呼吸效果动画
+            console.log("动画：创建并实例化按钮的呼吸动画效果");
+            that.animation = wx.createAnimation({ duration: 1000 });
             that.animation.backgroundColor("#FF0000").step();
             that.setData({ breathingEffection: that.animation.export() });
-            timerB = setTimeout(function () {
+            timerA = setTimeout(function () {
               that.animation.backgroundColor("#F5F5DC").step();
               that.setData({ breathingEffection: that.animation.export() });
             }, 1000);
-          }, 2000);
-          console.log("动画：按钮呼吸效果创建成功");
-          wx.showToast({
-            title: "第" + (toShowNoteCargo.note.record.length + 1) + "条语音记事",
-            icon: "none"
-          });
-        });
-        recordTimer = setTimeout(() => {
-          recorderManager.stop();
-          recorderManager.onStop((res) => {
-            console.log("用户成功进行语音记事");
-            var length = toShowNoteCargo.note.record.length;
-            var logs = { record_index: length, url: res.tempFilePath, opacity: 1 };
-            toShowNoteCargo.note.record.push(logs);
-            canIRecord = true;
-            console.log("语音记事暂存，路径为", toShowNoteCargo.note.record[length].url);
-            that.setData({ playback: toShowNoteCargo.note.record });
-            //截停呼吸效果动画
-            clearInterval(interval);
-            clearTimeout(timerA);
-            clearTimeout(timerB);
-            that.animation = wx.createAnimation({ duration: 0 });
-            that.animation.backgroundColor("#F5F5DC").step();
-            that.setData({ breathingEffection: that.animation.export() });
-            console.log("动画：按钮呼吸状态成功截停");
-            wx.showModal({
-              title: "语音记事",
-              content: "每条语音记事最长为两分钟",
-              showCancel: false
-            })
-            if (toShowNoteCargo.note.record.length >= 5) {
-              that.animation = wx.createAnimation({ duration: 1000 });
-              that.animation.opacity(0).step();
+            interval = setInterval(function () {
+              that.animation.backgroundColor("#FF0000").step();
               that.setData({ breathingEffection: that.animation.export() });
-              wx.vibrateLong();
-              setTimeout(() => {
-                that.setData({ recordAccess: false });
-                wx.showModal({
-                  title: "语音记事",
-                  content: "温馨提醒：语音记事数目已达上限",
-                  showCancel: false
-                });
+              timerB = setTimeout(function () {
+                that.animation.backgroundColor("#F5F5DC").step();
+                that.setData({ breathingEffection: that.animation.export() });
               }, 1000);
-            } else {
-              wx.vibrateShort();
-            }
+            }, 2000);
+            console.log("动画：按钮呼吸效果创建成功");
+            wx.showToast({
+              title: "第" + (toShowNoteCargo.note.record.length + 1) + "条语音记事",
+              icon: "none"
+            });
           });
-        }, 12000);
-      } else if (!canIRecord && toShowNoteCargo.note.record.length < 5) {
-        //截停呼吸效果动画
-        clearInterval(interval);
-        clearTimeout(timerA);
-        clearTimeout(timerB);
-        that.animation = wx.createAnimation({ duration: 0 });
-        that.animation.backgroundColor("#F5F5DC").step();
-        that.setData({ breathingEffection: that.animation.export() });
-        console.log("动画：按钮呼吸状态成功截停");
-        wx.vibrateLong();
-        wx.showToast({
-          title: "语音记事出错!",
-          image: "../images/error.png",
-          mask: true
-        });
+          recordTimer = setTimeout(() => {
+            recorderManager.stop();
+            recorderManager.onStop((res) => {
+              console.log("用户成功进行语音记事");
+              var length = toShowNoteCargo.note.record.length;
+              var logs = { record_index: length, url: res.tempFilePath, opacity: 1 };
+              toShowNoteCargo.note.record.push(logs);
+              canIRecord = true;
+              console.log("语音记事暂存，路径为", toShowNoteCargo.note.record[length].url);
+              that.setData({ playback: toShowNoteCargo.note.record });
+              //截停呼吸效果动画
+              clearInterval(interval);
+              clearTimeout(timerA);
+              clearTimeout(timerB);
+              that.animation = wx.createAnimation({ duration: 0 });
+              that.animation.backgroundColor("#F5F5DC").step();
+              that.setData({ breathingEffection: that.animation.export() });
+              console.log("动画：按钮呼吸状态成功截停");
+              wx.showModal({
+                title: "语音记事",
+                content: "每条语音记事最长为两分钟",
+                showCancel: false
+              })
+              if (toShowNoteCargo.note.record.length >= 5) {
+                that.animation = wx.createAnimation({ duration: 1000 });
+                that.animation.opacity(0).step();
+                that.setData({ breathingEffection: that.animation.export() });
+                wx.vibrateLong();
+                setTimeout(() => {
+                  that.setData({ recordAccess: false });
+                  wx.showModal({
+                    title: "语音记事",
+                    content: "温馨提醒：语音记事数目已达上限",
+                    showCancel: false
+                  });
+                }, 1000);
+              } else {
+                wx.vibrateShort();
+              }
+            });
+          }, 12000);
+        }, 200);
       }
     },
     //停止语音记事
     stopRecord(res) {
       var that = this;
+      clearTimeout(startRecord);      
       if (!canIRecord) {
         clearTimeout(recordTimer);
         recorderManager.stop();
@@ -414,20 +403,11 @@
             wx.vibrateShort();
           }
         })
-      } else if (toShowNoteCargo.note.record.length < 5) {
-        //截停呼吸效果动画
-        clearInterval(interval);
-        clearTimeout(timerA);
-        clearTimeout(timerB);
-        that.animation = wx.createAnimation({ duration: 0 });
-        that.animation.backgroundColor("#F5F5DC").step();
-        that.setData({ breathingEffection: that.animation.export() });
-        console.log("动画：按钮呼吸状态成功截停");
-        wx.vibrateLong();
-        wx.showToast({
-          title: "语音记事出错!",
-          image: "../images/error.png",
-          mask: true
+      } else {
+        wx.showModal({
+          title: "语音记事",
+          content: "提示：长按开始录音，松手完成录音",
+          showCancel: false
         });
       }
     },
