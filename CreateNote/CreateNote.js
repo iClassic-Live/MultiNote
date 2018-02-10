@@ -284,7 +284,7 @@
     startRecord(res) {
       if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
       var that = this;
-      if (canIRecord && toShowNoteCargo.note.record.length < 5) {
+      if (canIRecord) {
         startRecord = setTimeout(() => {
          recorderManager.start({
             duration: 1200000,
@@ -341,19 +341,19 @@
                 title: "语音记事",
                 content: "每条语音记事最长为两分钟",
                 showCancel: false
-              })
+              });
               if (toShowNoteCargo.note.record.length >= 5) {
                 that.animation = wx.createAnimation({ duration: 1000 });
                 that.animation.opacity(0).step();
                 that.setData({ breathingEffection: that.animation.export() });
+                wx.showToast({
+                  title: "语音记事已满",
+                  image: "../images/warning.png",
+                  mask: true
+                });
                 wx.vibrateLong();
                 setTimeout(() => {
                   that.setData({ recordAccess: false });
-                  wx.showModal({
-                    title: "语音记事",
-                    content: "温馨提醒：语音记事数目已达上限",
-                    showCancel: false
-                  });
                 }, 1000);
               } else {
                 wx.vibrateShort();
@@ -390,14 +390,14 @@
             that.animation = wx.createAnimation({ duration: 1000 });
             that.animation.opacity(0).step();
             that.setData({ breathingEffection: that.animation.export() });
+            wx.showToast({
+              title: "语音记事已满",
+              image: "../images/warning.png",
+              mask: true
+            });
             wx.vibrateLong();
             setTimeout(() => {
               that.setData({ recordAccess: false });
-              wx.showModal({
-                title: "语音记事",
-                content: "温馨提醒：语音记事数目已达上限",
-                showCancel: false
-              });
             }, 1000);
           } else {
             wx.vibrateShort();
@@ -406,7 +406,7 @@
       } else {
         wx.showModal({
           title: "语音记事",
-          content: "提示：长按开始录音，松手完成录音",
+          content: "长按开始录音，松手完成录音",
           showCancel: false
         });
       }
