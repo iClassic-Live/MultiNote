@@ -80,7 +80,7 @@
         wx.setStorageSync("note", note);
       }else if (!wx.getStorageSync("note")) wx.redirectTo({ url: "../Home/Home" });
       this.setData({ note: wx.getStorageSync("note") });
-      console.log("当前记事存储状况", wx.getStorageSync("note"));
+      // console.log("当前记事存储状况", wx.getStorageSync("note"));
       /* 使用定时器进行扫描操作：
         1. 监测当前记事是否已经超过15条，有则开启滚动查看功能，否则关闭；
         2. 监测当前是否在查看记事，是则屏蔽记事检索功能和新建记事功能，并置记事条目索引为空，否则取消屏蔽 */
@@ -96,7 +96,6 @@
         } else {
           if (this.data.upperMaskHeight !== 0) this.setData({ upperMaskHeight: 0 });
           if (this.data.bottomMaskHeight !== 0) this.setData({ bottomMaskHeight: 0 });
-          if (!!this.data.noteIndex) this.setData({ noteIndex: null });
         }
       }, 10);
     },
@@ -458,7 +457,7 @@
             noteDisplay: true
           });
         }
-      }else if (Math.abs(res.changedTouches[0].pageY - this.data.anchor) <= 200 && jumpNow) {
+      }else if (Math.abs(res.changedTouches[0].pageY - this.data.anchor) >= 200 && jumpNow) {
         console.log("jumpOut");
         jumpNow = false;
         if (this.data.textDisplay) {
@@ -468,13 +467,13 @@
           });
         }else if (this.data.recordDisplay) {
           this.setData({
-            recordDiplay: false,
-            playback: null
+            recordDisplay: false,
+            playback: []
           });
         }else if (this.data.photoDisplay) {
           this.setData({
             photoDisplay: false,
-            img: null
+            img: []
           });
         }else {
           this.setData({
@@ -569,7 +568,10 @@
         innerAudioContext.autoplay = true;
         innerAudioContext.src = this.data.playback[index].url;
         this.data.playback[index].opacity = 0.5;
-        this.setData({ playback: this.data.playback });
+        this.setData({
+          playback: this.data.playback,
+          noteIndex: index
+        });
         setTimeout(() => {
           that.data.playback[index].opacity = 1;
           that.setData({ playback: that.data.playback });
@@ -727,6 +729,6 @@
       wx.redirectTo({
         url: "../CreateNote/CreateNote"
       });
-    }
+    },
 
   });

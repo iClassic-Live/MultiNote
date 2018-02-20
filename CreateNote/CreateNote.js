@@ -21,6 +21,9 @@
   var recordTimer; //使语音记事结束的定时器
   var startRecord; //启动语音记事的定时器，防止因点击语音按钮导致出错
 
+  var shootNow = false;
+  var shootTimer;
+
 /* 页面构造器：页面功能初始化 */
   Page({
 
@@ -31,6 +34,7 @@
 
       //主功能区、视频记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
       mainFnDisplay: true,
+      cameraFnDisplay: false,
       videoDisplay: false,
 
       //主功能区功能初始化
@@ -54,6 +58,14 @@
 
       //记事保存功能初始化
       save_cancel: "取消记事", //保存/取消按钮的字样
+
+      flash: "off",
+      flashSet: "../images/notflash.png",
+      shootSign: 0,
+      cameraSet: "../images/photo.png",
+      changeMode: "../images/shoot.png",
+      shootNow: false,
+      qualitySet: "Normal"
     },
 
     /* 生命周期函数--监听页面加载 */
@@ -237,20 +249,47 @@
       if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
       if (getRecordAccess) {
         if (toShowNoteCargo.note.record.length === 0) {
+          console.log(toShowNoteCargo.note.record.length);
           this.data.recordAccess ?
             this.setData({ recordAccess: false }) :
             this.setData({ recordAccess: true });
         }else if (toShowNoteCargo.note.record.length < 5) {
-          if (res.type === "tap") {
-            if (this.data.playbackAccess) this.setData({ playbackAccess: false });
-            this.data.recordAccess ?
-              this.setData({ recordAccess: false }) :
-              this.setData({ recordAccess: true });
-          }else if (res.type === "longpress") {
-            if (this.data.recordAccess) this.setData({ recordAccess: false});
-            this.data.playbackAccess ?
-              this.setData({ playbackAccess: false }) :
-              this.setData({ playbackAccess: true });
+          var that = this;
+          if (this.data.recordAccess) {
+            wx.showModal({
+              title: "语音记事",
+              content: "是否要返听语音？",
+              success (res) {
+                if (res.confirm) that.setData({ playbackAccess: true });
+                that.setData({ recordAccess: false });
+              }
+            });
+          }else if (this.data.playbackAccess) {
+            wx.showModal({
+              title: "语音记事",
+              content: "是否要进行记事？",
+              success(res) {
+                if (res.confirm) that.setData({ recordAccess: true });
+                that.setData({ playbackAccess: false });
+              }
+            });
+          }else {
+            wx.showActionSheet({
+              itemList: ["录音", "返听语音"],
+              success(res) {
+                if (res.tapIndex === 0) {
+                  if (that.data.playbackAccess) that.setData({ playbackAccess: false });
+                  that.data.recordAccess ?
+                    that.setData({ recordAccess: false }) :
+                    that.setData({ recordAccess: true });
+                } else {
+                  if (that.data.recordAccess) that.setData({ recordAccess: false });
+                  that.data.playbackAccess ?
+                    that.setData({ playbackAccess: false }) :
+                    that.setData({ playbackAccess: true });
+                }
+              }
+            });
           }
         }else {
           this.data.playbackAccess ?
@@ -344,7 +383,7 @@
               });
               if (toShowNoteCargo.note.record.length >= 5) {
                 that.animation = wx.createAnimation({ duration: 1000 });
-                that.animation.opacity(0).step();
+                that.animation.backgroundColor("#FF0000").step();
                 that.setData({ breathingEffection: that.animation.export() });
                 wx.showToast({
                   title: "语音记事已满",
@@ -475,52 +514,84 @@
 
     /* 图片记事 */
     //图片记事的创建及查看功能权限的开启与关闭
-    getCameraFn(res) {
+    getPhotoFn(res) {
       if (this.data.recordAccess) this.setData({ recordAccess: false });
       if (this.data.playbackAccess) this.setData({ playbackAccess: false });
       var that = this;
       if (getCameraAccess) {
+        if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
         if (toShowNoteCargo.note.photo.length === 0) {
-          wx.chooseImage({
-            count: 3 - toShowNoteCargo.note.photo.length,
-            sourceType: ["camera", "album"],
-            success: function (res) {
-              var logs;
-              res.tempFiles.forEach((ele, index, origin) => {
-                logs = { photo_index: index, url: ele.path, opacity: 1 };
-                toShowNoteCargo.note.photo.push(logs);
-                that.data.img.push(logs);
-                that.setData({ img: that.data.img });
-              });
-              that.setData({ photoPreviewAccess: true });
-            },
+          wx.showActionSheet({
+            itemList: ["拍照", "从手机相册获取图片"],
+            success (res) {
+              if (res.tapIndex === 0) {
+                that.setData({
+                  mainFnDisplay: false,
+                  cameraFnDisplay: true,
+                  ifPhoto: true,
+                  camSet: "back",
+                  flash: "off",
+                  flashSet: "../images/notflash.png",
+                  qualitySet: "Normal",
+                  cameraSet: "../images/photo.png",
+                  changeMode: "../images/shoot.png"
+                });
+              }else {
+                wx.chooseImage({
+                  count: 3 - toShowNoteCargo.note.photo.length,
+                  sourceType: ["album"],
+                  success: function (res) {
+                    var logs;
+                    res.tempFiles.forEach((ele, index, origin) => {
+                      logs = { photo_index: index, url: ele.path, opacity: 1 };
+                      toShowNoteCargo.note.photo.push(logs);
+                      that.data.img.push(logs);
+                      that.setData({ img: that.data.img });
+                    });
+                    that.setData({ photoPreviewAccess: true });
+                  },
+                });
+              }
+            }
           });
         } else if (toShowNoteCargo.note.photo.length < 3) {
-          if (res.type === "tap") {
-            if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
-            wx.chooseImage({
-              count: 3 - toShowNoteCargo.note.photo.length,
-              sourceType: ["camera", "album"],
-              success: function (res) {
-                var logs;
-                res.tempFiles.forEach((ele, index, origin) => {
-                  logs = { photo_index: index, url: ele.path, opacity: 1 };
-                  toShowNoteCargo.note.photo.push(logs);
-                  that.data.img.push(logs);
-                  that.setData({ img: that.data.img });
-                });
-                that.setData({ photoPreviewAccess: true });
-              },
+          if (!this.data.photoPreviewAccess) {
+            wx.showActionSheet({
+              itemList: ["拍照", "从手机相册获取图片", "预览图片"],
+              success (res) {
+                if (res.tapIndex === 0) {
+                  that.setData({
+                    mainFnDisplay: false,
+                    cameraFnDisplay: true,
+                    ifPhoto: true,
+                    camSet: "back",
+                    flash: "off",
+                    flashSet: "../images/notflash.png",
+                    qualitySet: "Normal",
+                    cameraSet: "../images/photo.png",
+                    changeMode: "../images/shoot.png"
+                  });
+                }else if (res.tapIndex === 1) {
+                  wx.chooseImage({
+                    count: 3 - toShowNoteCargo.note.photo.length,
+                    sourceType: ["album"],
+                    success: function (res) {
+                      var logs;
+                      res.tempFiles.forEach((ele, index, origin) => {
+                        logs = { photo_index: index, url: ele.path, opacity: 1 };
+                        toShowNoteCargo.note.photo.push(logs);
+                        that.data.img.push(logs);
+                        that.setData({ img: that.data.img });
+                      });
+                      that.setData({ photoPreviewAccess: true });
+                    },
+                  });
+                }else {
+                  this.setData({ photoPreviewAccess: true });
+                }
+              }
             });
-          } else if (res.type === "longpress") {
-            this.data.photoPreviewAccess ? 
-            this.setData({ photoPreviewAccess: false }) :
-              this.setData({ photoPreviewAccess: true });
-          }
-        }else {
-          this.data.photoPreviewAccess ?
-            this.setData({ photoPreviewAccess: false }) :
-            this.setData({ photoPreviewAccess: true });
+          }else this.setData({ photoPreviewAccess: false });
         }
       }else {
         if (toShowNoteCargo.note.photo.length === 0) {
@@ -547,12 +618,15 @@
             }
           });
         } else if (toShowNoteCargo.note.photo.length < 3) {
-          if (res.type === "tap") {
-            wx.showModal({
-              title: "图片记事",
-              content: "无相机权限，只能从手机相册获取图片",
+          if (!this.data.photoPreviewAccess) {
+            wx.showToast({
+              title: "无相机权限",
+              image: "../images/warning.png"
+            });
+            wx.showActionSheet({
+              itemList: ["从手机相册获取图片", "预览图片"],
               success(res) {
-                if (res.confirm) {
+                if (res.tapIndex === 0) {
                   wx.chooseImage({
                     count: 3 - toShowNoteCargo.note.photo.length,
                     sourceType: ["album"],
@@ -567,14 +641,12 @@
                       that.setData({ photoPreviewAccess: true });
                     },
                   });
+                } else {
+                  that.setData({ photoPreview: true });
                 }
               }
             });
-          } else if (res.type === "longpress") {
-            this.data.photoPreviewAccess ?
-              this.setData({ photoPreviewAccess: false }) :
-              this.setData({ photoPreviewAccess: true });
-          }
+          }else this.setData({ photoPreviewAccess: false });
         } else {
           this.data.photoPreviewAccess ?
             this.setData({ photoPreviewAccess: false }) :
@@ -651,11 +723,27 @@
       var that = this;
       if (getCameraAccess) {
         if (!toShowNoteCargo.note.video) {
-          wx.chooseVideo({
-            sourceType: ["album", "camera"],
-            camera: "back",
+          wx.showActionSheet({
+            itemList: ["录像", "从手机相册获取视频"],
             success (res) {
-              toShowNoteCargo.note.video = res.tempFilePath;
+              if (res.tapIndex === 0) {
+                that.setData({
+                  mainFnDisplay: false,
+                  cameraFnDisplay: true,
+                  ifPhoto: false,
+                  camSet: "back",
+                  cameraSet: "../images/shoot.png",
+                  changeMode: "../images/photo.png"
+                });
+              }else {
+                wx.chooseVideo({
+                  sourceType: ["album"],
+                  camera: "back",
+                  success(res) {
+                    toShowNoteCargo.note.video = res.tempFilePath;
+                  }
+                });
+              }
             }
           });
         } else {
@@ -704,10 +792,12 @@
       wx.showActionSheet({
         itemList: ["退出预览", "保存视频到手机相册", "删除视频"],
         success(res) {
+          const videoControl = wx.createVideoContext(that.data.videoSrc);
           if (res.tapIndex === 0) {
+            videoControl.pause();
             that.setData({
               mainFnDisplay: true,
-              videoPreviewFnDisplay: false,
+              videoDisplay: false,
               videoSrc: ""
             });
           } else if (res.tapIndex === 1) {
@@ -729,10 +819,11 @@
               }
             });
           } else {
+            videoControl.pause();
             toShowNoteCargo.note.video = null;
             that.setData({
               mainFnDisplay: true,
-              videoPreviewFnDisplay: false,
+              videoDisplay: false,
               videoSrc: ""
             });
             wx.showToast({
@@ -769,8 +860,6 @@
                 console.log("toShowNoteCargo", toShowNoteCargo);
                 wx.setStorageSync("editNote", toShowNoteCargo);
                 console.log("需要修改的记事", wx.getStorageSync("editNote"));
-                console.log("MultiNote记录当前记事记录状态，记录状态为 " +
-                  toShowNoteCargo.info.noteType);
               }
               if (!!wx.getStorageSync("newNote") || !!wx.getStorageSync("editNote")) {
                 console.log("用户记事保存成功");
@@ -830,5 +919,209 @@
         }
       }
     },
+
+    /* 相机组件 */
+    goback (res) {
+      this.setData({
+        cameraFnDisplay: false,
+        mainFnDisplay: true
+      });
+    },
+    camSet (res) {
+      if (this.data.camSet === "front") {
+        this.setData({ camSet: "back" });
+      }else this.setData({ camSet: "front" });
+      this.setData({ camSign: 0 });
+      setTimeout(() => {
+        this.setData({ camSign: 1 });
+      }, 500);
+    },
+    flashSet (res) {
+      if (this.data.camSet === "back") {
+        if (this.data.flash === "off") {
+          this.setData({
+            flash: "on",
+            flashSet: "../images/flash.png"
+          });
+          wx.showToast({
+            title: "闪光灯开启",
+            icon: "none"
+          });
+        } else {
+          this.setData({
+            flash: "off",
+            flashSet: "../images/notflash.png"
+          });
+          wx.showToast({
+            title: "闪光灯关闭",
+            icon: "none"
+          });
+        }
+      }else {
+        wx.showToast({
+          title: "前置无闪光模式",
+          image: "../images/warning.png"
+        });
+      }
+    },
+    preview (res) {
+      var logs = [];
+      if (this.data.img.length > 0) {
+        this.data.img.forEach((ele, index, origin) => { logs.push(ele.url) });
+        wx.previewImage({
+          current: this.data.img.length,
+          urls: logs
+        });
+      }else {
+        wx.showToast({
+          title: "图片记事为空",
+          image: "../images/warning.png"
+        });
+      }
+    },
+    cameraSet (res) {
+      const camera = wx.createCameraContext();
+      var that = this
+      if (this.data.cameraSet === "../images/photo.png") {
+        if (toShowNoteCargo.note.photo.length < 3) {
+          var quality;
+          if (this.data.qualitySet === "Normal") quality = "normal";
+          if (this.data.qualitySet === "High") quality = "high";
+          if (this.data.qualitySet === "Low") quality = "low";
+          camera.takePhoto({
+            quality: quality,
+            success (res) {
+              var logs = { photo_index: toShowNoteCargo.note.photo.length, 
+                           url: res.tempImagePath, opacity: 1 };
+              toShowNoteCargo.note.photo.push(logs);
+              that.setData({
+                preview: logs.url,
+                img: toShowNoteCargo.note.photo
+              });
+              if (toShowNoteCargo.note.photo.length < 3) {
+                wx.showToast({
+                  title: "第" + that.data.img.length + "张图片记事",
+                  icon: "none"
+                });
+              }else {
+                if (!toShowNoteCargo.note.video)
+                wx.showModal({
+                  title: "图片记事",
+                  content: "图片记事已满，仍然可以以录像方式进行视频记事，是否进入录像模式？",
+                  success (res) {
+                    if (res.confirm) {
+                      that.setData({
+                        cameraSet: "../images/shoot.png",
+                        changeMode: "",
+                        ifPhoto: false
+                      });
+                    }else {
+                      that.setData({
+                        cameraFnDisplay: false,
+                        mainFnDisplay: true
+                      });
+                    }
+                  }
+                });
+              }
+            }
+          });
+        }
+      }else if (this.data.cameraSet === "../images/shoot.png") {
+        function stopShoot () {
+          camera.stopRecord({
+            success(res) {
+              shootNow = false;
+              clearTimeout(shootTimer);
+              clearInterval(interval);
+              clearTimeout(timerA);
+              clearTimeout(timerB);
+              if (that.data.shootSign === 1) this.setData({ shootSign: 0 });
+              toShowNoteCargo.note.video = res.tempVideoPath;
+              wx.vibrateLong();
+              that.setData({ shootNow: false });
+              wx.showToast({
+                title: "视频记事成功!",
+                image: "../images/success.png",
+                mask: true
+              });
+              setTimeout(() => {
+                that.setData({
+                  cameraFnDisplay: false,
+                  videoDisplay: true,
+                  videoSrc: toShowNoteCargo.note.video
+                });
+              }, 1500);
+            }
+          });
+        }
+        if (!that.data.shootNow) {
+          camera.startRecord({
+            success(res) {
+              that.setData({
+                shootNow: true,
+                shootSign: 1
+              });
+              timerA = setTimeout(() => {
+                that.setData({ shootSign: 0 });
+              }, 500);
+              interval = setInterval(() => {
+                that.setData({ shootSign: 1 });
+                timerB = setTimeout(() => {
+                  that.setData({ shootSign: 0 });
+                }, 500);
+              }, 1000);
+              wx.vibrateShort();
+              shootTimer = setTimeout(() => {
+                stopShoot();
+                wx.showToast({
+                  title: "录像限时两分钟",
+                  images: "../images/warning.png",
+                  mask: false
+                });
+              }, 120000);
+            }
+          });
+        }else stopShoot();
+      }
+    },
+    changeMode (res) {
+      var changeMode = this.data.changeMode;
+      var photo, video;
+      if (toShowNoteCargo.note.photo < 3) photo = true;
+      if (!toShowNoteCargo.note.video) video = true;
+      if (changeMode === "../images/shoot.png") {
+        if (video) {
+          this.setData({
+            cameraSet: "../images/shoot.png",
+            changeMode: "../images/photo.png",
+            ifPhoto: false
+          });
+        }else wx.showToast({
+          title: "视频记事已满",
+          image: "../images/warning.png",
+          mask: false
+        });
+      } else if (changeMode === "../images/photo.png") {
+        if (photo) {
+          this.setData({
+            cameraSet: "../images/photo.png",
+            changeMode: "../images/shoot.png",
+            ifPhoto: true
+          }); 
+        }else wx.showToast({
+          title: "图片记事已满",
+          image: "../images/warning.png",
+          mask: false
+        });
+      }
+    },
+    qualitySet (res) {
+      if (this.data.qualitySet === "Normal") {
+        this.setData({ qualitySet: "High" });
+      }else if (this.data.qualitySet === "High") {
+        this.setData({ qualitySet: "Low" });
+      }else this.setData({ qualitySet: "Normal" });
+    }
 
   });
