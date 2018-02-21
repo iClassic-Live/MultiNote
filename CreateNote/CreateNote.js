@@ -249,7 +249,6 @@
       if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
       if (getRecordAccess) {
         if (toShowNoteCargo.note.record.length === 0) {
-          console.log(toShowNoteCargo.note.record.length);
           this.data.recordAccess ?
             this.setData({ recordAccess: false }) :
             this.setData({ recordAccess: true });
@@ -519,7 +518,6 @@
       if (this.data.playbackAccess) this.setData({ playbackAccess: false });
       var that = this;
       if (getCameraAccess) {
-        if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
         if (toShowNoteCargo.note.photo.length === 0) {
           wx.showActionSheet({
             itemList: ["拍照", "从手机相册获取图片"],
@@ -587,7 +585,7 @@
                     },
                   });
                 }else {
-                  this.setData({ photoPreviewAccess: true });
+                  that.setData({ photoPreviewAccess: true });
                 }
               }
             });
