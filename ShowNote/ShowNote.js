@@ -592,7 +592,7 @@
         });
       }
     },
-    //开启看照片记事功能
+    //开启看图片记事功能
     seePhoto(res) {
       var str = res.currentTarget.id;
       var index = str.split("")[str.split("").length - 1];
@@ -608,49 +608,45 @@
       } else {
         wx.showModal({
           title: "读记事",
-          content: "该条目没有拍照记事",
+          content: "该条目没有图片记事",
           showCancel: false
         });
       }
     },
-    //照片记事操作：查看相应条目下的相应照片或退出查看
+    //图片记事操作：查看相应条目下的相应图片或退出查看
     photoCheck(res) {
       if (res.type === "tap") {
         var index = res.currentTarget.id;
         index = index.split("")[index.split("").length - 1];
         var that = this;
-        wx.showActionSheet({
-          itemList: ["全屏查看", "保存图片到手机相册"],
+        wx.showModal({
+          title: "读记事",
+          content: "是否保存本张图片到手机相册？",
           success(res) {
-            if (res.tapIndex === 0) {
-              wx.previewImage({
-                urls: [that.data.img[index].url],
-              });
-            } else {
-              wx.getSetting({
-                success(res) {
-                  !res.authSetting["scope.writePhotosAlbum"] ?
-                    wx.authorize({ scope: "scope.writePhotosAlbum" }) : "";
-                  wx.saveImageToPhotosAlbum({
-                    filePath: that.data.img[index].url,
-                    success(res) {
-                      wx.showToast({
-                        title: "保存操作成功！",
-                        image: "../images/success.png",
-                        mask: true
-                      });
-                    },
-                    fail(res) {
-                      wx.showToast({
-                        title: "保存操作失败！",
-                        image: "../images/error.png",
-                        mask: true
-                      });
-                    }
-                  });
+            wx.getSetting({
+              success(res) {
+                if (!res.authSetting["scope.writePhotosAlbum"]) {
+                  wx.authorize({ scope: "scope.writePhotosAlbum" });
                 }
-              });
-            }
+                wx.saveImageToPhotosAlbum({
+                  filePath: that.data.img[index].url,
+                  success(res) {
+                    wx.showToast({
+                      title: "保存操作成功！",
+                      image: "../images/success.png",
+                      mask: true
+                    });
+                  },
+                  fail(res) {
+                    wx.showToast({
+                      title: "保存操作失败！",
+                      image: "../images/error.png",
+                      mask: true
+                    });
+                  }
+                });
+              }
+            });
           }
         });
       } else if (res.type === "longpress") {
