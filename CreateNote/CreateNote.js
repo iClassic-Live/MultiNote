@@ -33,10 +33,11 @@ Page({
   /* 页面的初始数据 */
   data: {
 
-    //主功能区、视频记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
+    //主功能区、相机组件、视频记事预览组件、图片记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
     mainFnDisplay: true,
     cameraFnDisplay: false,
     videoDisplay: false,
+    photoDisplay: false,
 
     //主功能区功能初始化
     upperMaskHeight: 0, //上部蒙层高度
@@ -600,7 +601,8 @@ Page({
                   flashSet: "../images/notflash.png",
                   qualitySet: "Normal",
                   cameraSet: "../images/photo.png",
-                  changeMode: "../images/shoot.png"
+                  changeMode: "../images/shoot.png",
+                  preview: that.data.img[that.data.img.length - 1].url
                 });
               } else if (res.tapIndex === 1) {
                 wx.chooseImage({
@@ -618,7 +620,10 @@ Page({
                   },
                 });
               } else {
-                that.setData({ photoPreviewAccess: true });
+                if (!that.data.img === toShowNoteCargo.note.photo) {
+                  that.setData({ img: toShowNoteCargo.note.photo });
+                };
+                that.setData({ photoPreview: true });
               }
             }
           });
@@ -673,12 +678,18 @@ Page({
                   },
                 });
               } else {
+                if (!that.data.img === toShowNoteCargo.note.photo) {
+                  that.setData({ img: toShowNoteCargo.note.photo });
+                };
                 that.setData({ photoPreview: true });
               }
             }
           });
         } else this.setData({ photoPreviewAccess: false });
       } else {
+        if (!this.data.img === toShowNoteCargo.note.photo) {
+          this.setData({ img: toShowNoteCargo.note.photo });
+        }
         this.data.photoPreviewAccess ?
           this.setData({ photoPreviewAccess: false }) :
           this.setData({ photoPreviewAccess: true });
@@ -692,8 +703,12 @@ Page({
     var index = res.currentTarget.id;
     index = index.split("")[index.split("").length - 1];
     if (res.type === "tap") {
-      wx.previewImage({ urls: [toShowNoteCargo.note.photo[index].url] });
-      console.log("previewImage", toShowNoteCargo.note.photo[index].url);
+      this.setData({
+        mainFnDisplay: false,
+        photoDisplay: true,
+        img: toShowNoteCargo.note.photo,
+        current: index
+      });
     } else if (res.type === "longpress") {
       var that = this;
       function deletePhoto() {
@@ -880,6 +895,15 @@ Page({
       }
     });
   },
+  photoFn(res) {
+    this.setData({ photoDisplay: false });
+    if (this.data.ifFromCamera) {
+      this.setData({
+        cameraFnDisplay: true,
+        ifFromCamera: false
+      });
+    }else this.setData({ mainFnDisplay: true });
+  },
 
   /* 保存和取消记事区 */
   //记事保存与取消
@@ -1010,12 +1034,13 @@ Page({
     }
   },
   preview(res) {
-    var logs = [];
-    if (this.data.img.length > 0) {
-      this.data.img.forEach((ele, index, origin) => { logs.push(ele.url) });
-      wx.previewImage({
-        current: this.data.img.length,
-        urls: logs
+    if (toShowNoteCargo.note.photo.length > 0) {
+      this.setData({
+        cameraFnDisplay: false,
+        photoDisplay: true,
+        ifFromCamera: true,
+        img: toShowNoteCargo.note.photo,
+        current: toShowNoteCargo.note.photo.length - 1
       });
     } else {
       wx.showToast({
@@ -1045,6 +1070,8 @@ Page({
               preview: logs.url,
               img: toShowNoteCargo.note.photo
             });
+            console.log(that.data.img.length);
+            wx.previewImage({ urls: [that.data.img[that.data.img.length - 1].url] });
             if (toShowNoteCargo.note.photo.length < 3) {
               wx.showToast({
                 title: "第" + that.data.img.length + "张图片记事",
@@ -1059,7 +1086,7 @@ Page({
                     if (res.confirm) {
                       that.setData({
                         cameraSet: "../images/shoot.png",
-                        changeMode: "",
+                        changeMode: "../images/null.png",
                         ifPhoto: false
                       });
                     } else {
