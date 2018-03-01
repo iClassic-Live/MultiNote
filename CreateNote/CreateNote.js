@@ -207,7 +207,7 @@ Page({
       toShowNoteCargo.note.photo.length > 3 ?
         toShowNoteCargo.note.photo.splice(4, toShowNoteCargo.note.photo.length - 3) : "";
     }, 10);
-  },
+  }, 
 
   /* 生命周期函数--监听页面显示 */
   onShow: function (res) {
