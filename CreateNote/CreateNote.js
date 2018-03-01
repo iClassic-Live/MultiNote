@@ -601,9 +601,11 @@ Page({
                   flashSet: "../images/notflash.png",
                   qualitySet: "Normal",
                   cameraSet: "../images/photo.png",
-                  changeMode: "../images/shoot.png",
                   preview: that.data.img[that.data.img.length - 1].url
                 });
+                if (!toShowNoteCargo.note.video) {
+                  that.setData({ changeMode: "../images/shoot.png" });
+                } else that.setData({ changeMode: "../images/null.png" });
               } else if (res.tapIndex === 1) {
                 wx.chooseImage({
                   count: 3 - toShowNoteCargo.note.photo.length,
@@ -623,7 +625,7 @@ Page({
                 if (!that.data.img === toShowNoteCargo.note.photo) {
                   that.setData({ img: toShowNoteCargo.note.photo });
                 };
-                that.setData({ photoPreview: true });
+                that.setData({ photoPreviewAccess: true });
               }
             }
           });
@@ -773,6 +775,15 @@ Page({
       }
     }
   },
+  photoFn(res) {
+    this.setData({ photoDisplay: false });
+    if (this.data.ifFromCamera) {
+      this.setData({
+        cameraFnDisplay: true,
+        ifFromCamera: false
+      });
+    } else this.setData({ mainFnDisplay: true });
+  },
 
   /* 视频记事 */
   //视频记事尚的创建及查看功能权限的开启
@@ -792,9 +803,11 @@ Page({
                 cameraFnDisplay: true,
                 ifPhoto: false,
                 camSet: "back",
-                cameraSet: "../images/shoot.png",
-                changeMode: "../images/photo.png"
+                cameraSet: "../images/shoot.png"
               });
+              if (toShowNoteCargo.note.photo.length < 3) {
+                that.setData({ changeMode: "../images/photo.png" });
+              } else that.setData({ changeMode: "../images/null.png" });
             } else {
               wx.chooseVideo({
                 sourceType: ["album"],
@@ -894,15 +907,6 @@ Page({
         }
       }
     });
-  },
-  photoFn(res) {
-    this.setData({ photoDisplay: false });
-    if (this.data.ifFromCamera) {
-      this.setData({
-        cameraFnDisplay: true,
-        ifFromCamera: false
-      });
-    }else this.setData({ mainFnDisplay: true });
   },
 
   /* 保存和取消记事区 */
@@ -1068,36 +1072,44 @@ Page({
             toShowNoteCargo.note.photo.push(logs);
             that.setData({
               preview: logs.url,
-              img: toShowNoteCargo.note.photo
+              img: toShowNoteCargo.note.photo,
+              cameraFnDisplay: false,
+              photoDisplay: true,
+              ifFromCamera: true
             });
-            console.log(that.data.img.length);
-            wx.previewImage({ urls: [that.data.img[that.data.img.length - 1].url] });
-            if (toShowNoteCargo.note.photo.length < 3) {
-              wx.showToast({
-                title: "第" + that.data.img.length + "张图片记事",
-                icon: "none"
-              });
-            } else {
-              if (!toShowNoteCargo.note.video)
-                wx.showModal({
-                  title: "图片记事",
-                  content: "图片记事已满，仍然可以以录像方式进行视频记事，是否进入录像模式？",
-                  success(res) {
-                    if (res.confirm) {
-                      that.setData({
-                        cameraSet: "../images/shoot.png",
-                        changeMode: "../images/null.png",
-                        ifPhoto: false
-                      });
-                    } else {
-                      that.setData({
-                        cameraFnDisplay: false,
-                        mainFnDisplay: true
-                      });
-                    }
+            wx.showToast({
+              title: "第" + that.data.img.length + "张图片记事",
+              icon: "none",
+              duration: 500,
+              success(res) {
+                setTimeout(() => {
+                  that.setData({
+                    cameraFnDisplay: true,
+                    photoDisplay: false
+                  });
+                  if (!toShowNoteCargo.note.video && toShowNoteCargo.note.photo.length >= 3) {
+                    wx.showModal({
+                      title: "图片记事",
+                      content: "图片记事已满，仍然可以以录像方式进行视频记事，是否进入录像模式？",
+                      success(res) {
+                        if (res.confirm) {
+                          that.setData({
+                            cameraSet: "../images/shoot.png",
+                            changeMode: "../images/null.png",
+                            ifPhoto: false
+                          });
+                        } else {
+                          that.setData({
+                            cameraFnDisplay: false,
+                            mainFnDisplay: true
+                          });
+                        }
+                      }
+                    });
                   }
-                });
-            }
+                }, 1000);
+              }
+            });
           }
         });
       }
@@ -1160,33 +1172,17 @@ Page({
     }
   },
   changeMode(res) {
-    var changeMode = this.data.changeMode;
-    var photo, video;
-    if (toShowNoteCargo.note.photo < 3) photo = true;
-    if (!toShowNoteCargo.note.video) video = true;
-    if (changeMode === "../images/shoot.png") {
-      if (video) {
-        this.setData({
-          cameraSet: "../images/shoot.png",
-          changeMode: "../images/photo.png",
-          ifPhoto: false
-        });
-      } else wx.showToast({
-        title: "视频记事已满",
-        image: "../images/warning.png",
-        mask: false
+    if (this.data.changeMode === "../images/shoot.png") {
+      this.setData({
+        cameraSet: "../images/shoot.png",
+        changeMode: "../images/photo.png",
+        ifPhoto: false
       });
-    } else if (changeMode === "../images/photo.png") {
-      if (photo) {
-        this.setData({
-          cameraSet: "../images/photo.png",
-          changeMode: "../images/shoot.png",
-          ifPhoto: true
-        });
-      } else wx.showToast({
-        title: "图片记事已满",
-        image: "../images/warning.png",
-        mask: false
+    } else if (this.data.changeMode === "../images/photo.png") {
+      this.setData({
+        cameraSet: "../images/photo.png",
+        changeMode: "../images/shoot.png",
+        ifPhoto: true
       });
     }
   },
