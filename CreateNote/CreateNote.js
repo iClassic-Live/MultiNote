@@ -630,6 +630,13 @@ Page({
             }
           });
         } else this.setData({ photoPreviewAccess: false });
+      } else {
+        if (!this.data.img === toShowNoteCargo.note.photo) {
+          this.setData({ img: toShowNoteCargo.note.photo });
+        }
+        this.data.photoPreviewAccess ?
+          this.setData({ photoPreviewAccess: false }) :
+          this.setData({ photoPreviewAccess: true });
       }
     } else {
       if (toShowNoteCargo.note.photo.length === 0) {
@@ -764,7 +771,7 @@ Page({
             }
           }
         });
-      }else {
+      } else {
         wx.showModal({
           title: "图片记事",
           content: "是否删除本张图片",
