@@ -32,3 +32,9 @@
   margin-top: 30%;
   width: 96%;  
 }
+.versionSign {
+  position: absolute;
+  bottom: 0;
+  right: 0.5em;
+  font-weight: bold;
+}

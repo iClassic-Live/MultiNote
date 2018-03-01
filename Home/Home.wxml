@@ -13,4 +13,7 @@
   <view class="motto module">
     <image mode="widthFix" src="../images/motto.png"></image>
   </view>
+  <view class="versionSign">
+    <text>MultiNote 1.10.5</text>
+  </view>
 </view>
