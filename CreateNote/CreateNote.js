@@ -169,7 +169,7 @@ Page({
           video: ""
         },
         style: {
-          marginTop: wx.getStorageSync("note").length * 9,
+          marginTop: wx.getStorageSync("note").length * 9.5,
           opacity: 1,
           pullOutDelete: -20,
           pullOutMenu: -40
