@@ -1,8 +1,8 @@
 # MultiNote
 Mini Program: Make Noting Multiply
 
-Version: MultiNote 1.10.5
+Version: MultiNote 1.11.0
 
 Discription: Trial Version
 
-![](https://github.com/iClassic-Live/MultiNote/blob/master/images/MultiNote%201.10.5.jpg?raw=true)
+![](https://github.com/iClassic-Live/MultiNote/blob/master/images/MultiNote%201.11.0.jpg?raw=true)
