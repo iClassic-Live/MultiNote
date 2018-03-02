@@ -5,7 +5,7 @@
   //跨域传值载体初始化
   var fromCreateNoteCargo; //接收来自写记事页的数据的载体
 
-  //记事展示初始化 
+  //记事展示初始化
   var tapTime; //监测相应按钮的按下时长
   var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
 
@@ -52,7 +52,7 @@
       deleteNote: "删除", //删除按钮的字样
       anchor: 0, //滑动操作的锚点，滑动时该数据会被渲染
 
-      createNote: "新\xa0\xa0建\xa0\xa0记\xa0\xa0事", //新建记事按钮字样\xa0为空格符
+      createNote: "新建记事", //新建记事按钮字样\xa0为空格符
 
 
       //录像记事查看组件功能初始化
@@ -248,14 +248,14 @@
     },
     //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
     deleteNote(res) {
-      var str = res.currentTarget.id;
+      var index = res.currentTarget.id;
+      index = index.split("")[index.split("").length - 1];
       var that = this;
       wx.showModal({
         title: "读记事",
         content: "是否删除本条记事？",
         success(res) {
           if (res.confirm) {
-            var index = str.split("")[str.split("").length - 1];
             var timer = setInterval(() => {
               if (that.data.note[index].style.pullOutDelete !== -20) {
                 that.data.note[index].style.pullOutDelete = -20;
@@ -297,6 +297,9 @@
                 }, 2000);
               }
             }, 500);
+          }else {
+            that.data.note[index].style.pullOutDelete = -20;
+            that.setData({ note: that.data.note });
           }
         }
       });
@@ -596,8 +599,8 @@
     seePhoto(res) {
       var str = res.currentTarget.id;
       var index = str.split("")[str.split("").length - 1];
-      this.data.note[index].style.pullOutMenu = -40;
       if (this.data.note[index].note.photo.length > 0) {
+        this.data.note[index].style.pullOutMenu = -40;
         this.setData({
           img: this.data.note[index].note.photo,
           noteDisplay: false,

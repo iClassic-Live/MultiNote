@@ -21,13 +21,13 @@
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.style.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.style.marginTop}}%; opacity:{{item.style.opacity}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}}"></input>
       <view class="menu" style="right:{{item.style.pullOutMenu}}%">
-        <image id="text_{{item.id}}" src="../images/text.png" bindtap="readText"></image>
-        <image id="record_{{item.id}}"  src="../images/voice.png" bindtap="listenRecord"></image>
-        <image id="camera_{{item.id}}"  src="../images/camera.png" bindtap="seePhoto"></image>
-        <image id="shoot_{{item.id}}" src="../images/VCR.png" bindtap="watchVideo"></image>
+        <image id="text_{{item.id}}" src="../images/text.png" catchtap="readText"></image>
+        <image id="record_{{item.id}}"  src="../images/voice.png" catchtap="listenRecord"></image>
+        <image id="camera_{{item.id}}"  src="../images/camera.png" catchtap="seePhoto"></image>
+        <image id="shoot_{{item.id}}" src="../images/VCR.png" catchtap="watchVideo"></image>
       </view>
       <view class="delete" style="left:{{item.style.pullOutDelete}}%">
-        <button id="deleteNote_{{item.id}}" class="deleteNote" bindtap="deleteNote">{{deleteNote}}</button>
+        <button id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">{{deleteNote}}</button>
       </view>
     </view>
     <view class="text" wx:if="{{textDisplay}}" bindtouchmove="jumpToAnother">
@@ -46,7 +46,9 @@
   </scroll-view>
 
    <view class="creatingZone common">
-     <button class="createNote" bindtap="createNote">{{createNote}}</button> 
+     <button class="createNote" bindtap="createNote">
+      <text>{{createNote}}</text>
+     </button> 
   </view> 
 
 </view>

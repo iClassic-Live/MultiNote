@@ -46,7 +46,9 @@
   </view>
 
   <view class="save_cancelZone"> 
-    <button class="save_cancel" disabled="{{canISave}}" bindtap="save_cancel">{{save_cancel}}</button>
+    <button class="save_cancel" disabled="{{canISave}}" bindtap="save_cancel">
+      <text>{{save_cancel}}</text>
+    </button>
   </view>
   
 </view>
@@ -81,6 +83,14 @@
   </camera>
 </view>
 
-<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoPreview">
+<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoFn">
   <video src="{{videoSrc}}"></video>
+</view>
+
+<view id="photoFn" wx:if="{{photoDisplay}}" bindtap="photoFn">
+  <swiper current="{{current}}">
+    <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="{{item.photo}}">
+        <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}"></image>
+    </swiper-item>
+  </swiper>
 </view>

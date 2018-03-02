@@ -39,7 +39,7 @@ page {
 .searchZone .search {
   position: absolute;
   height: 6.7%;
-  width: 96.6%;
+  width: 96.8%;
   padding: 0 1%;
   border: 6rpx solid #cc0000;
   border-radius: 20rpx;
@@ -82,16 +82,17 @@ page {
   height: 6%;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   align-items: center;
-  width: 100%;
+  width: 98.8%;
+  border: 4.5rpx solid #8B4513;
+  border-radius: 15rpx;
 }
 .readingZone .note input {
   position: absolute;
   height: 100%;
-  width: 96.8%;
+  width: 98%;
   padding: 0 1%;
-  border: 4.5rpx solid #8B4513;
-  border-radius: 15rpx;
 }
 .readingZone .note .delete {
   position: absolute;
@@ -180,10 +181,14 @@ page {
   height: 100%;
   width: 100%;
   bottom: 0;
-  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background-color: #F0F8FF;
   border: 9rpx solid #708090;
   border-radius: 0;
+  font-weight: bold;
+  letter-spacing: 0.5em;
 }
 
 
