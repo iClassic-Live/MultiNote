@@ -22,7 +22,6 @@ var canIRecord = true; //用于监测当前是否正在进行语音记事的标�
 var recordTimer; //使语音记事结束的定时器
 var startRecord; //启动语音记事的定时器，防止因点击语音按钮导致出错
 
-var shootNow = false;
 var shootTimer;
 
 /* 页面构造器：页面功能初始化 */
@@ -1062,89 +1061,131 @@ Page({
   },
   cameraSet(res) {
     const camera = wx.createCameraContext();
-    var that = this
-    if (this.data.cameraSet === "../images/photo.png") {
-      if (toShowNoteCargo.note.photo.length < 3) {
-        var quality;
-        if (this.data.qualitySet === "Normal") quality = "normal";
-        if (this.data.qualitySet === "High") quality = "high";
-        if (this.data.qualitySet === "Low") quality = "low";
-        camera.takePhoto({
-          quality: quality,
-          success(res) {
-            var logs = {
-              photo_index: toShowNoteCargo.note.photo.length,
-              url: res.tempImagePath, opacity: 1
-            };
-            toShowNoteCargo.note.photo.push(logs);
-            that.setData({
-              preview: logs.url,
-              img: toShowNoteCargo.note.photo,
-              cameraFnDisplay: false,
-              photoDisplay: true,
-              ifFromCamera: true
-            });
-            wx.showToast({
-              title: "第" + that.data.img.length + "张图片记事",
-              icon: "none",
-              duration: 500,
-              success(res) {
-                setTimeout(() => {
-                  that.setData({
-                    cameraFnDisplay: true,
-                    photoDisplay: false
-                  });
-                  if (!toShowNoteCargo.note.video && toShowNoteCargo.note.photo.length >= 3) {
-                    wx.showModal({
-                      title: "图片记事",
-                      content: "图片记事已满，仍然可以以录像方式进行视频记事，是否进入录像模式？",
-                      success(res) {
-                        if (res.confirm) {
-                          that.setData({
-                            cameraSet: "../images/shoot.png",
-                            changeMode: "../images/null.png",
-                            ifPhoto: false
-                          });
-                        } else {
-                          that.setData({
-                            cameraFnDisplay: false,
-                            mainFnDisplay: true
-                          });
-                        }
-                      }
-                    });
-                  }
-                }, 1000);
-              }
-            });
-          }
-        });
-      }
-    } else if (this.data.cameraSet === "../images/shoot.png") {
-      function stopShoot() {
-        camera.stopRecord({
-          success(res) {
-            shootNow = false;
+    var that, cameraSet;
+    that = this;
+    cameraSet = this.data.cameraSet;
+    function failure() {
+      wx.showToast({
+        title: "相机组件崩溃！",
+        image: "../images/error.png",
+        mask: true,
+        success(res) {
+          if (that.data.shootNow) {
             clearTimeout(shootTimer);
             clearInterval(interval);
             clearTimeout(timerA);
             clearTimeout(timerB);
-            if (that.data.shootSign === 1) this.setData({ shootSign: 0 });
-            toShowNoteCargo.note.video = res.tempVideoPath;
-            wx.vibrateLong();
+            if (that.data.shootSign === 1) that.setData({ shootSign: 0 });
             that.setData({ shootNow: false });
-            wx.showToast({
-              title: "视频记事成功!",
-              image: "../images/success.png",
-              mask: true
+            camera.stopRecord();
+          }
+          setTimeout(() => {
+            that.setData({
+              cameraFnDisplay: false,
+              mainFnDisplay: true
             });
-            setTimeout(() => {
+          }, 1500);
+        }
+      });
+    }
+    if (cameraSet === "../images/photo.png") {
+      var quality = this.data.qualitySet;
+      if (quality === "Normal") {
+        quality = "normal";
+      }else if (quality === "High") {
+        quality = "high";
+      }else if (quality === "Low") {
+        quality = "Low";
+      }
+      camera.takePhoto({
+        quality: quality,
+        success(res) {
+          var logs = {
+            photo_index: toShowNoteCargo.note.photo.length,
+            url: res.tempImagePath, opacity: 1
+          };
+          toShowNoteCargo.note.photo.push(logs);
+          that.setData({
+            preview: logs.url,
+            img: toShowNoteCargo.note.photo
+          });
+          wx.showToast({
+            title: "第" + that.data.img.length + "张图片记事",
+            icon: "none",
+            duration: 500,
+            success(res) {
               that.setData({
                 cameraFnDisplay: false,
-                videoDisplay: true,
-                videoSrc: toShowNoteCargo.note.video
+                photoDisplay: true,
+                ifFromCamera: true
               });
-            }, 1500);
+              setTimeout(() => {
+                that.setData({
+                  cameraFnDisplay: true,
+                  photoDisplay: false,
+                  ifFromCamera: false
+                });
+                if (!toShowNoteCargo.note.video && that.data.img.length >= 3) {
+                  wx.showModal({
+                    title: "图片记事",
+                    content: "图片记事已满，仍然可以以录像方式进行视频记事，是否进入录像模式？",
+                    success(res) {
+                      if (res.confirm) {
+                        that.setData({
+                          cameraSet: "../images/shoot.png",
+                          changeMode: "../images/null.png",
+                          ifPhoto: false
+                        });
+                      } else {
+                        that.setData({
+                          cameraFnDisplay: false,
+                          mainFnDisplay: true
+                        });
+                      }
+                    }
+                  });
+                }
+              }, 1000);
+            }
+          });
+        },
+        fail(res) {
+          failure();
+        }
+      });
+    }else if (cameraSet === "../images/shoot.png") {
+      function stopShoot () {
+        camera.stopRecord({
+          success(res) {
+            clearTimeout(shootTimer);
+            clearInterval(interval);
+            clearTimeout(timerA);
+            clearTimeout(timerB);
+            if (that.data.shootSign === 1) that.setData({ shootSign: 0 });
+            toShowNoteCargo.note.video = res.tempVideoPath;
+            wx.showToast({
+              title: "视频记事成功！",
+              image: "../images/success.png",
+              mask: true,
+              success(res) {
+                wx.vibrateLong();
+                that.setData({ shootNow: false });
+                setTimeout(() => {
+                  that.setData({
+                    cameraFnDisplay: false,
+                    videoDisplay: true,
+                    videoSrc: toShowNoteCargo.note.video
+                  });
+                }, 1500);
+              }
+            })
+          },
+          fail(res) {
+            if (that.data.shootNow) {
+              that.setData({ shootNow: false });
+              camera.stopRecord();
+            }
+            failure();
           }
         });
       }
@@ -1166,16 +1207,21 @@ Page({
             }, 1000);
             wx.vibrateShort();
             shootTimer = setTimeout(() => {
-              stopShoot();
               wx.showToast({
                 title: "录像限时两分钟",
                 images: "../images/warning.png",
-                mask: false
+                mask: false,
+                success(res) {
+                  stopShoot();
+                }
               });
             }, 120000);
+          },
+          fail(res) {
+            failure();
           }
         });
-      } else stopShoot();
+      }else stopShoot();
     }
   },
   changeMode(res) {

@@ -14,6 +14,6 @@
     <image mode="widthFix" src="../images/motto.png"></image>
   </view>
   <view class="versionSign">
-    <text>Verion：MultiNote 1.11.1</text>
+    <text>Verion：MultiNote 1.12.0</text>
   </view>
 </view>

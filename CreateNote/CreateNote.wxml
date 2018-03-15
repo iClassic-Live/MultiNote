@@ -83,7 +83,7 @@
   </camera>
 </view>
 
-<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoFn">
+<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoPreview">
   <video src="{{videoSrc}}"></video>
 </view>
 
