@@ -64,28 +64,28 @@
     onLoad: function (options) {
       console.log("ShowNote onLoad");
       //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
-      if (!!wx.getStorageSync("newNote")) {
-        if (!!wx.getStorageSync("note")) {
-          var note = wx.getStorageSync("note");
-        }else var note = [];
-        fromCreateNoteCargo = wx.getStorageSync("newNote");
-        wx.removeStorageSync("newNote");
+      var note = wx.getStorageSync("note");
+      var newNote = wx.getStorageSync("newNote");
+      if (!!newNote) wx.removeStorageSync("newNote");
+      var editNote = wx.getStorageSync("editNote");
+      if (!!editNote) wx.removeStorageSync("editNote");
+      if (!!newNote) {
+        if (!note) note = [];
+        fromCreateNoteCargo = newNote;
         note.push(fromCreateNoteCargo);
         wx.setStorageSync("note", note);
-      } else if (!!wx.getStorageSync("editNote")) {
-        var note = wx.getStorageSync("note");
-        fromCreateNoteCargo = wx.getStorageSync("editNote");
-        wx.removeStorageSync("editNote");
+      } else if (!!editNote) {
+        fromCreateNoteCargo = editNote;
         note[fromCreateNoteCargo.id] = fromCreateNoteCargo;
         wx.setStorageSync("note", note);
-      }else if (!wx.getStorageSync("note")) wx.redirectTo({ url: "../Home/Home" });
+      }else if (!note) wx.redirectTo({ url: "../Home/Home" });
       this.setData({ note: wx.getStorageSync("note") });
       // console.log("当前记事存储状况", wx.getStorageSync("note"));
       /* 使用定时器进行扫描操作：
         1. 监测当前记事是否已经超过15条，有则开启滚动查看功能，否则关闭；
         2. 监测当前是否在查看记事，是则屏蔽记事检索功能和新建记事功能，并置记事条目索引为空，否则取消屏蔽 */
       var timer = setInterval(() => {
-        if (wx.getStorageSync("note").length > 15) {
+        if (note.length > 15) {
           if (!this.data.noteScrolling) this.setData({ noteScrolling: true });
         } else {
           if (this.data.noteScrolling) this.setData({ noteScrolling: false });
@@ -731,3 +731,5 @@
     },
 
   });
+
+  console.log(wx.getStorageSync("note"));
