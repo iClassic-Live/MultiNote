@@ -1,0 +1,96 @@
+<!-- 写记事页 -->
+<scroll-view id="background">
+  <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+</scroll-view>
+
+<view id="mainFn" wx:if="{{mainFnDisplay}}">
+
+  <view class="notingZone">
+    <view class="titleZone">
+      <input class="title" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent" value="{{title}}"></input>
+    </view>
+    <view class="textZone">
+       <textarea class="text" placeholder="{{textDefault}}" bindfocus="textContent" bindinput="textContent" bindblur="textContent" value="{{text}}"></textarea>
+    </view>
+  </view>
+
+  <view class="otherNoteZone">
+
+    <view class="recordZone">
+      <view class="recordTakingBtn" bindtap="getRecordFn">
+        <image src="../images/microphone.png"></image>
+      </view>
+      <view class="recordTaking" wx:if="{{recordAccess}}">
+        <button class="takingRecord" animation="{{breathingEffection}}" bindtouchstart="startRecord" bindtouchend="stopRecord"></button>
+      </view>
+      <view class="playback" wx:if="{{playbackAccess}}">
+        <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}" bindtap="playback_delete" bindlongpress="playback_delete">{{index + 1}}</button>
+      </view>
+    </view>
+
+    <view class="photoZone">
+      <view class="getCameraFn" bindtap="getPhotoFn">
+        <image src="../images/photo.png"></image>
+      </view>
+      <view class="photo" wx:if="{{photoPreviewAccess}}">
+        <view class="photoPreview" wx:for="{{img}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}">
+            <image id="photo_{{item.photo_index}}" mode="aspectFit" style="{{item.url}}" src="{{item.url}}" bindtap="check_deletePhoto" bindlongpress="check_deletePhoto"></image>
+        </view>
+      </view>
+    </view>
+
+    <view class="shootZone">
+      <image src="../images/shoot.png" bindtap="getShootFn"></image>
+    </view>
+
+  </view>
+
+  <view class="save_cancelZone"> 
+    <button class="save_cancel" disabled="{{canISave}}" bindtap="save_cancel">
+      <text>{{save_cancel}}</text>
+    </button>
+  </view>
+  
+</view>
+
+
+<view id="cameraFn" wx:if="{{cameraFnDisplay}}">
+  <camera flash="{{flash}}" device-position="{{camSet}}">
+    <cover-view class="top">
+      <cover-view class="goback" wx:if="{{!shootNow}}" bindtap="goback">
+        <cover-image mode="widthFix" src="../images/goback.png"></cover-image>
+      </cover-view>
+      <cover-view class="camSet" wx:if="{{!shootNow}}" bindtap="camSet">
+        <cover-image mode="widthFix" src="../images/camSet.png" style="opacity:{{camSign}}"></cover-image>
+      </cover-view>
+      <cover-view class="flashSet" wx:if="{{ifPhoto}}" bindtap="flashSet">
+        <cover-image mode="widthFix" src="{{flashSet}}"></cover-image>
+      </cover-view>
+      <cover-view class="shootSign" wx:if="{{!ifPhoto}}" style="opacity:{{shootSign}}"></cover-view>
+    </cover-view>
+    <cover-view class="bottom">
+      <cover-view class="preview component" wx:if="{{ifPhoto}}" bindtap="preview">
+        <cover-image mode="widthFix" src="{{preview}}"></cover-image>
+      </cover-view>
+      <cover-view class="cameraSet component" bindtap="cameraSet">
+        <cover-image mode="widthFix" src="{{cameraSet}}"></cover-image>
+      </cover-view>
+      <cover-view class="changeMode component" wx:if="{{!shootNow}}" bindtap="changeMode">
+        <cover-image mode="widthFix" src="{{changeMode}}"></cover-image>
+      </cover-view>
+      <cover-view class="qualitySet" wx:if="{{ifPhoto}}" bindtap="qualitySet">{{qualitySet}}</cover-view>
+    </cover-view>
+  </camera>
+</view>
+
+<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoFn">
+  <video src="{{videoSrc}}"></video>
+</view>
+
+<view id="photoFn" wx:if="{{photoDisplay}}" bindtap="photoFn">
+  <swiper current="{{current}}">
+    <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="{{item.photo}}">
+        <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}"></image>
+    </swiper-item>
+  </swiper>
+</view>
