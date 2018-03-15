@@ -731,5 +731,3 @@
     },
 
   });
-
-  console.log(wx.getStorageSync("note"));
