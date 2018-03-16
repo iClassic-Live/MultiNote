@@ -1009,7 +1009,15 @@ Page({
   camSet(res) {
     if (this.data.camSet === "front") {
       this.setData({ camSet: "back" });
-    } else this.setData({ camSet: "front" });
+      if (this.data.flash === "on") {
+        this.setData({ flashSet: "../images/flash.png" });
+      } else this.setData({ flashSet: "../images/notflash.png" });
+    } else {
+      this.setData({
+        camSet: "front",
+        flashSet: "../images/null.png"
+      });
+    }
     this.setData({ camSign: 0 });
     setTimeout(() => {
       this.setData({ camSign: 1 });
@@ -1036,11 +1044,6 @@ Page({
           icon: "none"
         });
       }
-    } else {
-      wx.showToast({
-        title: "前置无闪光模式",
-        image: "../images/warning.png"
-      });
     }
   },
   preview(res) {
