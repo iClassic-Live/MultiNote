@@ -209,7 +209,7 @@
       lock = true;
       jumpNow = true;
       var index = res.currentTarget.id;
-      if (!!index) {
+      if (!!index && !this.data.videoDisplay) {
         var pullOutDelete = this.data.note[index].style.pullOutDelete;
         var pullOutMenu = this.data.note[index].style.pullOutMenu;
         if (pullOutDelete > -12) {
@@ -350,7 +350,8 @@
         if (this.data.textDisplay) {
           this.setData({
             textDisplay: false,
-            text: null
+            text: null,
+            noteDisplay: false
           });
           if (hasRecord) {
             this.setData({
@@ -364,14 +365,15 @@
             });
           } else {
             this.setData({
-              videoDisplay: this,
+              videoDisplay: true,
               videoSrc: this.data.note[this.data.noteIndex].note.video
             });
           }
         } else if (this.data.recordDisplay) {
           this.setData({
             recordDisplay: false,
-            playback: null
+            playback: null,
+            noteDisplay: false
           });
           if (hasPhoto) {
             this.setData({
@@ -380,18 +382,19 @@
             });
           } else if (hasVideo) {
             this.setData({
-              videoDisplay: this,
+              videoDisplay: true,
               videoSrc: this.data.note[this.data.noteIndex].note.video
             });
           } else this.setData({ noteDisplay: true });
         } else if (this.data.photoDisplay) {
           this.setData({
             photoDisplay: false,
-            img: null
+            img: null,
+            noteDisplay: false
           });
           if (hasVideo) {
             this.setData({
-              videoDisplay: this,
+              videoDisplay: true,
               videoSrc: this.data.note[this.data.noteIndex].note.video
             });
           } else this.setData({ noteDisplay: true });
@@ -408,7 +411,8 @@
         if (this.data.videoDisplay) {
           this.setData({
             videoDisplay: false,
-            videoSrc: null
+            videoSrc: null,
+            noteDisplay: false
           });
           if (hasPhoto) {
             this.setData({
@@ -429,7 +433,8 @@
         } else if (this.data.photoDisplay) {
           this.setData({
             photoDisplay: false,
-            img: null
+            img: null,
+            noteDisplay: false
           });
           if (hasRecord) {
             this.setData({
@@ -445,7 +450,8 @@
         } else if (this.data.recordDisplay) {
           this.setData({
             recordDisplay: false,
-            playback: null
+            playback: null,
+            noteDisplay: false
           });
           if (hasText) {
             this.setData({
@@ -486,6 +492,9 @@
         }
         this.setData({ noteDisplay: true });
       }
+      if (this.data.videoDisplay) {
+        this.setData({ mainFnDisplay: false });
+      } else this.setData({ mainFnDisplay: true });
     },
     //开启读文本记事功能
     readText(res) {
@@ -626,30 +635,32 @@
           title: "读记事",
           content: "是否保存本张图片到手机相册？",
           success(res) {
-            wx.getSetting({
-              success(res) {
-                if (!res.authSetting["scope.writePhotosAlbum"]) {
-                  wx.authorize({ scope: "scope.writePhotosAlbum" });
-                }
-                wx.saveImageToPhotosAlbum({
-                  filePath: that.data.img[index].url,
-                  success(res) {
-                    wx.showToast({
-                      title: "保存操作成功！",
-                      image: "../images/success.png",
-                      mask: true
-                    });
-                  },
-                  fail(res) {
-                    wx.showToast({
-                      title: "保存操作失败！",
-                      image: "../images/error.png",
-                      mask: true
-                    });
+            if (res.confirm) {
+              wx.getSetting({
+                success(res) {
+                  if (!res.authSetting["scope.writePhotosAlbum"]) {
+                    wx.authorize({ scope: "scope.writePhotosAlbum" });
                   }
-                });
-              }
-            });
+                  wx.saveImageToPhotosAlbum({
+                    filePath: that.data.img[index].url,
+                    success(res) {
+                      wx.showToast({
+                        title: "保存操作成功！",
+                        image: "../images/success.png",
+                        mask: true
+                      });
+                    },
+                    fail(res) {
+                      wx.showToast({
+                        title: "保存操作失败！",
+                        image: "../images/error.png",
+                        mask: true
+                      });
+                    }
+                  });
+                }
+              }); 
+            }
           }
         });
       } else if (res.type === "longpress") {
@@ -683,10 +694,17 @@
     },
     //录像记事操作：退出查看(注：相应查看操作在视频浏览组件中进行)
     videoCheck(res) {
+      var that = this;
       wx.showActionSheet({
         itemList: ["退出查看", "保存视频到手机相册"],
         success: function (res) {
           if (res.tapIndex === 0) {
+            that.setData({
+              mainFnDisplay: true,
+              videoDisplay: false,
+              videoSrc: null
+            });
+          } else {
             wx.getSetting({
               success(res) {
                 !res.authSetting["scope.writePhotosAlbum"] ?
@@ -709,12 +727,6 @@
                   }
                 });
               }
-            });
-          } else {
-            this.setData({
-              mainFnDisplay: true,
-              videoDisplay: false,
-              videoSrc: null
             });
           }
         }

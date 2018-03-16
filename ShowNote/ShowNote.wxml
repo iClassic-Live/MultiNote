@@ -53,6 +53,6 @@
 
 </view>
 
-<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoCheck" bindtouchend="tapEnd" bindtouchmove="jumpToAnother">
+<scroll-view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoCheck" bindtouchend="tapEnd" bindtouchmove="jumpToAnother">
   <video src="{{videoSrc}}"></video>
-</view>
+</scroll-view>
