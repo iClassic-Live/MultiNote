@@ -25,7 +25,7 @@
 
       //主功能区、录像记事查看组件切换功能初始化，默认主功能区启动，其他功能区待命
       mainFnDisplay: true,
-      videoCheckFnDisplay: false,
+      videoDisplay: false,
 
 
       //主功能区功能初始化
@@ -669,7 +669,7 @@
         this.setData({
           note: this.data.note,
           mainFnDisplay: false,
-          videoCheckFnDisplay: true,
+          videoDisplay: true,
           videoSrc: this.data.note[index].note.video,
           noteIndex: index
         });
@@ -713,7 +713,7 @@
           } else {
             this.setData({
               mainFnDisplay: true,
-              videoCheckFnDisplay: false,
+              videoDisplay: false,
               videoSrc: null
             });
           }
