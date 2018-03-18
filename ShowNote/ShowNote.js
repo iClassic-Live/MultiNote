@@ -623,7 +623,7 @@ Page({
   },
   //开启看图片记事功能
   seePhoto(res) {
-    var str = res.currentTarget.id;
+    var index = res.currentTarget.id;
     index.replace(/(\d)+/g, ($) => { index = $; });
     if (this.data.note[index].note.photo.length > 0) {
       this.data.note[index].style.pullOutMenu = 450;
