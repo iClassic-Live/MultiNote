@@ -482,7 +482,6 @@ Page({
         });
       }
     } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
-      console.log("jumpOut");
       jumpNow = false;
       if (this.data.textDisplay) {
         this.setData({
@@ -510,6 +509,7 @@ Page({
     if (this.data.videoDisplay) {
       this.setData({ mainFnDisplay: false });
     } else this.setData({ mainFnDisplay: true });
+    if (this.data.mainFnDisplay && Math.abs(moveDistance) >= 200) console.log("JumpOut");
   },
   //开启读文本记事功能
   readText(res) {
@@ -539,31 +539,24 @@ Page({
   textCheck(res) {
     if (tapTime > 200) {
       var that = this;
-      wx.showActionSheet({
-        itemList: ["复制文本到剪贴板", "退出文本记事查看"],
-        success(res) {
-          if (res.tapIndex === 0) {
-            wx.setClipboardData({
-              data: that.data.text,
-              success: function (res) {
-                wx.getClipboardData({
-                  success: function (res) {
-                    wx.showToast({
-                      title: "复制文本成功",
-                      image: "../images/success.png",
-                      mask: true
-                    });
-                  }
-                });
-              }
-            });
-          } else {
-            that.setData({
-              noteDisplay: true,
-              textDisplay: false
-            });
-          }
+      wx.setClipboardData({
+        data: that.data.text,
+        success: function (res) {
+          wx.getClipboardData({
+            success: function (res) {
+              wx.showToast({
+                title: "复制文本成功",
+                image: "../images/success.png",
+                mask: true
+              });
+            }
+          });
         }
+      });
+    }else if (tapTime <= 200) {
+      this.setData({
+        noteDisplay: true,
+        textDisplay: false
       });
     }
   },
@@ -592,7 +585,7 @@ Page({
   recordCheck(res) {
     var that = this;
     var index = res.currentTarget.id;
-    if (tapTime <= 200 && index) {
+    if (!!index) {
       index.replace(/(\d)+/g, ($) => { index = $; });
       innerAudioContext.autoplay = true;
       innerAudioContext.src = this.data.playback[index].url;
@@ -613,7 +606,7 @@ Page({
           }, 250);
         }, 250);
       }, 250);
-    } else if (tapTime > 200) {
+    } else {
       this.setData({
         playback: null,
         noteDisplay: true,
@@ -644,7 +637,7 @@ Page({
   },
   //图片记事操作：查看相应条目下的相应图片或退出查看
   photoCheck(res) {
-    if (res.type === "tap") {
+    if (res.type === "longpress") {
       var index = res.currentTarget.id;
       index.replace(/(\d)+/g, ($) => { index = $; });
       var that = this;
@@ -680,7 +673,7 @@ Page({
           }
         }
       });
-    } else if (res.type === "longpress") {
+    } else if (res.type === "tap") {
       this.setData({
         img: null,
         noteDisplay: true,
