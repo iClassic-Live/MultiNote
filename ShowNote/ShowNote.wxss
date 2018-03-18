@@ -51,16 +51,19 @@ page {
   border-radius: 20rpx;  
 }
 .searchZone .result {
-  position: absolute;
   margin-top: 12%;
   height: 84.6%;
   width: 100%;
 }
 .searchZone .result .showResult {
   height: 60rpx;
-  width: 98.4%;
-  border: 6rpx solid blue;
+  width: 98.8%;
+  border: 6rpx solid #00f;
   border-radius: 15rpx;
+  margin-top: 3rpx;
+}
+.searchZone .result .showResult:hover {
+  border: 6rpx solid red;
 }
 .searchZone .result .showResult:first-child {
   margin-top: 0;
@@ -87,10 +90,10 @@ page {
   width: 98.8%;
   border: 4.5rpx solid #8B4513;
   border-radius: 15rpx;
+  margin-top: 3rpx;
 }
 .readingZone .note input {
   height: 100%;
-  width: 98%;
   padding: 0 1%;
 }
 .readingZone .note .delete {
@@ -102,7 +105,7 @@ page {
   height: 60rpx;
   line-height: 60rpx;
   width: 75rpx;
-  text-align: right;
+  text-align: center;
   padding: 0 15rpx;
   background-color: red;
   color: #000;

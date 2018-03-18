@@ -8,17 +8,17 @@
   <view class="bottomMask" style="height:{{bottomMaskHeight}}%"></view>
 
   <view class="searchZone common">
-    <view class="mask" style="height:{{maskHeight}}%"></view>
+    <view class="mask" style="height:{{maskHeight}}%"></view> 
     <input class="search" type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
-    <scroll-view class="result" scroll-y="{{resultScrolling}}">
+    <view class="result">
       <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
         <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
       </view>
-    </scroll-view>
+    </view>
   </view>
 
-  <scroll-view class="readingZone common" scroll-y="{{noteScrolling}}" scroll-with-animation="true" scroll-into-view="{{scrollToResult}}">
-    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.style.timeStampe}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}}"
+  <scroll-view class="readingZone common">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
 bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}}"></input>
       <view class="menu" style="left:{{item.style.pullOutMenu}}rpx">

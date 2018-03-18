@@ -35,11 +35,8 @@ Page({
     searchNote: "记事检索", //输入框为空时的提示内容
     resultKey: null, //检索信息的key值
     maskHeight: 6.7, //记事检索区背部的蒙层高度，未进入检索时为6.7，进入检索后为100
-    resultScrolling: false, //记事检索结果滚动权限，默认关闭
     result: [], //记事检索结果汇总，默认为空
 
-    noteScrolling: false, //
-    scrollToResult: null,
     note: wx.getStorageSync("newNote"), //全部记事信息的渲染
     noteIndex: null,
     noteDisplay: true, //记事区Display，默认展示，其他记事查看或记事检索时隐藏
@@ -82,7 +79,8 @@ Page({
       ele.style = {
         opacity: 1,
         pullOutDelete: 750,
-        pullOutMenu: 450
+        pullOutMenu: 450,
+        bgc: "none"
       }
     });
     wx.setStorageSync("note", note);
@@ -181,31 +179,33 @@ Page({
   gotoResult(res) {
     var that = this;
     var id = res.currentTarget.id;
-    id = id.split("")[id.split("").length - 1];
+    id.replace(/(\d)+/g, ($) => {
+      id = $;
+    });
     if (this.data.resultScrolling) {
       this.setData({
         maskHeight: 6.7,
         noteDisplay: true,
         resultKey: null,
-        result: [],
-        resultScrolling: false
+        result: []
       });
     };
-    if (this.data.noteScrolling) this.setData({ scrollToResult: id });
-    this.data.note[id].style.opacity = 0.5;
-    this.setData({ note: this.data.note });
     setTimeout(() => {
-      that.data.note[id].style.opacity = 1;
+      that.data.note[id].style.bgc = "red";
       that.setData({ note: that.data.note });
       setTimeout(() => {
-        that.data.note[id].style.opacity = 0.5;
+        that.data.note[id].style.bgc = "none";
         that.setData({ note: that.data.note });
         setTimeout(() => {
-          that.data.note[id].style.opacity = 1;
+          that.data.note[id].style.bgc = "red";
           that.setData({ note: that.data.note });
+          setTimeout(() => {
+            that.data.note[id].style.bgc = "none";
+            that.setData({ note: that.data.note });
+          }, 350);
         }, 350);
       }, 350);
-    }, 350);
+    }, 100);
   },
 
   /* 读记事区 */
@@ -358,7 +358,8 @@ Page({
       lock = false;
       this.setData({ anchor: res.changedTouches[0].pageY });
     }
-    if (res.changedTouches[0].pageY - this.data.anchor >= 200 && canIJump) {
+    var moveDistance = (res.changedTouches[0].pageY - this.data.anchor) * this.data.SWT;
+    if (moveDistance >= 200 && canIJump) {
       console.log("jumpDown");
       jumpNow = false;
       if (this.data.textDisplay) {
@@ -419,7 +420,7 @@ Page({
           noteDisplay: true
         });
       }
-    } else if (res.changedTouches[0].pageY - this.data.anchor <= -200 && canIJump) {
+    } else if (moveDistance <= -200 && canIJump) {
       console.log("JumpUp");
       jumpNow = false;
       if (this.data.videoDisplay) {
@@ -480,7 +481,7 @@ Page({
           noteDisplay: true
         });
       }
-    } else if (Math.abs(res.changedTouches[0].pageY - this.data.anchor) >= 200 && jumpNow) {
+    } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
       console.log("jumpOut");
       jumpNow = false;
       if (this.data.textDisplay) {
@@ -753,9 +754,17 @@ Page({
   /* 新建记事区 */
   //新建记事按钮：按下则跳转到写记事页
   createNote(res) {
-    wx.redirectTo({
-      url: "../CreateNote/CreateNote"
-    });
+    if (this.data.note.length <= 12) {
+      wx.redirectTo({
+        url: "../CreateNote/CreateNote"
+      });
+    }else {
+      wx.showModal({
+        title: "读记事",
+        content: "记事条目已达上限！",
+        showCancel: false
+      });
+    }
   },
 
 });
