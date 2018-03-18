@@ -3,8 +3,7 @@ page {
   background-color: #708090;
 }
 
-#mianFn {
-  position: absolute;
+#mainFn {
   height: 100%;
   width: 100%;
 }
@@ -58,16 +57,18 @@ page {
   width: 100%;
 }
 .searchZone .result .showResult {
-  height: 6%;
-  width: 100%;
-  margin-top: 6rpx;
+  height: 60rpx;
+  width: 98.4%;
+  border: 6rpx solid blue;
+  border-radius: 15rpx;
+}
+.searchZone .result .showResult:first-child {
+  margin-top: 0;
 }
 .searchZone .result .showResult input {
   height: 6.7%;
   width: 96.4%;
   padding: 0 1%;
-  border: 6rpx solid blue;
-  border-radius: 15rpx;
 }
 
 
@@ -78,8 +79,7 @@ page {
   width: 100%;
 }
 .readingZone .note {
-  position: absolute;
-  height: 6%;
+  height: 60rpx;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -89,25 +89,28 @@ page {
   border-radius: 15rpx;
 }
 .readingZone .note input {
-  position: absolute;
   height: 100%;
   width: 98%;
   padding: 0 1%;
 }
 .readingZone .note .delete {
-  position: absolute;
+  position: relative;
   height: 100%;
   z-index: 10;
 }
-.readingZone .note .delete button {
-  height: 100%;
-  display: flex;
-  align-items: center;
+.readingZone .note .delete view {
+  height: 60rpx;
+  line-height: 60rpx;
+  width: 75rpx;
+  text-align: right;
+  padding: 0 15rpx;
   background-color: red;
+  color: #000;
   font-weight: bold;
+  border-radius: 12.5rpx;
 }
 .readingZone .note .menu {
-  position: absolute;
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: center; 
@@ -129,7 +132,7 @@ page {
 }
 .readingZone .text {
   height: 99%;
-  width: 98.4%;
+  width: 98.8%;
   border: 6rpx solid black;
 }
 .readingZone .text textarea {
@@ -139,7 +142,7 @@ page {
 }
 .readingZone .record {
   height: 99%;
-  width: 98.4%;
+  width: 98.8%;
   border: 6rpx solid black;
   display: flex;
   flex-direction: row;

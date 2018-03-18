@@ -159,7 +159,6 @@ Page({
       console.log("用户开始新建记事");
       //初始化向写记事页发送数据的载体
       toShowNoteCargo = {
-        id: wx.getStorageSync("note").length,
         note: {
           title: "",
           text: "",
@@ -167,12 +166,7 @@ Page({
           photo: [],
           video: ""
         },
-        style: {
-          marginTop: wx.getStorageSync("note").length * 9.5,
-          opacity: 1,
-          pullOutDelete: -20,
-          pullOutMenu: -40
-        }
+        style: { opacity: 1 }
       }
       console.log("toShowNoteCargo初始化情况", toShowNoteCargo);
     }

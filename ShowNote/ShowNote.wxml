@@ -1,4 +1,4 @@
-<view id="mianFn" wx:if="{{mainFnDisplay}}">
+<view id="mainFn" wx:if="{{mainFnDisplay}}">
 
   <scroll-view class="background">
     <image mode="scaleToFill" src="../images/background-image.jpg"></image>
@@ -18,16 +18,17 @@
   </view>
 
   <scroll-view class="readingZone common" scroll-y="{{noteScrolling}}" scroll-with-animation="true" scroll-into-view="{{scrollToResult}}">
-    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.style.timeStampe}}" wx:if="{{noteDisplay}}" style="margin-top:{{item.style.marginTop}}%; opacity:{{item.style.opacity}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.style.timeStampe}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}}"
+bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}}"></input>
-      <view class="menu" style="right:{{item.style.pullOutMenu}}%">
+      <view class="menu" style="left:{{item.style.pullOutMenu}}rpx">
         <image id="text_{{item.id}}" src="../images/text.png" catchtap="readText"></image>
         <image id="record_{{item.id}}"  src="../images/voice.png" catchtap="listenRecord"></image>
         <image id="camera_{{item.id}}"  src="../images/camera.png" catchtap="seePhoto"></image>
         <image id="shoot_{{item.id}}" src="../images/VCR.png" catchtap="watchVideo"></image>
       </view>
-      <view class="delete" style="left:{{item.style.pullOutDelete}}%">
-        <button id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">{{deleteNote}}</button>
+      <view class="delete" style="right:{{item.style.pullOutDelete}}rpx">
+        <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">删除</view>
       </view>
     </view>
     <view class="text" wx:if="{{textDisplay}}" bindtouchmove="jumpToAnother">
