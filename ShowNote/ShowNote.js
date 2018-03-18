@@ -690,7 +690,7 @@ Page({
   },
   //开启看录像记事功能
   watchVideo(res) {
-    var str = res.currentTarget.id;
+    var index = res.currentTarget.id;
     index.replace(/(\d)+/g, ($) => { index = $; });
     if (!!this.data.note[index].note.video) {
       this.data.note[index].style.pullOutMenu = 450;
