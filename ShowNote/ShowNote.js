@@ -327,10 +327,14 @@ Page({
     //当删除键和记事查看菜单都未被拉出且在记事标题展示状态时，默认点击当前条目为选择修改记事
     if (!sign && this.data.noteDisplay) {
       var that = this;
+      this.data.note[index].style.bgc = "red";
+      this.setData({ note: this.data.note });
       wx.showModal({
         title: "读记事",
         content: "是否修改当前记事？",
         success(res) {
+          that.data.note[index].style.bgc = "none";
+          that.setData({ note: that.data.note });
           if (res.confirm) {
             wx.setStorageSync("editNote", that.data.note[index]);
             wx.redirectTo({ url: "../CreateNote/CreateNote" });
