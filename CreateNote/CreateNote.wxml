@@ -83,14 +83,14 @@
   </camera>
 </view>
 
-<view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoPreview">
+<scroll-view id="videoFn" wx:if="{{videoDisplay}}" bindlongpress="videoPreview">
   <video src="{{videoSrc}}"></video>
-</view>
+</scroll-view>
 
-<view id="photoFn" wx:if="{{photoDisplay}}" bindtap="photoFn">
+<scroll-view id="photoFn" wx:if="{{photoDisplay}}" bindtap="photoFn">
   <swiper current="{{current}}">
     <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="{{item.photo}}">
         <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}"></image>
     </swiper-item>
   </swiper>
-</view>
+</scroll-view>

@@ -108,6 +108,11 @@ Page({
   /* 生命周期函数--监听页面显示 */
   onShow: function () {
     console.log("ShowNote onShow");
+    var that = this;
+    setInterval(() => {
+      var mgt = wx.getSystemInfoSync().windowHeight * that.data.SWT * 0.067 + 10.5;
+      if (that.data.mgt !== mgt) that.setData({ mgt: mgt });
+    }, 10);
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */

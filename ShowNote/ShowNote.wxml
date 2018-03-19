@@ -17,7 +17,7 @@
     </view>
   </view>
 
-  <scroll-view class="readingZone common">
+  <scroll-view class="readingZone common" style="margin-top:{{mgt}}rpx">
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
 bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}}"></input>
