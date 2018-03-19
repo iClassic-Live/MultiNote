@@ -142,6 +142,7 @@ Page({
         note: this.data.note
       });
     } else if (res.type === "input") { //记事检索框正在键入时展示与键入值相关的记事条目标题
+      if (this.data.noteDisplay) this.setData({ noteDisplay: false });
       //使用简单的正则表达式对记事进行相应检索
       if (!!res.detail.value) {
         var reg = /\s/g;
@@ -158,21 +159,13 @@ Page({
         });
         this.setData({ result: result });
       } else this.setData({ result: [] });
-      //若检索到的记事等于或超过15条时使检索结果可以滚动查看
-      if (this.data.result.length >= 15) {
-        this.setData({ resultScrolling: true });
-      } else {
-        this.setData({ resultScrolling: false });
-      }
     } else if (res.type === "blur") { //记事检索功能失焦时关闭记事检索功能并恢复记事展示
-      if (this.data.result.length < 15) {
-        this.setData({
-          maskHeight: 6.7,
-          noteDisplay: true,
-          resultKey: null,
-          result: []
-        });
-      }
+      this.setData({
+        maskHeight: 6.7,
+        noteDisplay: true,
+        resultKey: null,
+        result: []
+      });
     }
   },
   //点击相应记事检索结果的时候返回相应记事条目位置
