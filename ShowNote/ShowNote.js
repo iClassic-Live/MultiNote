@@ -214,7 +214,7 @@ Page({
     tapTime = new Date().getTime() - tapTime;
     lock = true;
     jumpNow = true;
-    if (!!res.currentTarget.id) {
+    if (!!res.currentTarget.id && !this.data.videoDisplay) {
       var style = this.data.note[res.currentTarget.id].style
       if (style.pullOutDelete < 700) {
         this.data.note[res.currentTarget.id].style.pullOutDelete = 638;
@@ -362,7 +362,6 @@ Page({
     }
     var moveDistance = (res.changedTouches[0].pageY - this.data.anchor) * this.data.SWT;
     if (moveDistance >= 200 && canIJump) {
-      console.log("jumpDown");
       jumpNow = false;
       if (this.data.textDisplay) {
         this.setData({
@@ -422,8 +421,12 @@ Page({
           noteDisplay: true
         });
       }
+      if (!this.data.noteDisplay) {
+        console.log("jumpDown");
+      } else {
+        console.log("jumpOut")
+      }
     } else if (moveDistance <= -200 && canIJump) {
-      console.log("JumpUp");
       jumpNow = false;
       if (this.data.videoDisplay) {
         this.setData({
@@ -483,8 +486,14 @@ Page({
           noteDisplay: true
         });
       }
+      if (!this.data.noteDisplay) {
+        console.log("jumpUp");
+      } else {
+        console.log("jumpOut")
+      }
     } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
       jumpNow = false;
+      console.log("JumpOut");
       if (this.data.textDisplay) {
         this.setData({
           textDisplay: false,
@@ -510,8 +519,9 @@ Page({
     }
     if (this.data.videoDisplay) {
       this.setData({ mainFnDisplay: false });
-    } else this.setData({ mainFnDisplay: true });
-    if (this.data.mainFnDisplay && Math.abs(moveDistance) >= 200) console.log("JumpOut");
+    } else {
+      if (!this.data.mainFnDisplay) this.setData({ mainFnDisplay: true });
+    }
   },
   //开启读文本记事功能
   readText(res) {
