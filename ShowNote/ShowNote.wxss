@@ -36,9 +36,10 @@ page {
   width: 100%;
 }
 .searchZone .search {
-  position: absolute;
-  height: 6.7%;
-  width: 96.8%;
+  position: absolute; 
+  height: 7%;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0 1%;
   border: 6rpx solid #cc0000;
   border-radius: 20rpx;
@@ -48,45 +49,43 @@ page {
   width: 100%;
   background-color: #fff;
   opacity: 0.5;
-  border-radius: 20rpx;  
+  border-radius: 20rpx;
 }
 .searchZone .result {
-  margin-top: 12%;
-  height: 84.6%;
+  height: 85.3%;
   width: 100%;
 }
 .searchZone .result .showResult {
   height: 60rpx;
-  width: 98.8%;
+  width: 100%;
+  box-sizing: border-box;
   border: 6rpx solid #00f;
   border-radius: 15rpx;
-  margin-top: 3rpx;
 }
 .searchZone .result .showResult:hover {
+  box-sizing: border-box;
   border: 6rpx solid red;
 }
-.searchZone .result .showResult:first-child {
-  margin-top: 0;
-}
 .searchZone .result .showResult input {
-  height: 6.7%;
-  width: 96.4%;
+  height: 100%;
+  width: 98%;
   padding: 0 1%;
 }
 
 
 .readingZone {
   position: absolute;
-  height: 84.8%;
+  height: 85.3%;
   width: 100%;
 }
 .readingZone .note {
-  height: 60rpx;
+  height: 69rpx;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  width: 98.8%;
+  box-sizing: border-box;
+  width: 100%;
   border: 4.5rpx solid #8B4513;
   border-radius: 15rpx;
   margin-top: 3rpx;
@@ -99,11 +98,13 @@ page {
   position: relative;
   height: 100%;
   z-index: 10;
+  display: flex;
+  align-items: center;
 }
 .readingZone .note .delete view {
   height: 60rpx;
   line-height: 60rpx;
-  width: 75rpx;
+  width: 80rpx;
   text-align: center;
   padding: 0 15rpx;
   background-color: red;
@@ -133,18 +134,20 @@ page {
   width: 100%;
 }
 .readingZone .text {
-  height: 99%;
-  width: 98.8%;
+  height: 100%; 
+  width: auto;
+  box-sizing: border-box;
   border: 6rpx solid black;
 }
 .readingZone .text textarea {
-  height:100%;
+  height: 100%;
   width: 100%;
   padding: 0 1%;
 }
 .readingZone .record {
-  height: 99%;
-  width: 98.8%;
+  height: 100%;
+  width: auto;
+  box-sizing: border-box;
   border: 6rpx solid black;
   display: flex;
   flex-direction: row;
@@ -190,6 +193,7 @@ page {
   justify-content: center;
   align-items: center;
   background-color: #F0F8FF;
+  box-sizing: border-box;
   border: 9rpx solid #708090;
   border-radius: 0;
   font-weight: bold;

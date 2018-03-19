@@ -110,7 +110,7 @@ Page({
     console.log("ShowNote onShow");
     var that = this;
     setInterval(() => {
-      var mgt = wx.getSystemInfoSync().windowHeight * that.data.SWT * 0.067 + 10.5;
+      var mgt = wx.getSystemInfoSync().windowHeight * that.data.SWT * 0.07;
       if (that.data.mgt !== mgt) that.setData({ mgt: mgt });
     }, 10);
   },

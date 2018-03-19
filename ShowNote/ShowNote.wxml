@@ -10,14 +10,14 @@
   <view class="searchZone common">
     <view class="mask" style="height:{{maskHeight}}%"></view> 
     <input class="search" type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
-    <view class="result">
+    <view class="result" style="margin-top:{{mgt}}rpx;">
       <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
         <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
       </view>
     </view>
   </view>
 
-  <scroll-view class="readingZone common" style="margin-top:{{mgt}}rpx">
+  <scroll-view class="readingZone common" style="margin-top:{{mgt}}rpx;">
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
 bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}}"></input>
