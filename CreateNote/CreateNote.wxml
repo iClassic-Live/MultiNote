@@ -1,16 +1,27 @@
 <!-- 写记事页 -->
 <scroll-view id="background">
-  <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+  <swiper current="{{current}}" circular="true" duration="{{duration}}">
+    <swiper-item wx:for="{{bgiQueue}}" wx:for-item="item" wx:key="bgiQueue">
+      <image mode="aspectFill" src="{{item}}"></image>
+    </swiper-item>
+  </swiper>
 </scroll-view>
 
-<view id="mainFn" wx:if="{{mainFnDisplay}}">
+<scroll-view id="mainFn" wx:if="{{mainFnDisplay}}" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
 
   <view class="notingZone">
     <view class="titleZone">
-      <input class="title" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent" value="{{title}}"></input>
+      <input class="title" value="{{title}}" style="font-weight:{{fontWeight}};color:{{fontColor}}" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent"></input>
     </view>
     <view class="textZone">
-       <textarea class="text" placeholder="{{textDefault}}" bindfocus="textContent" bindinput="textContent" bindblur="textContent" value="{{text}}"></textarea>
+      <view class="text">
+        <textarea class="text" placeholder="{{textDefault}}" value="{{text}}" maxlength="none" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" bindfocus="textContent" bindinput="textContent" bindblur="textContent"></textarea>
+      </view>
+      <view class="font">
+        <picker mode="multiSelector" value="{{fontIndex}}" range="{{font}}" bindtap="getFontSet" bindcolumnchange="changeFont">
+          <image src="../images/text.png"></image>
+        </picker>
+      </view>
     </view>
   </view>
 
@@ -18,7 +29,7 @@
 
     <view class="recordZone">
       <view class="recordTakingBtn" bindtap="getRecordFn">
-        <image src="../images/microphone.png"></image>
+        <image src="../images/voice.png"></image>
       </view>
       <view class="recordTaking" wx:if="{{recordAccess}}">
         <button class="takingRecord" animation="{{breathingEffection}}" bindtouchstart="startRecord" bindtouchend="stopRecord"></button>
@@ -30,7 +41,7 @@
 
     <view class="photoZone">
       <view class="getCameraFn" bindtap="getPhotoFn">
-        <image src="../images/photo.png"></image>
+        <image src="../images/camera.png"></image>
       </view>
       <view class="photo" wx:if="{{photoPreviewAccess}}">
         <view class="photoPreview" wx:for="{{img}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}">
@@ -40,7 +51,7 @@
     </view>
 
     <view class="shootZone">
-      <image src="../images/shoot.png" bindtap="getShootFn"></image>
+      <image src="../images/VCR.png" bindtap="getShootFn"></image>
     </view>
 
   </view>
@@ -51,7 +62,7 @@
     </button>
   </view>
   
-</view>
+</scroll-view>
 
 
 <view id="cameraFn" wx:if="{{cameraFnDisplay}}">

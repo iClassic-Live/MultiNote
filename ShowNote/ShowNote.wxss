@@ -3,17 +3,26 @@ page {
   background-color: #708090;
 }
 
-#mainFn {
+#background {
+  position: absolute;
+  height: 93%;
+  width: 100%;
+  z-index: -1;
+}
+#background swiper {
+  height: 100%;
+  width: 100%;
+}
+#background swiper-item {
+  height: 100%;
+  width: 100%;
+}
+#background image {
   height: 100%;
   width: 100%;
 }
 
-.background {
-  position: absolute;
-  height: 99.2%;
-  width: 100%;
-}
-.background image {
+#mainFn {
   height: 100%;
   width: 100%;
 }
@@ -31,25 +40,25 @@ page {
 }
 
 .searchZone {
-  position: absolute;
+  position: relative;
+  bottom: 7%;
   height: 100%;
   width: 100%;
 }
 .searchZone .search {
-  position: absolute; 
+  position: relative;
+  top: 7%;
   height: 7%;
   width: 100%;
   box-sizing: border-box;
   padding: 0 1%;
   border: 6rpx solid #cc0000;
   border-radius: 20rpx;
+  background-color: rgba(255, 255, 255, 0.7);
 }
-.searchZone .mask {
-  position: absolute;
+.searchZone .search input {
+  height: 100%;
   width: 100%;
-  background-color: #fff;
-  opacity: 0.5;
-  border-radius: 20rpx;
 }
 .searchZone .result {
   height: 85%;
@@ -61,6 +70,8 @@ page {
   box-sizing: border-box;
   border: 6rpx solid #00f;
   border-radius: 15rpx;
+  background-color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 3rpx;
 }
 .searchZone .result .showResult:hover {
   box-sizing: border-box;
@@ -74,7 +85,8 @@ page {
 
 
 .readingZone {
-  position: absolute;
+  position: relative;
+  bottom: 100%;
   height: 85%;
   width: 100%;
 }
@@ -89,6 +101,7 @@ page {
   border: 4.5rpx solid #8B4513;
   border-radius: 15rpx;
   margin-top: 4.5rpx;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 .readingZone .note input {
   height: 100%;
@@ -100,6 +113,7 @@ page {
   z-index: 10;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 .readingZone .note .delete view {
   height: 60rpx;
@@ -138,6 +152,7 @@ page {
   width: auto;
   box-sizing: border-box;
   border: 6rpx solid black;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 .readingZone .text textarea {
   height: 100%;
@@ -153,6 +168,7 @@ page {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 .readingZone .record button {
   height: 100rpx;
@@ -179,13 +195,12 @@ page {
 }
 
 .creatingZone {
-  position: absolute;
+  position: relative;
   height: 8%;
   width: 100%;
-  bottom: 0;
+  bottom: 100%;
 }
 .creatingZone button {
-  position: absolute;
   height: 100%;
   width: 100%;
   bottom: 0;

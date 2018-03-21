@@ -2,6 +2,10 @@
 
 /* 读记事页初始化 */
 
+var lockA = true;
+var lockB = true;
+var current = wx.getStorageSync("bgiCurrent");
+
 //跨域传值载体初始化
 var fromCreateNoteCargo; //接收来自写记事页的数据的载体
 
@@ -23,10 +27,12 @@ Page({
   /* 页面的初始数据 */
   data: {
 
+    current: getApp().globalData.current,
+    bgiQueue: getApp().globalData.bgiQueue,
+
     //主功能区、录像记事查看组件切换功能初始化，默认主功能区启动，其他功能区待命
     mainFnDisplay: true,
     videoDisplay: false,
-
 
     //主功能区功能初始化
     upperMaskHeight: 0, //上部蒙层高度
@@ -60,6 +66,10 @@ Page({
   /* 生命周期函数--监听页面加载 */
   onLoad: function (options) {
     console.log("ShowNote onLoad");
+    this.setData({
+      screenWidth: wx.getSystemInfoSync().screenWidth,
+      current: wx.getStorageSync("bgiCurrent") || 0
+    });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note");
     var newNote = wx.getStorageSync("newNote");
@@ -76,12 +86,10 @@ Page({
     } else if (!note) wx.redirectTo({ url: "../Home/Home" });
     note.forEach((ele, index, origin) => {
       ele.id = index;
-      ele.style = {
-        opacity: 1,
-        pullOutDelete: 750,
-        pullOutMenu: 450,
-        bgc: "none"
-      }
+      ele.style.opacity = 1,
+      ele.style.pullOutDelete = 750,
+      ele.style.pullOutMenu = 450,
+      ele.style.bgc = "none"
     });
     wx.setStorageSync("note", note);
     this.setData({ note: note });
@@ -102,17 +110,15 @@ Page({
         if (this.data.upperMaskHeight !== 0) this.setData({ upperMaskHeight: 0 });
         if (this.data.bottomMaskHeight !== 0) this.setData({ bottomMaskHeight: 0 });
       }
+      var mgt = wx.getSystemInfoSync().windowHeight * this.data.SWT * 0.07;
+      if (this.data.mgt !== mgt) this.setData({ mgt: mgt });
     }, 10);
   },
 
   /* 生命周期函数--监听页面显示 */
   onShow: function () {
     console.log("ShowNote onShow");
-    var that = this;
-    setInterval(() => {
-      var mgt = wx.getSystemInfoSync().windowHeight * that.data.SWT * 0.07;
-      if (that.data.mgt !== mgt) that.setData({ mgt: mgt });
-    }, 10);
+    this.setData({ duration: 500 });
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
@@ -133,6 +139,22 @@ Page({
 
   /* 自定义用户交互逻辑 */
 
+  changeBackgroundImage(res) {
+    if (lockA && this.data.anchor[0] === "none") {
+      lockA = false;
+      this.setData({ anchor: ["none", res.changedTouches[0].pageX] });
+    }
+    var moveDistance = res.changedTouches[0].pageX - this.data.anchor[1];
+    if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
+      lockB = false;
+      if (moveDistance < 0 && this.data.current < this.data.bgiQueue.length - 1) {
+        this.setData({ current: this.data.current + 1 });
+      } else if (moveDistance > 0 && this.data.current !== 0) {
+        this.setData({ current: this.data.current - 1 });
+      }
+    }
+  },
+
   /* 记事检索区 */
   searchNote(res) {
     if (res.type === "focus") { //记事检索框聚焦时关闭未关闭的记事的删除和菜单栏、
@@ -142,12 +164,23 @@ Page({
         this.data.note[index].style.pullOutMenu = 450;
       });
       this.setData({
-        maskHeight: 100,
+        bgc: "rgba(255, 255, 255, 0.4)",
         noteDisplay: false,
         note: this.data.note
       });
     } else if (res.type === "input") { //记事检索框正在键入时展示与键入值相关的记事条目标题
-      if (this.data.noteDisplay) this.setData({ noteDisplay: false });
+      if (this.data.noteDisplay) {      
+        //隐藏记事展示，开启检索功能
+        this.data.note.forEach((ele, index, origin) => {
+          this.data.note[index].style.pullOutDelete = 750;
+          this.data.note[index].style.pullOutMenu = 450;
+        });
+        this.setData({
+          bgc: "rgba(255, 255, 255, 0.4)",
+          noteDisplay: false,
+          note: this.data.note
+        });
+      }
       //使用简单的正则表达式对记事进行相应检索
       if (!!res.detail.value) {
         var reg = /\s/g;
@@ -166,7 +199,7 @@ Page({
       } else this.setData({ result: [] });
     } else if (res.type === "blur") { //记事检索功能失焦时关闭记事检索功能并恢复记事展示
       this.setData({
-        maskHeight: 6.7,
+        bgc: "none",
         noteDisplay: true,
         resultKey: null,
         result: []
@@ -188,17 +221,22 @@ Page({
         result: []
       });
     };
+    this.fontColor = this.data.note[id].style.fontColor;
     setTimeout(() => {
       that.data.note[id].style.bgc = "red";
+      that.data.note[id].style.fontColor = "#fff";
       that.setData({ note: that.data.note });
       setTimeout(() => {
-        that.data.note[id].style.bgc = "none";
+        that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
+        that.data.note[id].style.fontColor = that.fontColor;
         that.setData({ note: that.data.note });
         setTimeout(() => {
           that.data.note[id].style.bgc = "red";
+          that.data.note[id].style.fontColor = "#fff";
           that.setData({ note: that.data.note });
           setTimeout(() => {
-            that.data.note[id].style.bgc = "none";
+            that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
+            that.data.note[id].style.fontColor = that.fontColor;
             that.setData({ note: that.data.note });
           }, 350);
         }, 350);
@@ -213,8 +251,9 @@ Page({
   tapEnd(res) {
     tapTime = new Date().getTime() - tapTime;
     lock = true;
-    jumpNow = true;
-    if (!!res.currentTarget.id && !this.data.videoDisplay) {
+    lockA = true;
+    lockB = true;
+    if (!!res.currentTarget.id && jumpNow) {
       var style = this.data.note[res.currentTarget.id].style
       if (style.pullOutDelete < 700) {
         this.data.note[res.currentTarget.id].style.pullOutDelete = 638;
@@ -228,11 +267,15 @@ Page({
       }
       this.setData({ note: this.data.note });
     }
+    jumpNow = true;
+    this.setData({ anchor: ["none"] });
+    wx.setStorageSync("bgiCurrent", this.data.current);
+    getApp().globalData.current = this.data.curent;
   },
   tapMove(res) {
     if (lock) {
       lock = !lock;
-      this.setData({ anchor: res.changedTouches[0].pageX });
+      this.setData({ anchor: ["X", res.changedTouches[0].pageX] });
       this.data.note.forEach((ele, index, origin) => {
         if (ele.style.pullOutDelete !== 750 || ele.style.pullOutMenu !== 450) {
           ele.style.pullOutDelete = 750;
@@ -241,19 +284,21 @@ Page({
         }
       });
     }
-    var index = res.currentTarget.id;
-    var pullOutDelete = this.data.note[index].style.pullOutDelete;
-    var pullOutMenu = this.data.note[index].style.pullOutMenu;
-    var moveDistance = (res.changedTouches[0].pageX - this.data.anchor) * this.data.SWT;
-    if ((pullOutDelete >= 638 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 105)) {
-      if (pullOutMenu !== 450) this.data.note[index].style.pullOutMenu = 450;
-      this.data.note[index].style.pullOutDelete = 750 - moveDistance;
+    if (this.data.anchor[0] === "X") {
+      var index = res.currentTarget.id;
+      var pullOutDelete = this.data.note[index].style.pullOutDelete;
+      var pullOutMenu = this.data.note[index].style.pullOutMenu;
+      var moveDistance = (res.changedTouches[0].pageX - this.data.anchor[1]) * this.data.SWT;
+      if ((pullOutDelete >= 638 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 105)) {
+        if (pullOutMenu !== 450) this.data.note[index].style.pullOutMenu = 450;
+        this.data.note[index].style.pullOutDelete = 750 - moveDistance;
+      }
+      if ((pullOutMenu >= 100 && pullOutMenu <= 450) && (moveDistance < 0 && moveDistance > -350)) {
+        if (pullOutDelete !== 750) this.data.note[index].style.pullOutDelete = 750;
+        this.data.note[index].style.pullOutMenu = 450 + moveDistance;
+      }
+      this.setData({ note: this.data.note });
     }
-    if ((pullOutMenu >= 100 && pullOutMenu <= 450) && (moveDistance < 0 && moveDistance > -350)) {
-      if (pullOutDelete !== 750) this.data.note[index].style.pullOutDelete = 750;
-      this.data.note[index].style.pullOutMenu = 450 + moveDistance;
-    }
-    this.setData({ note: this.data.note });
   },
   //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
   deleteNote(res) {
@@ -333,12 +378,15 @@ Page({
     if (!sign && this.data.noteDisplay) {
       var that = this;
       this.data.note[index].style.bgc = "red";
+      this.fontColor = this.data.note[index].style.fontColor;
+      this.data.note[index].style.fontColor = "#fff";
       this.setData({ note: this.data.note });
       wx.showModal({
         title: "读记事",
         content: "是否修改当前记事？",
         success(res) {
-          that.data.note[index].style.bgc = "none";
+          that.data.note[index].style.bgc = "rgba(255, 255, 255 ,0.4)";
+          that.data.note[index].style.fontColor = that.fontColor;
           that.setData({ note: that.data.note });
           if (res.confirm) {
             wx.setStorageSync("editNote", that.data.note[index]);
@@ -358,187 +406,193 @@ Page({
     hasText + hasRecord + hasPhoto + hasVideo >= 2 && jumpNow ? canIJump = true : canIJump = false;
     if (lock) {
       lock = false;
-      this.setData({ anchor: res.changedTouches[0].pageY });
+      this.setData({ anchor: ["Y", res.changedTouches[0].pageY] });
     }
-    var moveDistance = (res.changedTouches[0].pageY - this.data.anchor) * this.data.SWT;
-    if (moveDistance >= 200 && canIJump) {
-      jumpNow = false;
-      if (this.data.textDisplay) {
-        this.setData({
-          textDisplay: false,
-          text: null,
-          noteDisplay: false
-        });
-        if (hasRecord) {
+    if (this.data.anchor[0] === "Y") {
+      var moveDistance = (res.changedTouches[0].pageY - this.data.anchor[1]) * this.data.SWT;
+      if (moveDistance >= 200 && canIJump) {
+        jumpNow = false;
+        if (this.data.textDisplay) {
           this.setData({
-            recordDisplay: true,
-            playback: this.data.note[this.data.noteIndex].note.record
+            textDisplay: false,
+            text: null,
+            noteDisplay: false
           });
-        } else if (hasPhoto) {
+          if (hasRecord) {
+            this.setData({
+              recordDisplay: true,
+              playback: this.data.note[this.data.noteIndex].note.record
+            });
+          } else if (hasPhoto) {
+            this.setData({
+              photoDisplay: true,
+              img: this.data.note[this.data.noteIndex].note.photo
+            });
+          } else {
+            this.setData({
+              videoDisplay: true,
+              videoSrc: this.data.note[this.data.noteIndex].note.video
+            });
+          }
+        } else if (this.data.recordDisplay) {
           this.setData({
-            photoDisplay: true,
-            img: this.data.note[this.data.noteIndex].note.photo
+            recordDisplay: false,
+            playback: null,
+            noteDisplay: false
           });
-        } else {
+          if (hasPhoto) {
+            this.setData({
+              photoDisplay: true,
+              img: this.data.note[this.data.noteIndex].note.photo
+            });
+          } else if (hasVideo) {
+            this.setData({
+              videoDisplay: true,
+              videoSrc: this.data.note[this.data.noteIndex].note.video
+            });
+          } else this.setData({ noteDisplay: true });
+        } else if (this.data.photoDisplay) {
           this.setData({
-            videoDisplay: true,
-            videoSrc: this.data.note[this.data.noteIndex].note.video
+            photoDisplay: false,
+            img: null,
+            noteDisplay: false
+          });
+          if (hasVideo) {
+            this.setData({
+              videoDisplay: true,
+              videoSrc: this.data.note[this.data.noteIndex].note.video
+            });
+          } else this.setData({ noteDisplay: true });
+        } else if (this.data.videoDisplay) {
+          this.setData({
+            videoDisplay: false,
+            videoSrc: null,
+            noteDisplay: true
           });
         }
-      } else if (this.data.recordDisplay) {
-        this.setData({
-          recordDisplay: false,
-          playback: null,
-          noteDisplay: false
-        });
-        if (hasPhoto) {
+        if (!this.data.noteDisplay) {
+          console.log("jumpDown");
+        } else {
+          console.log("jumpOut");
+          if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
+        }
+      } else if (moveDistance <= -200 && canIJump) {
+        jumpNow = false;
+        if (this.data.videoDisplay) {
           this.setData({
-            photoDisplay: true,
-            img: this.data.note[this.data.noteIndex].note.photo
+            videoDisplay: false,
+            videoSrc: null,
+            noteDisplay: false
           });
-        } else if (hasVideo) {
+          if (hasPhoto) {
+            this.setData({
+              photoDisplay: true,
+              img: this.data.note[this.data.noteIndex].note.photo
+            });
+          } else if (hasRecord) {
+            this.setData({
+              recordDisplay: true,
+              playback: this.data.note[this.data.noteIndex].note.record
+            });
+          } else {
+            this.setData({
+              textDisplay: true,
+              text: this.data.note[this.data.noteIndex].note.text
+            });
+          }
+        } else if (this.data.photoDisplay) {
           this.setData({
-            videoDisplay: true,
-            videoSrc: this.data.note[this.data.noteIndex].note.video
+            photoDisplay: false,
+            img: null,
+            noteDisplay: false
           });
-        } else this.setData({ noteDisplay: true });
-      } else if (this.data.photoDisplay) {
-        this.setData({
-          photoDisplay: false,
-          img: null,
-          noteDisplay: false
-        });
-        if (hasVideo) {
+          if (hasRecord) {
+            this.setData({
+              recordDisplay: true,
+              playback: this.data.note[this.data.noteIndex].note.record
+            });
+          } else if (hasText) {
+            this.setData({
+              textDisplay: true,
+              text: this.data.note[this.data.noteIndex].note.text
+            });
+          } else this.setData({ noteDisplay: true });
+        } else if (this.data.recordDisplay) {
           this.setData({
-            videoDisplay: true,
-            videoSrc: this.data.note[this.data.noteIndex].note.video
+            recordDisplay: false,
+            playback: null,
+            noteDisplay: false
           });
-        } else this.setData({ noteDisplay: true });
-      } else {
-        this.setData({
-          videoDisplay: false,
-          videoSrc: null,
-          noteDisplay: true
-        });
+          if (hasText) {
+            this.setData({
+              textDisplay: true,
+              text: this.data.note[this.data.noteIndex].note.text
+            });
+          } else this.setData({ noteDisplay: true });
+        } else if (this.data.textDisplay) {
+          this.setData({
+            textDisplay: false,
+            text: null,
+            noteDisplay: true
+          });
+        }
+        if (!this.data.noteDisplay) {
+          console.log("jumpUp");
+        } else {
+          console.log("jumpOut");
+          if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
+        }
+      } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
+        jumpNow = false;
+        console.log(this.data.anchor, moveDistance);
+        if (this.data.textDisplay) {
+          this.setData({
+            textDisplay: false,
+            text: null
+          });
+        } else if (this.data.recordDisplay) {
+          this.setData({
+            recordDisplay: false,
+            playback: []
+          });
+        } else if (this.data.photoDisplay) {
+          this.setData({
+            photoDisplay: false,
+            img: []
+          });
+        } else if (this.data.videoDisplay) {
+          this.setData({
+            videoDisplay: false,
+            videoSrc: null
+          });
+        }
+        this.setData({ noteDisplay: true });
       }
-      if (!this.data.noteDisplay) {
-        console.log("jumpDown");
-      } else {
-        console.log("jumpOut")
-      }
-    } else if (moveDistance <= -200 && canIJump) {
-      jumpNow = false;
       if (this.data.videoDisplay) {
-        this.setData({
-          videoDisplay: false,
-          videoSrc: null,
-          noteDisplay: false
-        });
-        if (hasPhoto) {
-          this.setData({
-            photoDisplay: true,
-            img: this.data.note[this.data.noteIndex].note.photo
-          });
-        } else if (hasRecord) {
-          this.setData({
-            recordDisplay: true,
-            playback: this.data.note[this.data.noteIndex].note.record
-          });
-        } else {
-          this.setData({
-            textDisplay: true,
-            text: this.data.note[this.data.noteIndex].note.text
-          });
-        }
-      } else if (this.data.photoDisplay) {
-        this.setData({
-          photoDisplay: false,
-          img: null,
-          noteDisplay: false
-        });
-        if (hasRecord) {
-          this.setData({
-            recordDisplay: true,
-            playback: this.data.note[this.data.noteIndex].note.record
-          });
-        } else if (hasText) {
-          this.setData({
-            textDisplay: true,
-            text: this.data.note[this.data.noteIndex].note.text
-          });
-        } else this.setData({ noteDisplay: true });
-      } else if (this.data.recordDisplay) {
-        this.setData({
-          recordDisplay: false,
-          playback: null,
-          noteDisplay: false
-        });
-        if (hasText) {
-          this.setData({
-            textDisplay: true,
-            text: this.data.note[this.data.noteIndex].note.text
-          });
-        } else this.setData({ noteDisplay: true });
+        this.setData({ mainFnDisplay: false });
       } else {
-        this.setData({
-          textDisplay: false,
-          text: null,
-          noteDisplay: true
-        });
+        if (!this.data.mainFnDisplay) this.setData({ mainFnDisplay: true });
       }
-      if (!this.data.noteDisplay) {
-        console.log("jumpUp");
-      } else {
-        console.log("jumpOut")
-      }
-    } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
-      jumpNow = false;
-      console.log("JumpOut");
-      if (this.data.textDisplay) {
-        this.setData({
-          textDisplay: false,
-          text: null
-        });
-      } else if (this.data.recordDisplay) {
-        this.setData({
-          recordDisplay: false,
-          playback: []
-        });
-      } else if (this.data.photoDisplay) {
-        this.setData({
-          photoDisplay: false,
-          img: []
-        });
-      } else {
-        this.setData({
-          videoDisplay: false,
-          videoSrc: null
-        });
-      }
-      this.setData({ noteDisplay: true });
     }
-    if (this.data.videoDisplay) {
-      this.setData({ mainFnDisplay: false });
-    } else {
-      if (!this.data.mainFnDisplay) this.setData({ mainFnDisplay: true });
-    }
+
   },
   //开启读文本记事功能
   readText(res) {
     var index = res.currentTarget.id;
-    index.replace(/(\d)+/g, ($) => {
-      index = $;
-    });
+    index.replace(/(\d)+/g, ($) => { index = $; });
     var text = this.data.note[index].note.text;
-    if (text) {
+    if (!!text) {
       this.data.note[index].style.pullOutMenu = 450;
       this.setData({
         text: text,
         noteDisplay: false,
         textDisplay: true,
         note: this.data.note,
-        noteIndex: index
-      });
+        noteIndex: index,
+        fontSize: this.data.note[index].style.fontSize || "100%",
+        fontWeight: this.data.note[index].style.fontWeight || "normal",
+        fontColor: this.data.note[index].style.fontColor || "#000"
+      })
     } else {
       wx.showModal({
         title: '读记事',
@@ -549,6 +603,7 @@ Page({
   },
   //文本记事操作：复制文本内容或退出查看
   textCheck(res) {
+    tapTime = new Date().getTime() - tapTime;
     if (tapTime > 200) {
       var that = this;
       wx.setClipboardData({
@@ -565,7 +620,7 @@ Page({
           });
         }
       });
-    }else if (tapTime <= 200) {
+    }else {
       this.setData({
         noteDisplay: true,
         textDisplay: false

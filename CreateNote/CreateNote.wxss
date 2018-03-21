@@ -7,7 +7,15 @@ page {
 #background {
   position: absolute;
   height: 93.4%;
-  width: 100%; 
+  width: 100%;
+  z-index: -1;
+}
+#background swiper {
+  height: 100%;
+  width: 100%;
+}#background swiper-item {
+  height: 100%;
+  width: 100%;
 }
 #background image {
   height: 100%;
@@ -30,22 +38,42 @@ page {
     }
 
     /* 标题区 */
+    .titleZone {
+      background-color: rgba(255, 255, 255, 0.4);
+    }
     .titleZone .title {
       border-bottom: 3px solid #f40; 
-      width: 98%;
+      box-sizing: border-box;
       height: 5%;
+      width: 100%;
       padding: 0 1%;
     }
     /* 文本记事区 */
     .textZone {
       height: 90%;
-      width: 100%;      
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.4);
     }
     .textZone .text {
-      width: 98%;
+      width: 100%;
       height: 100%;
+    }
+    .textZone .text textarea {
+      box-sizing: border-box;
+      height: 80%;
+      width: 100%;
       padding: 0 1%;
-    }  
+    }
+    .textZone .font {
+      position: relative;
+      left: 85%;
+      bottom: 100rpx;
+      z-index: 999;
+    }
+    .textZone .font image {
+      height: 90rpx;
+      width: 90rpx;
+    }
 
     /* 其他记事区 */
       .otherNoteZone {
@@ -59,21 +87,22 @@ page {
         margin-left: 5rpx;
         display: flex;
         flex-direction: row;
+        align-items: center;
       }
       .recordTakingBtn image {
-        margin: 30rpx 0 0 15rpx;
+        margin-left: 15rpx;
         height: 120rpx;
         width: 120rpx;
       }
       .takingRecord {
-        margin: 20rpx 0 0 225rpx;
+        margin-left: 225rpx;
         height: 120rpx;
         width: 120rpx;
         border-radius: 50%;
         background-color: #F5F5DC;
       }
       .playback {
-        margin: 35rpx 0 0 15rpx;
+        margin-left: 15rpx;
         width: 560rpx;
         display: flex;
         flex-direction: row;
@@ -96,8 +125,9 @@ page {
         flex-direction: row;
       }
       .getCameraFn image {
-        height: 150rpx;
-        width: 150rpx;
+        margin: 30rpx 0 0 15rpx;
+        height: 120rpx;
+        width: 120rpx;
       }
       .photo {
         margin-left: 25rpx;
@@ -123,8 +153,9 @@ page {
         flex-direction: row;
       }
       .shootZone image {
-        height: 170rpx;
-        width: 170rpx;
+        margin: 30rpx 0 0 15rpx;
+        height: 120rpx;
+        width: 120rpx;
       }
 
 

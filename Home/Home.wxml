@@ -1,9 +1,13 @@
 <!-- 启动页 -->
- <scroll-view id="background">
-  <image mode="scaleToFill" src="../images/background-image.jpg"></image>
+<scroll-view id="background">
+  <swiper current="{{current}}" circular="true" duration="{{duration}}">
+    <swiper-item wx:for="{{bgiQueue}}" wx:for-item="item" wx:key="bgiQueue">
+      <image mode="aspectFill" src="{{item}}"></image>
+    </swiper-item>
+  </swiper>
 </scroll-view> 
 
-<view id="mainFn">
+<view id="mainFn" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
   <view class="logo module">
     <image mode="widthFix" src="../images/logo.png"></image>
   </view>
@@ -14,6 +18,6 @@
     <image mode="widthFix" src="../images/motto.png"></image>
   </view>
   <view class="versionSign">
-    <text>Verion：MultiNote 1.13.2</text>
+    <text>Verion：MultiNote 1.14.0</text>
   </view>
 </view>

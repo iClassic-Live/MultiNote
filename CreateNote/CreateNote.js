@@ -2,6 +2,11 @@
 
 /* 写记事页面初始化 */
 
+//用于监测变换图片的滑动操作起始的标识
+var lockA = true;
+var lockB = true;
+var current = wx.getStorageSync("bgiCurrent");
+
 //用于监测是否已开启相关权限的标识初始化
 var getRecordAccess = true; //录音权限的标识，默认权限开启
 var getCameraAccess = true; //相机权限的标识，默认权限开启
@@ -32,6 +37,10 @@ Page({
   /* 页面的初始数据 */
   data: {
 
+    current: getApp().globalData.current,
+    duration: 0,
+    bgiQueue: getApp().globalData.bgiQueue,
+
     //主功能区、相机组件、视频记事预览组件、图片记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
     mainFnDisplay: true,
     cameraFnDisplay: false,
@@ -47,6 +56,12 @@ Page({
 
     //文本记事功能初始化
     textDefault: "记事文本", //记事文本为空时的字样，默认为记事文本
+    ifFontSet: false,
+    font: [["超小号", "小号", "默认", "大号", "超大号"], ["轻盈", "默认", "粗壮"], ["默认", "中国红", "罗兰紫", "深空蓝", "森林绿", "巧克力棕"]],
+    fontIndex: [2, 1, 0],
+    fontSize: "100%",
+    fontWeight: "normal",
+    fontColor: "#000",
 
     //语音记事功能初始化
     recordAccess: false, //语音记事权限，默认false，权限关闭
@@ -67,11 +82,16 @@ Page({
     changeMode: "../images/shoot.png",
     shootNow: false,
     qualitySet: "Normal"
+
   },
 
   /* 生命周期函数--监听页面加载 */
   onLoad: function (options) {
     console.log("CreateNote onLoad");
+    this.setData({
+      screenWidth: wx.getSystemInfoSync().screenWidth,
+      current: wx.getStorageSync("bgiCurrent") || 0
+    });
     //监测是否获取了设备的录音权限、相机权限和保存到相册的权限
     wx.getSetting({
       success(res) {
@@ -147,8 +167,13 @@ Page({
         title: toShowNoteCargo.note.title,
         text: toShowNoteCargo.note.text,
         playback: toShowNoteCargo.note.record,
-        img: toShowNoteCargo.note.photo
+        img: toShowNoteCargo.note.photo,
+        fontSize: toShowNoteCargo.style.fontSize,
+        fontWeight: toShowNoteCargo.style.fontWeight,
+        fontColor: toShowNoteCargo.style.fontColor,
+        fontIndex: toShowNoteCargo.info.fontIndex
       });
+      console.log("fontIndex" ,this.data.fontIndex);
       console.log("各项记事存储情况如下",
         "\n记事标题：" + this.data.title,
         "\n记事文本：" + this.data.title,
@@ -166,7 +191,13 @@ Page({
           photo: [],
           video: ""
         },
-        style: { opacity: 1 }
+        style: {
+          opacity: 1,
+          fontSize: "100%",
+          fontWeight: "normal",
+          fontColor: "#000"
+        },
+        info: { fontIndex: [2, 1, 0] }
       }
       console.log("toShowNoteCargo初始化情况", toShowNoteCargo);
     }
@@ -205,6 +236,7 @@ Page({
   /* 生命周期函数--监听页面显示 */
   onShow: function (res) {
     console.log("CreateNote onShow");
+    this.setData({ duration: 500 });
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
@@ -224,6 +256,29 @@ Page({
   },
 
   /* 自定义用户交互逻辑处理: 写记事  */
+
+  /* 变换背景图 */
+  tapEnd(res) {
+    lockA = true;
+    lockB = true;
+    wx.setStorageSync("bgiCurrent", this.data.current);
+    getApp().globalData.current = this.data.curent;
+  },
+  changeBackgroundImage(res) {
+    if (lockA) {
+      lockA = false;
+      this.setData({ anchor: res.changedTouches[0].pageX });
+    }
+    var moveDistance = res.changedTouches[0].pageX - this.data.anchor;
+    if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
+      lockB = false;
+      if (moveDistance < 0 && this.data.current < this.data.bgiQueue.length - 1) {
+        this.setData({ current: this.data.current + 1 });
+      } else if (moveDistance > 0 && this.data.current !== 0) {
+        this.setData({ current: this.data.current - 1 });
+      }
+    }
+  },
 
   /* 记事标题 */
   //记事标题的创建
@@ -268,6 +323,46 @@ Page({
         });
       }
     }
+  },
+  getFontSet(res) {
+    console.log("getFontSet");
+    this.setData({ ifFontSet: true });
+    if (this.data.recordAccess) this.setData({ recordAccess: false });
+    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
+    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
+  },
+  changeFont(res) {
+    if (res.detail.column === 0) {
+      var fontSize;
+      if (res.detail.value === 0) fontSize = "50%";
+      if (res.detail.value === 1) fontSize = "75%";
+      if (res.detail.value === 2) fontSize = "100%";
+      if (res.detail.value === 3) fontSize = "150%";
+      if (res.detail.value === 4) fontSize = "200%";
+      this.setData({ fontSize: fontSize });
+      toShowNoteCargo.style.fontSize = fontSize;
+    }else if (res.detail.column === 1) {
+      var fontWeight;
+      if (res.detail.value === 0) fontWeight = "lighter";
+      if (res.detail.value === 1) fontWeight = "normal";
+      if (res.detail.value === 2) fontWeight = "bolder";
+      this.setData({ fontWeight: fontWeight });
+      toShowNoteCargo.style.fontWeight = fontWeight;
+    }else if (res.detail.column === 2) {
+      var fontColor;
+      if (res.detail.value === 0) fontColor = "#000";
+      if (res.detail.value === 1) fontColor = "#F00";
+      if (res.detail.value === 2) fontColor = "#8A2BE2";
+      if (res.detail.value === 3) fontColor = "#00BFFF";
+      if (res.detail.value === 4) fontColor = "#228B22";
+      if (res.detail.value === 5) fontColor = "#D2691E";
+      this.setData({ fontColor: fontColor });
+      toShowNoteCargo.style.fontColor = fontColor;
+    }
+    var fontIndex = this.data.fontIndex;
+    fontIndex[res.detail.column] = res.detail.value;
+    this.setData({ fontIndex: fontIndex });
+    toShowNoteCargo.info.fontIndex = fontIndex;
   },
 
   /* 语音记事 */
