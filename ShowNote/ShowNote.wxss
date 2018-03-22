@@ -121,7 +121,7 @@ page {
 .readingZone .note .delete view {
   height: 60rpx;
   line-height: 60rpx;
-  width: 80rpx;
+  width: 2em;
   text-align: center;
   padding: 0 15rpx;
   background-color: red;

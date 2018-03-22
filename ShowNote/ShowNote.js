@@ -245,7 +245,7 @@ Page({
     if (!!res.currentTarget.id && jumpNow) {
       var style = this.data.note[res.currentTarget.id].style
       if (style.pullOutDelete < 700) {
-        this.data.note[res.currentTarget.id].style.pullOutDelete = 638;
+        this.data.note[res.currentTarget.id].style.pullOutDelete = 640;
       } else {
         this.data.note[res.currentTarget.id].style.pullOutDelete = 750;
       }
@@ -278,7 +278,7 @@ Page({
       var pullOutDelete = this.data.note[index].style.pullOutDelete;
       var pullOutMenu = this.data.note[index].style.pullOutMenu;
       var moveDistance = (res.changedTouches[0].pageX - anchor[1]) * SWT;
-      if ((pullOutDelete >= 638 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 105)) {
+      if ((pullOutDelete >= 640 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 110)) {
         if (pullOutMenu !== 450) this.data.note[index].style.pullOutMenu = 450;
         this.data.note[index].style.pullOutDelete = 750 - moveDistance;
       }
