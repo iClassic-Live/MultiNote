@@ -4,7 +4,6 @@
 
 var lockA = true;
 var lockB = true;
-var current = wx.getStorageSync("bgiCurrent");
 
 //跨域传值载体初始化
 var fromCreateNoteCargo; //接收来自写记事页的数据的载体
@@ -35,15 +34,14 @@ Page({
     videoDisplay: false,
 
     //主功能区功能初始化
-    upperMaskHeight: 0, //上部蒙层高度
-    bottomeMaskHeight: 0, //下部蒙层高度
+
+    getUseAccess: true,
 
     searchNote: "记事检索", //输入框为空时的提示内容
     resultKey: null, //检索信息的key值
-    maskHeight: 6.7, //记事检索区背部的蒙层高度，未进入检索时为6.7，进入检索后为100
     result: [], //记事检索结果汇总，默认为空
 
-    note: wx.getStorageSync("newNote"), //全部记事信息的渲染
+    note: wx.getStorageSync("note"), //全部记事信息的渲染
     noteIndex: null,
     noteDisplay: true, //记事区Display，默认展示，其他记事查看或记事检索时隐藏
     textDisplay: false, //文本记事Display，默认隐藏
@@ -52,8 +50,6 @@ Page({
     playback: null, //语音记事内容，默认为空
     photoDisplay: false,  //照相记事Display，默认隐藏
     img: null, //照相记事内容，默认为空
-    anchor: 0, //滑动操作的锚点，滑动时该数据会被渲染
-    SWT: null,
 
     createNote: "新建记事", //新建记事按钮字样\xa0为空格符
 
@@ -66,10 +62,9 @@ Page({
   /* 生命周期函数--监听页面加载 */
   onLoad: function (options) {
     console.log("ShowNote onLoad");
-    this.setData({
-      screenWidth: wx.getSystemInfoSync().screenWidth,
-      current: wx.getStorageSync("bgiCurrent") || 0
-    });
+    this.SWT = 750 / wx.getSystemInfoSync().screenWidth;
+    this.anchor = ["changeBGI"];
+    this.setData({ current: wx.getStorageSync("bgiCurrent") || 0 });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note");
     var newNote = wx.getStorageSync("newNote");
@@ -87,31 +82,20 @@ Page({
     note.forEach((ele, index, origin) => {
       ele.id = index;
       ele.style.opacity = 1,
-      ele.style.pullOutDelete = 750,
-      ele.style.pullOutMenu = 450,
-      ele.style.bgc = "none"
+        ele.style.pullOutDelete = 750,
+        ele.style.pullOutMenu = 450,
+        ele.style.bgc = "none"
     });
     wx.setStorageSync("note", note);
     this.setData({ note: note });
     // console.log("当前记事存储状况", wx.getStorageSync("note"));
-    /* 使用定时器进行扫描操作：
-      1. 监测当前记事是否已经超过15条，有则开启滚动查看功能，否则关闭；
-      2. 监测当前是否在查看记事，是则屏蔽记事检索功能和新建记事功能，并置记事条目索引为空，否则取消屏蔽 */
+    // 使用定时器进行扫描操作：监测当前是否在查看记事，是则屏蔽记事检索功能和新建记事功能，否则取消屏蔽;
     var timer = setInterval(() => {
-      if (note.length >= 15) {
-        if (!this.data.noteScrolling) this.setData({ noteScrolling: true });
-      } else {
-        if (this.data.noteScrolling) this.setData({ noteScrolling: false });
-      }
       if (!this.data.noteDisplay) {
-        if (this.data.upperMaskHeight !== 7.6) this.setData({ upperMaskHeight: 7.6 });
-        if (this.data.bottomMaskHeight !== 8) this.setData({ bottomMaskHeight: 8 });
+        if (this.data.getUseAccess) this.setData({ getUseAccess: false });
       } else {
-        if (this.data.upperMaskHeight !== 0) this.setData({ upperMaskHeight: 0 });
-        if (this.data.bottomMaskHeight !== 0) this.setData({ bottomMaskHeight: 0 });
+        if(!this.data.getUseAccess) this.setData({ getUseAccess: true });
       }
-      var mgt = wx.getSystemInfoSync().windowHeight * this.data.SWT * 0.07;
-      if (this.data.mgt !== mgt) this.setData({ mgt: mgt });
     }, 10);
   },
 
@@ -124,7 +108,7 @@ Page({
   /* 生命周期函数--监听页面初次渲染完成 */
   onReady: function () {
     console.log("ShowNote onReady");
-    this.setData({ SWT: 750 / wx.getSystemInfoSync().screenWidth });
+    this.SWT = 750 / wx.getSystemInfoSync().screenWidth;
   },
 
   /* 生命周期函数--监听页面隐藏 */
@@ -140,16 +124,17 @@ Page({
   /* 自定义用户交互逻辑 */
 
   changeBackgroundImage(res) {
-    if (lockA && this.data.anchor[0] === "none") {
+    if (lockA) {
       lockA = false;
-      this.setData({ anchor: ["none", res.changedTouches[0].pageX] });
+      this.anchor[1] = res.changedTouches[0].pageX;
     }
-    var moveDistance = res.changedTouches[0].pageX - this.data.anchor[1];
-    if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
+    var moveDistance;
+    if (this.anchor[0] === "changeBGI") moveDistance = this.anchor[1] - res.changedTouches[0].pageX;
+    if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
       lockB = false;
-      if (moveDistance < 0 && this.data.current < this.data.bgiQueue.length - 1) {
+      if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
         this.setData({ current: this.data.current + 1 });
-      } else if (moveDistance > 0 && this.data.current !== 0) {
+      } else if (moveDistance < 0 && this.data.current !== 0) {
         this.setData({ current: this.data.current - 1 });
       }
     }
@@ -169,7 +154,7 @@ Page({
         note: this.data.note
       });
     } else if (res.type === "input") { //记事检索框正在键入时展示与键入值相关的记事条目标题
-      if (this.data.noteDisplay) {      
+      if (this.data.noteDisplay) {
         //隐藏记事展示，开启检索功能
         this.data.note.forEach((ele, index, origin) => {
           this.data.note[index].style.pullOutDelete = 750;
@@ -268,14 +253,14 @@ Page({
       this.setData({ note: this.data.note });
     }
     jumpNow = true;
-    this.setData({ anchor: ["none"] });
+    this.anchor = ["changeBGI"];
     wx.setStorageSync("bgiCurrent", this.data.current);
     getApp().globalData.current = this.data.curent;
   },
   tapMove(res) {
     if (lock) {
       lock = !lock;
-      this.setData({ anchor: ["X", res.changedTouches[0].pageX] });
+      this.anchor = ["pullOut", res.changedTouches[0].pageX];
       this.data.note.forEach((ele, index, origin) => {
         if (ele.style.pullOutDelete !== 750 || ele.style.pullOutMenu !== 450) {
           ele.style.pullOutDelete = 750;
@@ -284,11 +269,11 @@ Page({
         }
       });
     }
-    if (this.data.anchor[0] === "X") {
+    if (this.anchor[0] === "pullOut") {
       var index = res.currentTarget.id;
       var pullOutDelete = this.data.note[index].style.pullOutDelete;
       var pullOutMenu = this.data.note[index].style.pullOutMenu;
-      var moveDistance = (res.changedTouches[0].pageX - this.data.anchor[1]) * this.data.SWT;
+      var moveDistance = (res.changedTouches[0].pageX - this.anchor[1]) * this.SWT;
       if ((pullOutDelete >= 638 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 105)) {
         if (pullOutMenu !== 450) this.data.note[index].style.pullOutMenu = 450;
         this.data.note[index].style.pullOutDelete = 750 - moveDistance;
@@ -406,10 +391,10 @@ Page({
     hasText + hasRecord + hasPhoto + hasVideo >= 2 && jumpNow ? canIJump = true : canIJump = false;
     if (lock) {
       lock = false;
-      this.setData({ anchor: ["Y", res.changedTouches[0].pageY] });
+      this.anchor = ["JumpToAnother", res.changedTouches[0].pageY];
     }
-    if (this.data.anchor[0] === "Y") {
-      var moveDistance = (res.changedTouches[0].pageY - this.data.anchor[1]) * this.data.SWT;
+    if (this.anchor[0] === "JumpToAnother") {
+      var moveDistance = (res.changedTouches[0].pageY - this.anchor[1]) * this.SWT;
       if (moveDistance >= 200 && canIJump) {
         jumpNow = false;
         if (this.data.textDisplay) {
@@ -544,7 +529,6 @@ Page({
         }
       } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
         jumpNow = false;
-        console.log(this.data.anchor, moveDistance);
         if (this.data.textDisplay) {
           this.setData({
             textDisplay: false,
@@ -620,7 +604,7 @@ Page({
           });
         }
       });
-    }else {
+    } else {
       this.setData({
         noteDisplay: true,
         textDisplay: false
@@ -814,11 +798,11 @@ Page({
   /* 新建记事区 */
   //新建记事按钮：按下则跳转到写记事页
   createNote(res) {
-    if (this.data.note.length <= 12) {
+    if (this.data.note.length < 12) {
       wx.redirectTo({
         url: "../CreateNote/CreateNote"
       });
-    }else {
+    } else {
       wx.showModal({
         title: "读记事",
         content: "记事条目已达上限！",

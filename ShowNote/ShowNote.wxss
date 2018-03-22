@@ -4,7 +4,7 @@ page {
 }
 
 #background {
-  position: absolute;
+  position: absolute; 
   height: 93%;
   width: 100%;
   z-index: -1;
@@ -23,6 +23,7 @@ page {
 }
 
 #mainFn {
+  position: absolute; 
   height: 100%;
   width: 100%;
 }
@@ -61,6 +62,8 @@ page {
   width: 100%;
 }
 .searchZone .result {
+  position: relative;
+  top: 7%;
   height: 85%;
   width: 100%;
 }
@@ -71,7 +74,7 @@ page {
   border: 6rpx solid #00f;
   border-radius: 15rpx;
   background-color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 3rpx;
+  margin-top: 4.5rpx;
 }
 .searchZone .result .showResult:hover {
   box-sizing: border-box;
@@ -86,7 +89,7 @@ page {
 
 .readingZone {
   position: relative;
-  bottom: 100%;
+  bottom: 93%;
   height: 85%;
   width: 100%;
 }
@@ -195,15 +198,14 @@ page {
 }
 
 .creatingZone {
-  position: relative;
+  position: absolute;
   height: 8%;
   width: 100%;
-  bottom: 100%;
+  bottom: 0;
 }
 .creatingZone button {
   height: 100%;
   width: 100%;
-  bottom: 0;
   display: flex;
   justify-content: center;
   align-items: center;

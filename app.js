@@ -17,7 +17,7 @@ App({
    */
   onLaunch: function (res) {
     console.log("MultiNote onLaunch");
-    if (!wx.getStorageSync("note")) wx.setStorageSync("", []);
+    if (!wx.getStorageSync("note")) wx.setStorageSync("note", []);
   },
 
   /**

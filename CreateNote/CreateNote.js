@@ -272,7 +272,7 @@ Page({
     var moveDistance = res.changedTouches[0].pageX - this.data.anchor;
     if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
       lockB = false;
-      if (moveDistance < 0 && this.data.current < this.data.bgiQueue.length - 1) {
+      if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
         this.setData({ current: this.data.current + 1 });
       } else if (moveDistance > 0 && this.data.current !== 0) {
         this.setData({ current: this.data.current - 1 });
@@ -289,7 +289,7 @@ Page({
     if (res.type === "input") {
       if (res.detail.value.length <= 30) {
         if (/\s/g.test(res.detail.value.split("")[0])) {
-          this.setData({ title: "" });
+          this.setData({ title: toShowNoteCargo.note.title });
           wx.showToast({
             title: "首字符不能为空",
             image: "../images/warning.png"

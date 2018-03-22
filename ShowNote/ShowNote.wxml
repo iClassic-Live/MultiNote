@@ -9,21 +9,18 @@
 
 <scroll-view id="mainFn" wx:if="{{mainFnDisplay}}">
 
-  <view class="upperMask" style="height:{{upperMaskHeight}}%"></view>
-  <view class="bottomMask" style="height:{{bottomMaskHeight}}%"></view>
-
-  <view class="searchZone common" style="background-color:{{bgc}}">
+  <view class="searchZone" style="background-color:{{bgc}}">
     <view class="search">
-      <input type="text" placeholder="{{searchNote}}" focus="{{canISearch}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+      <input type="text" placeholder="{{searchNote}}" disabled="{{!getUseAccess}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
     </view>
-    <view class="result" style="margin-top:{{mgt + 6}}rpx;">
+    <view class="result">
       <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
         <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
       </view>
     </view>
   </view>
 
-  <scroll-view class="readingZone common" style="margin-top:{{mgt + 3}}rpx;" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
+  <scroll-view class="readingZone" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
 bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
@@ -53,7 +50,7 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
   </scroll-view>
 
    <view class="creatingZone common">
-     <button class="createNote" bindtap="createNote">
+     <button disabled="{{!getUseAccess}}" class="createNote" bindtap="createNote">
       <text>{{createNote}}</text>
      </button> 
   </view> 
