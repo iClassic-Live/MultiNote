@@ -2,6 +2,9 @@
 
 /* 读记事页初始化 */
 
+//获取用户本机的相对像素比
+const SWT = 750 / wx.getSystemInfoSync().screenWidth;
+
 var lockA = true;
 var lockB = true;
 
@@ -11,6 +14,7 @@ var fromCreateNoteCargo; //接收来自写记事页的数据的载体
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
 var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
+var anchor = ["changeBGI"]; //相应滑动操作的起始标识
 
 //语音记事初始化
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部 audio 上下文
@@ -26,23 +30,27 @@ Page({
   /* 页面的初始数据 */
   data: {
 
-    current: getApp().globalData.current,
-    bgiQueue: getApp().globalData.bgiQueue,
+    //背景图切换功能初始化
+    current: getApp().globalData.current, //设定背景图所在滑块序号
+    bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
 
-    //主功能区、录像记事查看组件切换功能初始化，默认主功能区启动，其他功能区待命
-    mainFnDisplay: true,
-    videoDisplay: false,
+    //主功能区、视频查看组件切换功能初始化：默认主功能区启动，其他功能区待命
+    mainFnDisplay: true, //主功能区
+    videoDisplay: false, //视频查看组件
 
     //主功能区功能初始化
 
-    getUseAccess: true,
+    //记事检索和记事创建功能使用权限初始化
+    getUseAccess: true, //当正在查阅某项记事时记事检索和记事创建功能将不允许能使用
 
+    //记事检索功能初始化
     searchNote: "记事检索", //输入框为空时的提示内容
     resultKey: null, //检索信息的key值
     result: [], //记事检索结果汇总，默认为空
 
+    //记事列表展示功能初始化
     note: wx.getStorageSync("note"), //全部记事信息的渲染
-    noteIndex: null,
+    noteIndex: null, //正在查看的记事的索引
     noteDisplay: true, //记事区Display，默认展示，其他记事查看或记事检索时隐藏
     textDisplay: false, //文本记事Display，默认隐藏
     text: null, //文本记事内容，默认为空
@@ -51,7 +59,8 @@ Page({
     photoDisplay: false,  //照相记事Display，默认隐藏
     img: null, //照相记事内容，默认为空
 
-    createNote: "新建记事", //新建记事按钮字样\xa0为空格符
+    //记事创建功能更初始化
+    createNote: "新建记事", //新建记事按钮字样
 
 
     //录像记事查看组件功能初始化
@@ -62,8 +71,6 @@ Page({
   /* 生命周期函数--监听页面加载 */
   onLoad: function (options) {
     console.log("ShowNote onLoad");
-    this.SWT = 750 / wx.getSystemInfoSync().screenWidth;
-    this.anchor = ["changeBGI"];
     this.setData({ current: wx.getStorageSync("bgiCurrent") || 0 });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note");
@@ -94,7 +101,7 @@ Page({
       if (!this.data.noteDisplay) {
         if (this.data.getUseAccess) this.setData({ getUseAccess: false });
       } else {
-        if(!this.data.getUseAccess) this.setData({ getUseAccess: true });
+        if (!this.data.getUseAccess) this.setData({ getUseAccess: true });
       }
     }, 10);
   },
@@ -108,7 +115,6 @@ Page({
   /* 生命周期函数--监听页面初次渲染完成 */
   onReady: function () {
     console.log("ShowNote onReady");
-    this.SWT = 750 / wx.getSystemInfoSync().screenWidth;
   },
 
   /* 生命周期函数--监听页面隐藏 */
@@ -126,10 +132,10 @@ Page({
   changeBackgroundImage(res) {
     if (lockA) {
       lockA = false;
-      this.anchor[1] = res.changedTouches[0].pageX;
+      anchor[1] = res.changedTouches[0].pageX;
     }
     var moveDistance;
-    if (this.anchor[0] === "changeBGI") moveDistance = this.anchor[1] - res.changedTouches[0].pageX;
+    if (anchor[0] === "changeBGI") moveDistance = anchor[1] - res.changedTouches[0].pageX;
     if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
       lockB = false;
       if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
@@ -195,9 +201,7 @@ Page({
   gotoResult(res) {
     var that = this;
     var id = res.currentTarget.id;
-    id.replace(/(\d)+/g, ($) => {
-      id = $;
-    });
+    id = id.match(/\d+/g)[0];
     if (this.data.resultScrolling) {
       this.setData({
         maskHeight: 6.7,
@@ -253,14 +257,14 @@ Page({
       this.setData({ note: this.data.note });
     }
     jumpNow = true;
-    this.anchor = ["changeBGI"];
+    anchor = ["changeBGI"];
     wx.setStorageSync("bgiCurrent", this.data.current);
     getApp().globalData.current = this.data.curent;
   },
   tapMove(res) {
     if (lock) {
       lock = !lock;
-      this.anchor = ["pullOut", res.changedTouches[0].pageX];
+      anchor = ["pullOut", res.changedTouches[0].pageX];
       this.data.note.forEach((ele, index, origin) => {
         if (ele.style.pullOutDelete !== 750 || ele.style.pullOutMenu !== 450) {
           ele.style.pullOutDelete = 750;
@@ -269,11 +273,11 @@ Page({
         }
       });
     }
-    if (this.anchor[0] === "pullOut") {
+    if (anchor[0] === "pullOut") {
       var index = res.currentTarget.id;
       var pullOutDelete = this.data.note[index].style.pullOutDelete;
       var pullOutMenu = this.data.note[index].style.pullOutMenu;
-      var moveDistance = (res.changedTouches[0].pageX - this.anchor[1]) * this.SWT;
+      var moveDistance = (res.changedTouches[0].pageX - anchor[1]) * SWT;
       if ((pullOutDelete >= 638 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 105)) {
         if (pullOutMenu !== 450) this.data.note[index].style.pullOutMenu = 450;
         this.data.note[index].style.pullOutDelete = 750 - moveDistance;
@@ -288,9 +292,7 @@ Page({
   //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
   deleteNote(res) {
     var index = res.currentTarget.id;
-    index.replace(/(\d)+/g, ($) => {
-      index = $;
-    });
+    index = index.match(/\d+/g)[0];
     var that = this;
     wx.showModal({
       title: "读记事",
@@ -391,10 +393,10 @@ Page({
     hasText + hasRecord + hasPhoto + hasVideo >= 2 && jumpNow ? canIJump = true : canIJump = false;
     if (lock) {
       lock = false;
-      this.anchor = ["JumpToAnother", res.changedTouches[0].pageY];
+      anchor = ["JumpToAnother", res.changedTouches[0].pageY];
     }
-    if (this.anchor[0] === "JumpToAnother") {
-      var moveDistance = (res.changedTouches[0].pageY - this.anchor[1]) * this.SWT;
+    if (anchor[0] === "JumpToAnother") {
+      var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
       if (moveDistance >= 200 && canIJump) {
         jumpNow = false;
         if (this.data.textDisplay) {
@@ -563,7 +565,7 @@ Page({
   //开启读文本记事功能
   readText(res) {
     var index = res.currentTarget.id;
-    index.replace(/(\d)+/g, ($) => { index = $; });
+    index = index.match(/\d+/g)[0];
     var text = this.data.note[index].note.text;
     if (!!text) {
       this.data.note[index].style.pullOutMenu = 450;
@@ -614,7 +616,7 @@ Page({
   //开启听语音记事功能
   listenRecord(res) {
     var index = res.currentTarget.id;
-    index.replace(/(\d)+/g, ($) => { index = $; });
+    index = index.match(/\d+/g)[0];
     if (this.data.note[index].note.record.length > 0) {
       this.data.note[index].style.pullOutMenu = 450;
       this.setData({
@@ -637,7 +639,7 @@ Page({
     var that = this;
     var index = res.currentTarget.id;
     if (!!index) {
-      index.replace(/(\d)+/g, ($) => { index = $; });
+      index = index.match(/\d+/g)[0];
       innerAudioContext.autoplay = true;
       innerAudioContext.src = this.data.playback[index].url;
       this.data.playback[index].opacity = 0.5;
@@ -668,7 +670,7 @@ Page({
   //开启看图片记事功能
   seePhoto(res) {
     var index = res.currentTarget.id;
-    index.replace(/(\d)+/g, ($) => { index = $; });
+    index = index.match(/\d+/g)[0];
     if (this.data.note[index].note.photo.length > 0) {
       this.data.note[index].style.pullOutMenu = 450;
       this.setData({
@@ -690,34 +692,28 @@ Page({
   photoCheck(res) {
     if (res.type === "longpress") {
       var index = res.currentTarget.id;
-      index.replace(/(\d)+/g, ($) => { index = $; });
+      console.log("index", res.currentTarget.id);
+      index = index.match(/\d+/g)[0];
       var that = this;
       wx.showModal({
         title: "读记事",
         content: "是否保存本张图片到手机相册？",
         success(res) {
           if (res.confirm) {
-            wx.getSetting({
+            wx.saveImageToPhotosAlbum({
+              filePath: that.data.img[index].url,
               success(res) {
-                if (!res.authSetting["scope.writePhotosAlbum"]) {
-                  wx.authorize({ scope: "scope.writePhotosAlbum" });
-                }
-                wx.saveImageToPhotosAlbum({
-                  filePath: that.data.img[index].url,
-                  success(res) {
-                    wx.showToast({
-                      title: "保存操作成功！",
-                      image: "../images/success.png",
-                      mask: true
-                    });
-                  },
-                  fail(res) {
-                    wx.showToast({
-                      title: "保存操作失败！",
-                      image: "../images/error.png",
-                      mask: true
-                    });
-                  }
+                wx.showToast({
+                  title: "保存操作成功！",
+                  image: "../images/success.png",
+                  mask: true
+                });
+              },
+              fail(res) {
+                wx.showToast({
+                  title: "保存操作失败！",
+                  image: "../images/error.png",
+                  mask: true
                 });
               }
             });
@@ -735,7 +731,7 @@ Page({
   //开启看录像记事功能
   watchVideo(res) {
     var index = res.currentTarget.id;
-    index.replace(/(\d)+/g, ($) => { index = $; });
+    index = index.match(/\d+/g)[0];
     if (!!this.data.note[index].note.video) {
       this.data.note[index].style.pullOutMenu = 450;
       this.setData({

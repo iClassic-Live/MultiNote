@@ -11,7 +11,7 @@
 
   <view class="searchZone" style="background-color:{{bgc}}">
     <view class="search">
-      <input type="text" placeholder="{{searchNote}}" disabled="{{!getUseAccess}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+      <input type="text" placeholder="{{searchNote}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
     </view>
     <view class="result">
       <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
@@ -40,10 +40,10 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
     <view class="record" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck" bindtouchmove="jumpToAnother">
       <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
     </view>
-    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindlongpress="photoCheck" bindtouchmove="jumpToAnother">
+    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="photoCheck" bindtouchmove="jumpToAnother">
       <swiper>
-        <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
-          <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" bindtap="photoCheck"></image>
+        <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
+          <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" bindlongpress="photoCheck"></image>
         </swiper-item>
       </swiper>
     </view>
