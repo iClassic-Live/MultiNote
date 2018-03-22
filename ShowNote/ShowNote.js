@@ -89,9 +89,9 @@ Page({
     note.forEach((ele, index, origin) => {
       ele.id = index;
       ele.style.opacity = 1,
-        ele.style.pullOutDelete = 750,
-        ele.style.pullOutMenu = 450,
-        ele.style.bgc = "none"
+      ele.style.pullOutDelete = 120,
+      ele.style.pullOutMenu = 300,
+      ele.style.bgc = "rgba(255, 255, 255, 0.4)"
     });
     wx.setStorageSync("note", note);
     this.setData({ note: note });
@@ -204,7 +204,6 @@ Page({
     id = id.match(/\d+/g)[0];
     if (this.data.resultScrolling) {
       this.setData({
-        maskHeight: 6.7,
         noteDisplay: true,
         resultKey: null,
         result: []
@@ -238,21 +237,20 @@ Page({
     tapTime = new Date().getTime();
   },
   tapEnd(res) {
-    tapTime = new Date().getTime() - tapTime;
     lock = true;
     lockA = true;
-    lockB = true;
-    if (!!res.currentTarget.id && jumpNow) {
+    lockB = true;   
+    if (/\d+/g.test(res.currentTarget.id) && jumpNow) {
       var style = this.data.note[res.currentTarget.id].style
-      if (style.pullOutDelete < 700) {
-        this.data.note[res.currentTarget.id].style.pullOutDelete = 640;
-      } else {
-        this.data.note[res.currentTarget.id].style.pullOutDelete = 750;
+      if (style.pullOutDelete > 0 && style.pullOutDelete < 40) {
+        this.data.note[res.currentTarget.id].style.pullOutDelete = 0;
+      } else if (style.pullOutDelete > 0) {
+        this.data.note[res.currentTarget.id].style.pullOutDelete = 120;
       }
-      if (style.pullOutMenu < 250) {
-        this.data.note[res.currentTarget.id].style.pullOutMenu = 100;
-      } else {
-        this.data.note[res.currentTarget.id].style.pullOutMenu = 450;
+      if (style.pullOutMenu > 0 && style.pullOutMenu < 100) {
+        this.data.note[res.currentTarget.id].style.pullOutMenu = 0;
+      } else if (style.pullOutMenu > 0) {
+        this.data.note[res.currentTarget.id].style.pullOutMenu = 300;
       }
       this.setData({ note: this.data.note });
     }
@@ -266,9 +264,9 @@ Page({
       lock = !lock;
       anchor = ["pullOut", res.changedTouches[0].pageX];
       this.data.note.forEach((ele, index, origin) => {
-        if (ele.style.pullOutDelete !== 750 || ele.style.pullOutMenu !== 450) {
-          ele.style.pullOutDelete = 750;
-          ele.style.pullOutMenu = 450;
+        if (ele.style.pullOutDelete !== 120 || ele.style.pullOutMenu !== 300) {
+          ele.style.pullOutDelete = 120;
+          ele.style.pullOutMenu = 300;
           this.setData({ note: this.data.note });
         }
       });
@@ -278,13 +276,13 @@ Page({
       var pullOutDelete = this.data.note[index].style.pullOutDelete;
       var pullOutMenu = this.data.note[index].style.pullOutMenu;
       var moveDistance = (res.changedTouches[0].pageX - anchor[1]) * SWT;
-      if ((pullOutDelete >= 640 && pullOutDelete <= 750) && (moveDistance > 0 && moveDistance < 110)) {
-        if (pullOutMenu !== 450) this.data.note[index].style.pullOutMenu = 450;
-        this.data.note[index].style.pullOutDelete = 750 - moveDistance;
+      if ((pullOutDelete >= 0 && pullOutDelete <= 120) && (moveDistance > 0 && Math.abs(moveDistance) < 120)) {
+        if (pullOutMenu !== 300) this.data.note[index].style.pullOutMenu = 300;
+        this.data.note[index].style.pullOutDelete = 120 - Math.abs(moveDistance);
       }
-      if ((pullOutMenu >= 100 && pullOutMenu <= 450) && (moveDistance < 0 && moveDistance > -350)) {
-        if (pullOutDelete !== 750) this.data.note[index].style.pullOutDelete = 750;
-        this.data.note[index].style.pullOutMenu = 450 + moveDistance;
+      if ((pullOutMenu >= 0 && pullOutMenu <= 300) && (moveDistance < 0 && Math.abs(moveDistance) < 300)) {
+        if (pullOutDelete !== 120) this.data.note[index].style.pullOutDelete = 120;
+        this.data.note[index].style.pullOutMenu = 300 - Math.abs(moveDistance);
       }
       this.setData({ note: this.data.note });
     }
@@ -354,9 +352,9 @@ Page({
     //当删除键或记事查看菜单已被拉出时的拉出取消操作
     let sign;
     this.data.note.forEach((ele, index, origin) => {
-      if (ele.style.pullOutDelete !== 750 || ele.style.pullOutMenu !== 450) {
-        ele.style.pullOutDelete = 750;
-        ele.style.pullOutMenu = 450;
+      if (ele.style.pullOutDelete !== 120 || ele.style.pullOutMenu !== 300) {
+        ele.style.pullOutDelete = 120;
+        ele.style.pullOutMenu = 300;
         this.setData({ note: this.data.note });
         sign = true;
       }

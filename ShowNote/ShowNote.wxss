@@ -106,37 +106,43 @@ page {
   margin-top: 4.5rpx;
   background-color: rgba(255, 255, 255, 0.4);
 }
-.readingZone .note input {
+.readingZone .note .title {
+  position: absolute;
+  height: 69rpx;
+  width: 100%;
+}
+.readingZone .note .title input {
   height: 100%;
   padding: 0 1%;
 }
 .readingZone .note .delete {
-  position: relative;
-  height: 100%;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  box-sizing: border-box;
+  height: 69rpx;
+  border: 4.5rpx solid rgba(255, 255, 255, 0);
+  left: 0;
+  z-index: 99;
 }
 .readingZone .note .delete view {
-  height: 60rpx;
-  line-height: 60rpx;
-  width: 2em;
-  text-align: center;
-  padding: 0 15rpx;
-  background-color: red;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 0.5em;
+  border-radius: 12.5rpx;
+  background-color: rgba(255, 0, 0, 1);
   color: #000;
   font-weight: bold;
-  border-radius: 12.5rpx;
 }
 .readingZone .note .menu {
-  position: relative;
+  position: absolute;
+  right: 0;
   display: flex;
   flex-direction: row;
   align-items: center; 
-  height: 100%;
+  height: 69rpx;
   width: 40%;
-  z-index: 10;
+  z-index: 99;
 }
 .readingZone .note .menu image {
   margin: 5rpx 10rpx 0;

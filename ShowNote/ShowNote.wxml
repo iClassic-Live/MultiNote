@@ -23,15 +23,19 @@
   <scroll-view class="readingZone" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
 bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
-      <input class="title" disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
-      <view class="menu" style="left:{{item.style.pullOutMenu}}rpx">
+      <view class="title">
+        <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
+      </view>
+      <view class="menu" style="right:{{-item.style.pullOutMenu}}rpx">
         <image id="text_{{item.id}}" src="../images/text.png" catchtap="readText"></image>
         <image id="record_{{item.id}}"  src="../images/voice.png" catchtap="listenRecord"></image>
         <image id="camera_{{item.id}}"  src="../images/camera.png" catchtap="seePhoto"></image>
         <image id="shoot_{{item.id}}" src="../images/VCR.png" catchtap="watchVideo"></image>
       </view>
-      <view class="delete" style="right:{{item.style.pullOutDelete}}rpx">
-        <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">删除</view>
+      <view class="delete" style="left:{{-item.style.pullOutDelete}}rpx">
+        <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">
+          <text>删除</text>
+        </view>
       </view>
     </view>
     <view class="text" wx:if="{{textDisplay}}" bindtouchmove="jumpToAnother">
