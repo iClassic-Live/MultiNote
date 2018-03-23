@@ -1,3 +1,4 @@
+console.clear();
 App({
 
   globalData: {
@@ -6,8 +7,9 @@ App({
       "../images/bgi1.jpg",
       "../images/bgi2.jpg",
       "../images/bgi3.jpg",
-      "../images/bgi4.gif",      
-      "../images/bgi5.gif"
+      "../images/bgi4.gif",
+      "../images/bgi5.webp",
+      "../images/bgi6.webp"
     ]
   },
 

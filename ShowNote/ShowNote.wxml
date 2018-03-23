@@ -39,15 +39,15 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       </view>
     </view>
     <view class="text" wx:if="{{textDisplay}}" catchtouchmove="jumpToAnother">
-      <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}" catchtouchstart="tapStart" catchtouchend="tapEnd" catchtap="textCheck"></textarea>
+      <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}" bindtouchstart="tapStart"bindtouchend="tapEnd" bindtap="textCheck"></textarea>
     </view>
-    <view class="record" wx:if="{{recordDisplay}}" catchtouchstart="tapStart" catchtouchend="tapEnd" catchtap="recordCheck" catchtouchmove="jumpToAnother">
-      <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
+    <view class="record" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck" catchtouchmove="jumpToAnother">
+      <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" bindtap="recordCheck">{{index + 1}}</button>
     </view>
-    <view class="photo" wx:if="{{photoDisplay}}" catchtouchstart="tapStart" catchtouchend="tapEnd" catchtap="photoCheck" catchtouchmove="jumpToAnother">
+    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="photoCheck" catchtouchmove="jumpToAnother">
       <swiper>
         <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
-          <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" bindlongpress="photoCheck"></image>
+          <image id="photo_{{item.photo_index}}" mode="aspectFill" src="{{item.url}}" bindlongpress="photoCheck"></image>
         </swiper-item>
       </swiper>
     </view>
@@ -62,5 +62,5 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
 </scroll-view>
 
 <scroll-view id="videoFn" wx:if="{{videoDisplay}}">
-  <video src="{{videoSrc}}" catchlongpress="videoCheck" catchtouchend="tapEnd" catchtouchmove="jumpToAnother"></video>
+  <video src="{{videoSrc}}" bindlongpress="videoCheck" bindtouchend="tapEnd" catchtouchmove="jumpToAnother"></video>
 </scroll-view>
