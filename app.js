@@ -6,10 +6,10 @@ App({
     bgiQueue: [
       "../images/bgi1.jpg",
       "../images/bgi2.jpg",
-      "../images/bgi3.jpg",
-      "../images/bgi4.gif",
-      "../images/bgi5.webp",
-      "../images/bgi6.webp"
+      "../images/bgi3.gif",
+      "../images/bgi4.jpg",
+      "../images/bgi5.jpg",
+      "../images/bgi6.gif"
     ]
   },
 
