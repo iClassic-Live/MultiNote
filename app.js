@@ -2,6 +2,7 @@ console.clear();
 App({
 
   globalData: {
+    version: "MultiNote 1.15.1",
     current: wx.getStorageSync("bgiCurrent") || 0,
     bgiQueue: [
       "../images/bgi1.jpg",

@@ -6,6 +6,7 @@ var lockB = true;
   Page({
 
       data: {
+        version: getApp().globalData.version,
         current: getApp().globalData.current,
         bgiQueue: getApp().globalData.bgiQueue
       },
