@@ -590,7 +590,9 @@ Page({
   },
   //文本记事操作：复制文本内容或退出查看
   textCheck(res) {
-    tapTime = new Date().getTime() - tapTime;
+    if (tapTime.toString().length === 13) {
+      tapTime = new Date().getTime() - tapTime;
+    }else tapTime = 0;
     if (tapTime > 200) {
       var that = this;
       wx.setClipboardData({
@@ -693,7 +695,6 @@ Page({
   photoCheck(res) {
     if (res.type === "longpress") {
       var index = res.currentTarget.id;
-      console.log("index", res.currentTarget.id);
       index = index.match(/\d+/g)[0];
       var that = this;
       wx.showModal({
@@ -795,7 +796,7 @@ Page({
   /* 新建记事区 */
   //新建记事按钮：按下则跳转到写记事页
   createNote(res) {
-    var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5 - 1);
+    let num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5 - 1);
     if (this.data.note.length < num) {
       wx.redirectTo({ url: "../CreateNote/CreateNote" });
     } else {
