@@ -38,13 +38,13 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
         </view>
       </view>
     </view>
-    <view class="text" wx:if="{{textDisplay}}" bindtouchmove="jumpToAnother">
-      <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="textCheck"></textarea>
+    <view class="text" wx:if="{{textDisplay}}" catchtouchmove="jumpToAnother">
+      <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}" catchtouchstart="tapStart" catchtouchend="tapEnd" catchtap="textCheck"></textarea>
     </view>
-    <view class="record" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck" bindtouchmove="jumpToAnother">
+    <view class="record" wx:if="{{recordDisplay}}" catchtouchstart="tapStart" catchtouchend="tapEnd" catchtap="recordCheck" catchtouchmove="jumpToAnother">
       <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
     </view>
-    <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="photoCheck" bindtouchmove="jumpToAnother">
+    <view class="photo" wx:if="{{photoDisplay}}" catchtouchstart="tapStart" catchtouchend="tapEnd" catchtap="photoCheck" catchtouchmove="jumpToAnother">
       <swiper>
         <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
           <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" bindlongpress="photoCheck"></image>
@@ -62,5 +62,5 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
 </scroll-view>
 
 <scroll-view id="videoFn" wx:if="{{videoDisplay}}">
-  <video src="{{videoSrc}}" bindlongpress="videoCheck" bindtouchend="tapEnd" bindtouchmove="jumpToAnother"></video>
+  <video src="{{videoSrc}}" catchlongpress="videoCheck" catchtouchend="tapEnd" catchtouchmove="jumpToAnother"></video>
 </scroll-view>

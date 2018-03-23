@@ -393,9 +393,10 @@ Page({
       lock = false;
       anchor = ["JumpToAnother", res.changedTouches[0].pageY];
     }
-    if (anchor[0] === "JumpToAnother") {
+    if (anchor[0] === "JumpToAnother" && jumpNow) {
       var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
       if (moveDistance >= 200 && canIJump) {
+        console.log("JumpDown");
         jumpNow = false;
         if (this.data.textDisplay) {
           this.setData({
@@ -462,6 +463,7 @@ Page({
           if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
         }
       } else if (moveDistance <= -200 && canIJump) {
+        console.log("JumpUp");
         jumpNow = false;
         if (this.data.videoDisplay) {
           this.setData({
@@ -552,6 +554,7 @@ Page({
         }
         this.setData({ noteDisplay: true });
       }
+      if (this.data.noteDisplay) console.log("JumpOut");
       if (this.data.videoDisplay) {
         this.setData({ mainFnDisplay: false });
       } else {
