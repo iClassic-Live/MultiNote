@@ -569,7 +569,7 @@ Page({
     index = index.match(/\d+/g)[0];
     var text = this.data.note[index].note.text;
     if (!!text) {
-      this.data.note[index].style.pullOutMenu = 450;
+      this.data.note[index].style.pullOutMenu = 300;
       this.setData({
         text: text,
         noteDisplay: false,
@@ -619,7 +619,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
     if (this.data.note[index].note.record.length > 0) {
-      this.data.note[index].style.pullOutMenu = 450;
+      this.data.note[index].style.pullOutMenu = 300;
       this.setData({
         note: this.data.note,
         playback: this.data.note[index].note.record,
@@ -673,7 +673,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
     if (this.data.note[index].note.photo.length > 0) {
-      this.data.note[index].style.pullOutMenu = 450;
+      this.data.note[index].style.pullOutMenu = 300;
       this.setData({
         img: this.data.note[index].note.photo,
         noteDisplay: false,
@@ -734,7 +734,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
     if (!!this.data.note[index].note.video) {
-      this.data.note[index].style.pullOutMenu = 450;
+      this.data.note[index].style.pullOutMenu = 300;
       this.setData({
         note: this.data.note,
         mainFnDisplay: false,
