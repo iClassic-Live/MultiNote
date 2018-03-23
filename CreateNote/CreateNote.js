@@ -41,6 +41,8 @@ Page({
     duration: 0,
     bgiQueue: getApp().globalData.bgiQueue,
 
+    height: null,
+
     //主功能区、相机组件、视频记事预览组件、图片记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
     mainFnDisplay: true,
     cameraFnDisplay: false,

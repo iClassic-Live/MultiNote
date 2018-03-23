@@ -55,24 +55,29 @@ page {
       background-color: rgba(255, 255, 255, 0.4);
     }
     .textZone .text {
+      height: 80%;      
       width: 100%;
-      height: 100%;
     }
     .textZone .text textarea {
       box-sizing: border-box;
-      height: 80%;
+      height: 100%;
       width: 100%;
       padding: 0 1%;
+      background: -webkit-gradient(linear, left top, left bottom,	from(#000), color-stop(5%, rgba(255, 255, 255,0)));
+      background-size: 100% 1em;
+      font-family: Droid Sans;
     }
     .textZone .font {
-      position: relative;
-      left: 85%;
-      bottom: 100rpx;
-      z-index: 999;
+      position: absolute;
+      right: 1.5vh;
     }
-    .textZone .font image {
-      height: 90rpx;
-      width: 90rpx;
+    .textZone .font picker {
+      position: relative;
+      bottom: 1.5vh;
+    }
+    .textZone .font picker image {
+      height:9vh;
+      width: 9vh;
     }
 
     /* 其他记事区 */

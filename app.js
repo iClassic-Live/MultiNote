@@ -1,4 +1,3 @@
-console.clear();
 App({
 
   globalData: {

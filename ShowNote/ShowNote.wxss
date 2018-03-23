@@ -28,18 +28,6 @@ page {
   width: 100%;
 }
 
-.upperMask {
-  position: absolute;
-  width: 100%;
-  z-index: 999;
-}
-.bottomMask {
-  position: absolute;
-  width: 100%;
-  bottom: 0;
-  z-index: 999;  
-}
-
 .searchZone {
   position: relative;
   bottom: 7%;
@@ -164,9 +152,12 @@ page {
   background-color: rgba(255, 255, 255, 0.4);
 }
 .readingZone .text textarea {
+  box-sizing: border-box;
   height: 100%;
   width: 100%;
   padding: 0 1%;
+  background: -webkit-gradient(linear, left top, left bottom, from(#000), color-stop(5%, rgba(255, 255, 255, 0)));
+  background-size: 100% 1em;
 }
 .readingZone .record {
   height: 100%;

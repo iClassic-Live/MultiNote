@@ -15,7 +15,7 @@
     </view>
     <view class="textZone">
       <view class="text">
-        <textarea class="text" placeholder="{{textDefault}}" value="{{text}}" maxlength="none" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" bindfocus="textContent" bindinput="textContent" bindblur="textContent"></textarea>
+        <textarea class="text" placeholder="{{textDefault}}" value="{{text}}" maxlength="none" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}};" bindfocus="textContent" bindinput="textContent" bindblur="textContent"></textarea>
       </view>
       <view class="font">
         <picker mode="multiSelector" value="{{fontIndex}}" range="{{font}}" bindtap="getFontSet" bindcolumnchange="changeFont">

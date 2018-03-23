@@ -792,10 +792,9 @@ Page({
   /* 新建记事区 */
   //新建记事按钮：按下则跳转到写记事页
   createNote(res) {
-    if (this.data.note.length < 12) {
-      wx.redirectTo({
-        url: "../CreateNote/CreateNote"
-      });
+    var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5 - 1);
+    if (this.data.note.length < num) {
+      wx.redirectTo({ url: "../CreateNote/CreateNote" });
     } else {
       wx.showModal({
         title: "读记事",
