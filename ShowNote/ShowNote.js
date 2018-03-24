@@ -300,16 +300,14 @@ Page({
   deleteNote(res) {
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
+    that.data.note[index].style.pullOutDelete = 120;
+    that.setData({ note: that.data.note });
     var that = this;
     wx.showModal({
       title: "读记事",
       content: "是否删除本条记事？",
       success(res) {
         if (res.confirm) {
-          if (that.data.note[index].style.pullOutDelete !== 120) {
-            that.data.note[index].style.pullOutDelete = 120;
-            that.setData({ note: that.data.note });
-          }
           var timer = setInterval(() => {
             that.data.note[index].style.opacity -= 0.1;
             that.setData({ note: that.data.note });
