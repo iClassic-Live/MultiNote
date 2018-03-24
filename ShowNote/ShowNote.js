@@ -300,8 +300,8 @@ Page({
   deleteNote(res) {
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
-    that.data.note[index].style.pullOutDelete = 120;
-    that.setData({ note: that.data.note });
+    this.data.note[index].style.pullOutDelete = 120;
+    this.setData({ note: this.data.note });
     var that = this;
     wx.showModal({
       title: "读记事",
