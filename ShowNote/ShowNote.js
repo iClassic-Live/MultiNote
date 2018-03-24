@@ -8,9 +8,6 @@ const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 var lockA = true;
 var lockB = true;
 
-//跨域传值载体初始化
-var fromCreateNoteCargo; //接收来自写记事页的数据的载体
-
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
 var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
@@ -31,7 +28,8 @@ Page({
   data: {
 
     //背景图切换功能初始化
-    current: getApp().globalData.current, //设定背景图所在滑块序号
+    duration: 0, //背景图滑块切换的过渡时间
+    current: getApp().globalData.current, //背景图所在滑块序号
     bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
 
     //主功能区、视频查看组件切换功能初始化：默认主功能区启动，其他功能区待命
@@ -74,24 +72,22 @@ Page({
     this.setData({ current: wx.getStorageSync("bgiCurrent") || 0 });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note");
-    var newNote = wx.getStorageSync("newNote");
-    if (!!newNote) wx.removeStorageSync("newNote");
-    var editNote = wx.getStorageSync("editNote");
-    if (!!editNote) wx.removeStorageSync("editNote");
-    if (!!newNote) {
-      if (!note) note = [];
-      fromCreateNoteCargo = newNote;
-      note.push(fromCreateNoteCargo);
-    } else if (!!editNote) {
-      fromCreateNoteCargo = editNote;
-      note[fromCreateNoteCargo.id] = fromCreateNoteCargo;
-    } else if (!note) wx.redirectTo({ url: "../Home/Home" });
+    var noting = wx.getStorageSync("noting");
+    if (!!noting) {
+      wx.removeStorageSync("noting");
+      if (noting.info.noteType === "new") {
+        if (!note) note = [];
+        note.push(noting);
+      } else if (noting.info.noteType === "edit") {
+        note[noting.id] = noting;
+      } else if (!note) wx.redirectTo({ url: "../Home/Home" });
+    }
     note.forEach((ele, index, origin) => {
       ele.id = index;
-      ele.style.opacity = 1,
-      ele.style.pullOutDelete = 120,
-      ele.style.pullOutMenu = 300,
-      ele.style.bgc = "rgba(255, 255, 255, 0.4)"
+      ele.style.opacity = 1;
+      ele.style.pullOutDelete = 120;
+      ele.style.pullOutMenu = 300;
+      ele.style.bgc = "rgba(255, 255, 255, 0.4)";
     });
     wx.setStorageSync("note", note);
     this.setData({ note: note });
@@ -104,6 +100,17 @@ Page({
         if (!this.data.getUseAccess) this.setData({ getUseAccess: true });
       }
     }, 10);
+    //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
+    var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
+    if (creatingSign[0][0] === "unchanged") {
+      creatingSign[1] = setInterval(() => {
+        var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+        if (creatingSign[0][1] > num) {
+          wx.setStorageSync("How Many Notes Can I Create", ["changed", num]);
+          clearInterval(creatingSign[1]);
+        }
+      });
+    }
   },
 
   /* 生命周期函数--监听页面显示 */
@@ -130,18 +137,20 @@ Page({
   /* 自定义用户交互逻辑 */
 
   changeBackgroundImage(res) {
-    if (lockA) {
-      lockA = false;
-      anchor[1] = res.changedTouches[0].pageX;
-    }
-    var moveDistance;
-    if (anchor[0] === "changeBGI") moveDistance = anchor[1] - res.changedTouches[0].pageX;
-    if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
-      lockB = false;
-      if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
-        this.setData({ current: this.data.current + 1 });
-      } else if (moveDistance < 0 && this.data.current !== 0) {
-        this.setData({ current: this.data.current - 1 });
+    if (res.changedTouches instanceof Array) {
+      if (lockA) {
+        lockA = false;
+        anchor[1] = res.changedTouches[0].pageX;
+      }
+      var moveDistance;
+      if (anchor[0] === "changeBGI") moveDistance = anchor[1] - res.changedTouches[0].pageX;
+      if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
+        lockB = false;
+        if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
+          this.setData({ current: this.data.current + 1 });
+        } else if (moveDistance < 0 && this.data.current !== 0) {
+          this.setData({ current: this.data.current - 1 });
+        }
       }
     }
   },
@@ -151,8 +160,8 @@ Page({
     if (res.type === "focus") { //记事检索框聚焦时关闭未关闭的记事的删除和菜单栏、
       //隐藏记事展示，开启检索功能
       this.data.note.forEach((ele, index, origin) => {
-        this.data.note[index].style.pullOutDelete = 750;
-        this.data.note[index].style.pullOutMenu = 450;
+        this.data.note[index].style.pullOutDelete = 120;
+        this.data.note[index].style.pullOutMenu = 300;
       });
       this.setData({
         bgc: "rgba(255, 255, 255, 0.4)",
@@ -163,8 +172,8 @@ Page({
       if (this.data.noteDisplay) {
         //隐藏记事展示，开启检索功能
         this.data.note.forEach((ele, index, origin) => {
-          this.data.note[index].style.pullOutDelete = 750;
-          this.data.note[index].style.pullOutMenu = 450;
+          this.data.note[index].style.pullOutDelete = 120;
+          this.data.note[index].style.pullOutMenu = 300;
         });
         this.setData({
           bgc: "rgba(255, 255, 255, 0.4)",
@@ -239,7 +248,7 @@ Page({
   tapEnd(res) {
     lock = true;
     lockA = true;
-    lockB = true;   
+    lockB = true;
     if (/\d+/g.test(res.currentTarget.id) && jumpNow) {
       var style = this.data.note[res.currentTarget.id].style
       if (style.pullOutDelete > 0 && style.pullOutDelete < 40) {
@@ -297,8 +306,8 @@ Page({
       content: "是否删除本条记事？",
       success(res) {
         if (res.confirm) {
-          if (that.data.note[index].style.pullOutDelete !== 750) {
-            that.data.note[index].style.pullOutDelete = 750;
+          if (that.data.note[index].style.pullOutDelete !== 120) {
+            that.data.note[index].style.pullOutDelete = 120;
             that.setData({ note: that.data.note });
           }
           var timer = setInterval(() => {
@@ -348,6 +357,7 @@ Page({
   },
   //取消滑动拉出的删除按键或菜单栏的展示
   cancel_editNote(res) {
+    console.log("get Tap");
     let index = res.currentTarget.id;
     //当删除键或记事查看菜单已被拉出时的拉出取消操作
     let sign;
@@ -374,7 +384,8 @@ Page({
           that.data.note[index].style.fontColor = that.fontColor;
           that.setData({ note: that.data.note });
           if (res.confirm) {
-            wx.setStorageSync("editNote", that.data.note[index]);
+            that.data.note[index].info.noteType = "edit";
+            wx.setStorageSync("noting", that.data.note[index]);
             wx.redirectTo({ url: "../CreateNote/CreateNote" });
           }
         }
@@ -592,7 +603,7 @@ Page({
   textCheck(res) {
     if (tapTime.toString().length === 13) {
       tapTime = new Date().getTime() - tapTime;
-    }else tapTime = 0;
+    } else tapTime = 0;
     if (tapTime > 200) {
       var that = this;
       wx.setClipboardData({
@@ -796,8 +807,16 @@ Page({
   /* 新建记事区 */
   //新建记事按钮：按下则跳转到写记事页
   createNote(res) {
-    let num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5 - 1);
-    if (this.data.note.length < num) {
+    var num = wx.getStorageSync("How Many Notes Can I Create");
+    if (num instanceof Array === false) {
+      var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+      wx.setStorageSync("How Many Notes Can I Create", ["unchanged", num]);
+      wx.showToast({
+        title: "缓存已被清空",
+        image: "../images/error.png"
+      });
+    }
+    if (this.data.note.length < num[1]) {
       wx.redirectTo({ url: "../CreateNote/CreateNote" });
     } else {
       wx.showModal({

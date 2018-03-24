@@ -27,7 +27,7 @@ var canIRecord = true; //用于监测当前是否正在进行语音记事的标�
 var recordTimer; //使语音记事结束的定时器
 var startRecord; //启动语音记事的定时器，防止因点击语音按钮导致出错
 
-var shootTimer;
+var shootTimer; //录像时长计时器的标识
 
 /* 页面构造器：页面功能初始化 */
 Page({
@@ -37,11 +37,10 @@ Page({
   /* 页面的初始数据 */
   data: {
 
-    current: getApp().globalData.current,
-    duration: 0,
-    bgiQueue: getApp().globalData.bgiQueue,
-
-    height: null,
+    //背景图切换功能初始化
+    duration: 0, //背景图滑块切换的过渡时间
+    current: getApp().globalData.current, //背景图所在滑块序号
+    bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
 
     //主功能区、相机组件、视频记事预览组件、图片记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
     mainFnDisplay: true,
@@ -49,21 +48,16 @@ Page({
     videoDisplay: false,
     photoDisplay: false,
 
-    //主功能区功能初始化
-    upperMaskHeight: 0, //上部蒙层高度
-    bottomMaskHeight: 0, //下部蒙层高度
-
     //记事标题功能初始化
     titleDefault: "记事标题", //标题文本为空时的字样，默认为记事标题
 
     //文本记事功能初始化
     textDefault: "记事文本", //记事文本为空时的字样，默认为记事文本
-    ifFontSet: false,
-    font: [["超小号", "小号", "默认", "大号", "超大号"], ["轻盈", "默认", "粗壮"], ["默认", "中国红", "罗兰紫", "深空蓝", "森林绿", "巧克力棕"]],
-    fontIndex: [2, 1, 0],
-    fontSize: "100%",
-    fontWeight: "normal",
-    fontColor: "#000",
+    font: [["超小号", "小号", "默认", "大号", "超大号"], ["轻盈", "默认", "粗壮"], ["默认", "中国红", "罗兰紫", "深空蓝", "森林绿", "巧克力棕"]], //字体样式选择器相应选择项的提示序列
+    fontIndex: [2, 1, 0], //字体样式选择器的展示序列索引
+    fontSize: "100%", //字体大小，默认原生大小
+    fontWeight: "normal", //字体粗细，默认原生粗细
+    fontColor: "#000", //字体颜色，默认为黑色
 
     //语音记事功能初始化
     recordAccess: false, //语音记事权限，默认false，权限关闭
@@ -77,13 +71,14 @@ Page({
     //记事保存功能初始化
     save_cancel: "取消记事", //保存/取消按钮的字样
 
-    flash: "off",
-    flashSet: "../images/notflash.png",
-    shootSign: 0,
-    cameraSet: "../images/photo.png",
-    changeMode: "../images/shoot.png",
-    shootNow: false,
-    qualitySet: "Normal"
+    //相机组件功能初始化
+    flash: "off", //闪光灯设置，默认关闭
+    flashSet: "../images/notflash.png", //闪光灯标识设定
+    shootSign: 0, //录像进行时闪动标识
+    cameraSet: "../images/photo.png", //拍摄按钮标识设定
+    changeMode: "../images/shoot.png", //拍摄类型切换标识设定
+    shootNow: false, //录像进行时标识，录像未进行时为false
+    qualitySet: "Normal" //照片质量设定，默认为普通
 
   },
 
@@ -162,8 +157,8 @@ Page({
       }
     });
     //监测当前是修改记事还是新建记事，并相应地为接下来的记事存储做准备
-    if (wx.getStorageSync("editNote")) {
-      toShowNoteCargo = wx.getStorageSync("editNote");
+    if (!!wx.getStorageSync("noting")) {
+      toShowNoteCargo = wx.getStorageSync("noting");
       console.log("用户开始修改记事", toShowNoteCargo);
       this.setData({
         title: toShowNoteCargo.note.title,
@@ -175,7 +170,7 @@ Page({
         fontColor: toShowNoteCargo.style.fontColor,
         fontIndex: toShowNoteCargo.info.fontIndex
       });
-      console.log("fontIndex" ,this.data.fontIndex);
+      console.log("fontIndex", this.data.fontIndex);
       console.log("各项记事存储情况如下",
         "\n记事标题：" + this.data.title,
         "\n记事文本：" + this.data.title,
@@ -199,11 +194,15 @@ Page({
           fontWeight: "normal",
           fontColor: "#000"
         },
-        info: { fontIndex: [2, 1, 0] }
+        info: {
+          noteType: "new",
+          fontIndex: [2, 1, 0]
+        }
       }
       console.log("toShowNoteCargo初始化情况", toShowNoteCargo);
     }
     //定时器扫描监测当前是否可以保存记事和相关记事的数目是否超出限定
+    var sign;
     scanning = setInterval(() => {
       //监测当前是否可以保存记事
       var title = toShowNoteCargo.note.title;
@@ -211,7 +210,7 @@ Page({
       var record = toShowNoteCargo.note.record;
       var photo = toShowNoteCargo.note.photo;
       var video = toShowNoteCargo.note.video;
-      if (!!title) { //只有在已写标题的情况下才可以保存记事，否则不允许保存
+      if (!!title && !sign) { //只有在已写标题的情况下才可以保存记事，否则不允许保存
         if (((!text && record.length === 0) && photo.length === 0) && !video) { //当有任意一种记事时可以保存记事，否则不允许保存
           this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
         } else {
@@ -239,6 +238,30 @@ Page({
   onShow: function (res) {
     console.log("CreateNote onShow");
     this.setData({ duration: 500 });
+    //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
+    var num = wx.getStorageSync("How Many Notes Can I Create");
+    if (num[0] === "unchanged") {
+      var length = wx.getStorageSync("note").length;
+      var ifCreatingNote = true;
+      if (wx.getStorageInfoSync().keys.indexOf("noting") !== -1) ifCreatingNote = false;
+      var timer = setInterval(() => {
+        var Num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+        if (num[1] > Num) {
+          wx.setStorageSync("How Many Notes Can I Create", ["changed", Num]);
+          if (length >= Num) {
+            if (ifCreatingNote) {
+              sign = true;
+              var content = "当前记事将不能保存，";
+            } else var content = "";
+            wx.showModal({
+              title: "写记事",
+              content: "警告：发现由于系统虚拟导航栏因在应用使用过程中被拉起导致应用视口高度发生变化，为保证应用功能正常，" + content + "您需要在目前基础上再删除" + (length - Num + 1) + "条记事才能创建新的记事，不便之处请您谅解！"
+            });
+            clearInterval(timer);
+          }
+        }
+      }, 10);
+    }
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
@@ -267,17 +290,19 @@ Page({
     getApp().globalData.current = this.data.curent;
   },
   changeBackgroundImage(res) {
-    if (lockA) {
-      lockA = false;
-      this.setData({ anchor: res.changedTouches[0].pageX });
-    }
-    var moveDistance = res.changedTouches[0].pageX - this.data.anchor;
-    if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
-      lockB = false;
-      if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
-        this.setData({ current: this.data.current + 1 });
-      } else if (moveDistance > 0 && this.data.current !== 0) {
-        this.setData({ current: this.data.current - 1 });
+    if (res.changedTouches instanceof Array) {
+      if (lockA) {
+        lockA = false;
+        this.setData({ anchor: res.changedTouches[0].pageX });
+      }
+      var moveDistance = res.changedTouches[0].pageX - this.data.anchor;
+      if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
+        lockB = false;
+        if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
+          this.setData({ current: this.data.current + 1 });
+        } else if (moveDistance > 0 && this.data.current !== 0) {
+          this.setData({ current: this.data.current - 1 });
+        }
       }
     }
   },
@@ -289,21 +314,38 @@ Page({
     if (this.data.playbackAccess) this.setData({ playbackAccess: false });
     if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     if (res.type === "input") {
-      if (res.detail.value.length <= 30) {
-        if (/\s/g.test(res.detail.value.split("")[0])) {
+      var value = res.detail.value;
+      if (/\s+/.test(value)) {
+        value = value.replace(/\s+/, "");
+        this.setData({ title: value });
+        if (value.length > 20) {
+          value = value.substring(0, 20);
+          toShowNoteCargo.note.title = value;
           this.setData({ title: toShowNoteCargo.note.title });
-          wx.showToast({
-            title: "首字符不能为空",
-            image: "../images/warning.png"
+          wx.showModal({
+            title: "写记事",
+            content: "警告：首字符不能为空格，且标题最长为二十字，相应空格已删除，且删除相应空格后超出的字符已删除",
+            showCancel: false
           });
-        } else toShowNoteCargo.note.title = res.detail.value;
-      } else {
-        this.setData({ title: res.detail.value.split("").slice(0, 30).join("") });
-        wx.showToast({
-          title: "标题最长三十字",
-          image: "../images/warning.png"
+        }else {
+          toShowNoteCargo.note.title = value;
+          this.setData({ title: toShowNoteCargo.note.title });
+          wx.showModal({
+            title: "写记事",
+            content: "警告：首字符不能为空格，相应空格已删除",
+            showCancel: false
+          });
+        }
+      }else if (value.length > 20) {
+        value = value.substring(0, 20);
+        toShowNoteCargo.note.title = value;
+        this.setData({ title: toShowNoteCargo.note.title });
+        wx.showModal({
+          title: "写记事",
+          content: "警告：标题最长为三十字，超出的字符已删除",
+          showCancel: false
         });
-      }
+      } else toShowNoteCargo.note.title = value;
     }
   },
 
@@ -316,9 +358,9 @@ Page({
     if (res.type === "input") {
       toShowNoteCargo.note.text = res.detail.value;
     } else if (res.type === "blur") {
-      if (res.detail.value.split("").length > 0 && !res.detail.value.trim()) {
+      if (res.detail.value.length > 0 && !res.detail.value.trim()) {
         toShowNoteCargo.note.text = "";
-        this.setData({ text: "" });
+        this.setData({ text: toShowNoteCargo.note.text });
         wx.showToast({
           title: "不能全输入空格",
           image: "../images/warning.png"
@@ -326,9 +368,8 @@ Page({
       }
     }
   },
+  //获取字体样式修改功能
   getFontSet(res) {
-    console.log("getFontSet");
-    this.setData({ ifFontSet: true });
     if (this.data.recordAccess) this.setData({ recordAccess: false });
     if (this.data.playbackAccess) this.setData({ playbackAccess: false });
     if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
@@ -1024,14 +1065,8 @@ Page({
           if (res.confirm) {
             console.log("MultiNote开始保存当前记事");
             //为当前记事创建同步缓存并跳转到读记事页
-            if (!wx.getStorageSync("editNote")) {
-              wx.setStorageSync("newNote", toShowNoteCargo);
-            } else {
-              console.log("toShowNoteCargo", toShowNoteCargo);
-              wx.setStorageSync("editNote", toShowNoteCargo);
-              console.log("需要修改的记事", wx.getStorageSync("editNote"));
-            }
-            if (!!wx.getStorageSync("newNote") || !!wx.getStorageSync("editNote")) {
+            wx.setStorageSync("noting", toShowNoteCargo);
+            if (!!wx.getStorageSync("noting")) {
               console.log("用户记事保存成功");
               console.log("toShowNoteCargo的记事存储状态", toShowNoteCargo);
               wx.showToast({

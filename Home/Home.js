@@ -6,9 +6,13 @@ var lockB = true;
   Page({
 
       data: {
+        //应用版本号显示
         version: getApp().globalData.version,
-        current: getApp().globalData.current,
-        bgiQueue: getApp().globalData.bgiQueue
+
+        //背景图切换功能初始化
+        duration: 0, //背景图滑块切换的过渡时间
+        current: getApp().globalData.current, //背景图所在滑块序号
+        bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
       },
 
     /* 页面默认功能 */
@@ -26,6 +30,17 @@ var lockB = true;
       onShow (res){
         console.log("Home onShow");
         this.setData({ duration: 500 });
+        //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
+        var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
+        if (creatingSign[0][0] === "unchanged") {
+          creatingSign[1] = setInterval(() => {
+            var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+            if (creatingSign[0][1] > num) {
+              wx.setStorageSync("How Many Notes Can I Create", ["changed", num]);
+              clearInterval(timer);
+            }
+          });
+        }
       },
 
       /* 生命周期函数--监听页面初次渲染完成 */
