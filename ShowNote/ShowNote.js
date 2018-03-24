@@ -5,11 +5,14 @@
 //获取用户本机的相对像素比
 const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
+var intervalQueue = [];
+
 var lockA = true;
 var lockB = true;
 
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
+var involkeNum = 0; //监测tapEnd事件被同时触发多少次的标识;
 var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
 var anchor = ["changeBGI"]; //相应滑动操作的起始标识
 
@@ -249,39 +252,117 @@ Page({
     lock = true;
     lockA = true;
     lockB = true;
-    if (/\d+/g.test(res.currentTarget.id) && jumpNow) {
-      var style = this.data.note[res.currentTarget.id].style
-      if (style.pullOutDelete > 0 && style.pullOutDelete < 40) {
-        this.data.note[res.currentTarget.id].style.pullOutDelete = 0;
+    var that = this;
+    involkeNum += 1;
+    if ((/\d+/g.test(res.currentTarget.id) && jumpNow)) {
+      var style = this.data.note[res.currentTarget.id].style;
+      if (style.pullOutDelete > 0 && style.pullOutDelete < 60) {
+        var timer1 = setInterval(() => {
+          if (that.data.note[res.currentTarget.id].style.pullOutDelete >= 0) {
+            that.data.note[res.currentTarget.id].style.pullOutDelete -= 10;
+            if (that.data.note[res.currentTarget.id].style.pullOutDelete < 0) {
+              that.data.note[res.currentTarget.id].style.pullOutDelete = 0;
+              clearInterval(timer1);
+            }
+          } else {
+            that.data.note[res.currentTarget.id].style.pullOutDelete = 0;
+            clearInterval(timer1);
+          }
+          that.setData({ note: that.data.note });
+        }, 10);
       } else if (style.pullOutDelete > 0) {
-        this.data.note[res.currentTarget.id].style.pullOutDelete = 120;
+        var timer2 = setInterval(() => {
+          if (that.data.note[res.currentTarget.id].style.pullOutDelete < 120) {
+            that.data.note[res.currentTarget.id].style.pullOutDelete += 20;
+          } else {
+            that.data.note[res.currentTarget.id].style.pullOutDelete = 120;
+            clearInterval(timer2);
+          }
+          that.setData({ note: that.data.note });
+        }, 20);
       }
-      if (style.pullOutMenu > 0 && style.pullOutMenu < 100) {
-        this.data.note[res.currentTarget.id].style.pullOutMenu = 0;
+      if (style.pullOutMenu > 0 && style.pullOutMenu < 150) {
+        var timer3 = setInterval(() => {
+          if (that.data.note[res.currentTarget.id].style.pullOutMenu >= 0) {
+            that.data.note[res.currentTarget.id].style.pullOutMenu -= 60;
+            if (that.data.note[res.currentTarget.id].style.pullOutMenu < 0) {
+              that.data.note[res.currentTarget.id].style.pullOutMenu = 0;
+              clearInterval(timer3);
+            }
+          } else {
+            that.data.note[res.currentTarget.id].style.pullOutMenu = 0;
+            clearInterval(timer3);
+          }
+          that.setData({ note: that.data.note });
+        }, 20);
       } else if (style.pullOutMenu > 0) {
-        this.data.note[res.currentTarget.id].style.pullOutMenu = 300;
+        var timer4 = setInterval(() => {
+          if (that.data.note[res.currentTarget.id].style.pullOutMenu < 300) {
+            that.data.note[res.currentTarget.id].style.pullOutMenu += 60;
+          } else {
+            that.data.note[res.currentTarget.id].style.pullOutMenu = 300;
+            clearInterval(timer4);
+          }
+          that.setData({ note: that.data.note });
+        }, 20);
       }
-      this.setData({ note: this.data.note });
     }
+    setTimeout(() => {
+      if (involkeNum === 1) {
+        var arr = [];
+        that.data.note.forEach((ele, index, origin) => {
+          if ((ele.style.pullOutDelete < 120 || ele.style.pullOutMenu < 300)
+            && res.currentTarget.id !== index) { arr.push(index); }
+        });
+        arr.forEach((ele, index, origin) => {
+          var num = ele;
+          ele = setInterval(() => {
+            var style = that.data.note[num].style
+            if (style.pullOutDelete < 120) {
+              that.data.note[num].style.pullOutDelete += 20;
+            } else that.data.note[num].style.pullOutDelete = 120;
+            if (style.pullOutMenu < 300) {
+              that.data.note[num].style.pullOutMenu += 60;
+            } else that.data.note[num].style.pullOutMenu = 300;
+            that.setData({ note: that.data.note });
+            if (style.pullOutDelete === 120 && style.pullOutMenu === 300) clearInterval(ele);
+          }, 20);
+        });
+      }
+      involkeNum = 0;
+    }, 20);
     jumpNow = true;
     anchor = ["changeBGI"];
     wx.setStorageSync("bgiCurrent", this.data.current);
     getApp().globalData.current = this.data.curent;
+    clearInterval();
   },
   tapMove(res) {
+    var index = res.currentTarget.id;    
     if (lock) {
       lock = !lock;
       anchor = ["pullOut", res.changedTouches[0].pageX];
-      this.data.note.forEach((ele, index, origin) => {
-        if (ele.style.pullOutDelete !== 120 || ele.style.pullOutMenu !== 300) {
-          ele.style.pullOutDelete = 120;
-          ele.style.pullOutMenu = 300;
-          this.setData({ note: this.data.note });
-        }
+      var arr = [];
+      var that = this;
+      that.data.note.forEach((ele, id, origin) => {
+        if (ele.style.pullOutDelete < 120 || ele.style.pullOutMenu < 300) arr.push(id);
+      });
+      arr.forEach((ele, id, origin) => {
+        var num = ele;
+        ele = setInterval(() => {
+          var style = that.data.note[num].style
+          if (style.pullOutDelete < 120) {
+            that.data.note[num].style.pullOutDelete += 20;
+          } else that.data.note[num].style.pullOutDelete = 120;
+          if (style.pullOutMenu < 300) {
+            that.data.note[num].style.pullOutMenu += 60;
+          } else that.data.note[num].style.pullOutMenu = 300;
+          that.setData({ data: that.data.note });
+          if (style.pullOutDelete === 120 && style.pullOutMenu === 300) clearInterval(ele);
+        }, 20);
       });
     }
     if (anchor[0] === "pullOut") {
-      var index = res.currentTarget.id;
       var pullOutDelete = this.data.note[index].style.pullOutDelete;
       var pullOutMenu = this.data.note[index].style.pullOutMenu;
       var moveDistance = (res.changedTouches[0].pageX - anchor[1]) * SWT;
@@ -300,9 +381,13 @@ Page({
   deleteNote(res) {
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
-    this.data.note[index].style.pullOutDelete = 120;
-    this.setData({ note: this.data.note });
     var that = this;
+    var timer = setInterval(() => {
+      if (that.data.note[index].style.pullOutDelete < 120) {
+        that.data.note[index].style.pullOutDelete += 20;
+        that.setData({ note: that.data.note });
+      } else clearInterval(timer);
+    }, 20);
     wx.showModal({
       title: "读记事",
       content: "是否删除本条记事？",
@@ -355,35 +440,50 @@ Page({
   },
   //取消滑动拉出的删除按键或菜单栏的展示
   cancel_editNote(res) {
-    console.log("get Tap");
-    let index = res.currentTarget.id;
+    let id = res.currentTarget.id;
     //当删除键或记事查看菜单已被拉出时的拉出取消操作
-    let sign;
-    this.data.note.forEach((ele, index, origin) => {
-      if (ele.style.pullOutDelete !== 120 || ele.style.pullOutMenu !== 300) {
-        ele.style.pullOutDelete = 120;
-        ele.style.pullOutMenu = 300;
-        this.setData({ note: this.data.note });
-        sign = true;
-      }
-    });
+    var that = this;
+    var sign;
+    var style = this.data.note[id].style
+    if (style.pullOutDelete === 120 && style.pullOutMenu === 300) sign = true;
+    var timer = setInterval(() => {
+      var num = [];
+      var clInterval = true;
+      for (let i = 0; i < that.data.note.length; i++) num.push([i, false]);
+      that.data.note.forEach((ele, index, origin) => {
+        if (ele.style.pullOutDelete !== 120 || ele.style.pullOutMenu !== 300) {
+          num[index][1] = true;
+          if (ele.style.pullOutDelete < 120) {
+            ele.style.pullOutDelete += 20;
+          } else ele.style.pullOutDelete = 120;
+          if (ele.style.pullOutMenu < 300) {
+            ele.style.pullOutMenu += 60;
+          } else ele.style.pullOutMenu = 300;
+          that.setData({ note: that.data.note });
+        }
+      });
+      num.forEach((ele, index, origin) => {
+        if (ele[1]) clInterval = false;
+      });
+      if (clInterval) clearInterval(timer);
+    }, 20);
     //当删除键和记事查看菜单都未被拉出且在记事标题展示状态时，默认点击当前条目为选择修改记事
-    if (!sign && this.data.noteDisplay) {
+    if (sign && this.data.noteDisplay) {
       var that = this;
-      this.data.note[index].style.bgc = "red";
-      this.fontColor = this.data.note[index].style.fontColor;
-      this.data.note[index].style.fontColor = "#fff";
+      this.data.note[id].style.bgc = "red";
+      this.fontColor = this.data.note[id].style.fontColor;
+      this.data.note[id].style.fontColor = "#fff";
       this.setData({ note: this.data.note });
       wx.showModal({
         title: "读记事",
         content: "是否修改当前记事？",
         success(res) {
-          that.data.note[index].style.bgc = "rgba(255, 255, 255 ,0.4)";
-          that.data.note[index].style.fontColor = that.fontColor;
+          that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
+          that.data.note[id].style.fontColor = that.fontColor;
           that.setData({ note: that.data.note });
           if (res.confirm) {
-            that.data.note[index].info.noteType = "edit";
-            wx.setStorageSync("noting", that.data.note[index]);
+            that.data.note[id].info.noteType = "edit";
+            wx.setStorageSync("noting", that.data.note[id]);
             wx.redirectTo({ url: "../CreateNote/CreateNote" });
           }
         }
@@ -602,7 +702,7 @@ Page({
     if (tapTime.toString().length === 13) {
       tapTime = new Date().getTime() - tapTime;
     } else tapTime = 0;
-    if (tapTime > 200) {
+    if (tapTime > 300) {
       var that = this;
       wx.setClipboardData({
         data: that.data.text,
