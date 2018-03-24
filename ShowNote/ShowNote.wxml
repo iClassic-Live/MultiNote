@@ -11,7 +11,7 @@
 
   <view class="searchZone" style="background-color:{{bgc}}">
     <view class="search">
-      <input type="text" placeholder="{{searchNote}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+      <input type="text" placeholder="{{searchNote}}" disabled="{{!getUseAccess}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
     </view>
     <view class="result">
       <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
