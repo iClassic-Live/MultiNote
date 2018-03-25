@@ -290,6 +290,7 @@ Page({
           console.log("tapMove timer has been cleared");
         }
       }, 5);
+      intervalQueue.push(timer);
     }
     invokeNum += 1;
     setTimeout(() => {
@@ -311,6 +312,7 @@ Page({
       console.log("invoke tapEnd");
       lock = !lock;
       anchor = ["pullOut", res.changedTouches[0].pageX];
+      intervalQueue.forEach(ele => { clearInterval(ele) });
       this.hideMenu(this, index);
     }
     if (anchor[0] === "pullOut") {
@@ -843,6 +845,8 @@ Page({
           }
           that.setData({ note: that.data.note });
         }, 5);
+        intervalQueue.forEach(ele => { clearInterval(ele) });
+        intervalQueue.push(timer1);
       }
       if (ele.tag === "pullOutMenu") {
         var timer2 = setInterval(() => {
@@ -854,6 +858,8 @@ Page({
           }
           that.setData({ note: that.data.note });
         }, 5);
+        intervalQueue.forEach(ele => { clearInterval(ele) });
+        intervalQueue.push(timer2);
       }
     });
   },
