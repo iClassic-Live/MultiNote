@@ -20,7 +20,7 @@
     </view>
   </view>
 
-  <scroll-view class="readingZone" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
+  <scroll-view class="readingZone" bindtouchstart="tapStart" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{noteDisplay}}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
 bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
       <view class="title">
