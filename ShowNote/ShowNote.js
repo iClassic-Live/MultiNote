@@ -5,8 +5,9 @@
 //获取用户本机的相对像素比
 const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
-var lockA = true;
-var lockB = true;
+//用于监测变换图片的滑动操作起始的标识
+var lockA = true; //获取滑动起始点信息的锁
+var lockB = true; //滑动达到指定值后的锁
 
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
@@ -30,7 +31,7 @@ Page({
 
     //背景图切换功能初始化
     duration: 0, //背景图滑块切换的过渡时间
-    current: getApp().globalData.current, //背景图所在滑块序号
+    current: wx.getStorageSync("bgiCurrent") || 0, //背景图所在滑块序号
     bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
 
     //主功能区、视频查看组件切换功能初始化：默认主功能区启动，其他功能区待命
@@ -66,16 +67,16 @@ Page({
   },
 
   /* 生命周期函数--监听页面加载 */
-  onLoad: function (options) {
+  onLoad(res) {
     console.log("ShowNote onLoad");
-    this.setData({ current: wx.getStorageSync("bgiCurrent") || 0 });
+    var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
+    if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
-    var note = wx.getStorageSync("note");
+    var note = wx.getStorageSync("note") || [];
     var noting = wx.getStorageSync("noting");
     if (!!noting) {
       wx.removeStorageSync("noting");
       if (noting.info.noteType === "new") {
-        if (!note) note = [];
         note.push(noting);
       } else if (noting.info.noteType === "edit") {
         note[noting.id] = noting;
@@ -103,7 +104,7 @@ Page({
     var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
     if (creatingSign[0][0] === "unchanged") {
       creatingSign[1] = setInterval(() => {
-        var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+        var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5);
         if (creatingSign[0][1] > num) {
           wx.setStorageSync("How Many Notes Can I Create", ["changed", num]);
           clearInterval(creatingSign[1]);
@@ -113,41 +114,48 @@ Page({
   },
 
   /* 生命周期函数--监听页面显示 */
-  onShow: function () {
+  onShow(res) {
     console.log("ShowNote onShow");
-    this.setData({ duration: 500 });
+    var bgiCurrent = wx.getStorageSync("bgiCurrent");
+    if (this.data.current === bgiCurrent) {
+      if (this.data.current !== 500) this.setData({ duration: 500 });
+    } else this.setData({ current: bgiCurrent });
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
-  onReady: function () {
+  onReady(res) {
     console.log("ShowNote onReady");
+    if (this.data.current !== 500) this.setData({ duration: 500 });
   },
 
   /* 生命周期函数--监听页面隐藏 */
-  onHide: function () {
+  onHide(res) {
     console.log("ShowNote onHide");
   },
 
   /* 生命周期函数--监听页面卸载 */
-  onUnload: function () {
+  onUnload(res) {
     console.log("ShowNote onUnload");
   },
 
   /* 自定义用户交互逻辑 */
 
   changeBackgroundImage(res) {
-    if (lockA) {
-      lockA = false;
-      anchor[1] = res.changedTouches[0].pageX;
-    }
-    var moveDistance;
-    if (anchor[0] === "changeBGI") moveDistance = anchor[1] - res.changedTouches[0].pageX;
-    if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
-      lockB = false;
-      if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
-        this.setData({ current: this.data.current + 1 });
-      } else if (moveDistance < 0 && this.data.current !== 0) {
-        this.setData({ current: this.data.current - 1 });
+    if (res.changedTouches instanceof Array && anchor[0] === "changeBGI") {
+      if (lockA) {
+        lockA = false;
+        anchor[1] = res.changedTouches[0].pageX;
+      }
+      var moveDistance = res.changedTouches[0].pageX - anchor[1];
+      if ((!lockA && lockB) && Math.abs(moveDistance) >= 750 / SWT / 3) {
+        lockB = false;
+        if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
+          this.setData({ current: this.data.current + 1 });
+          wx.setStorageSync("bgiCurrent", this.data.current);
+        } else if (moveDistance > 0 && this.data.current !== 0) {
+          this.setData({ current: this.data.current - 1 });
+          wx.setStorageSync("bgiCurrent", this.data.current);
+        }
       }
     }
   },
@@ -287,7 +295,7 @@ Page({
           console.log("interval in tapEnd has been deleted");
         }
       }, 5);
-    }else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu();
+    } else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu();
     setTimeout(() => { invokeQueue = []; }, 20);
     jumpNow = true;
     anchor = ["changeBGI"];
@@ -822,7 +830,7 @@ Page({
     this.hideMenu();
     var num = wx.getStorageSync("How Many Notes Can I Create");
     if (num instanceof Array === false) {
-      var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+      var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5);
       wx.setStorageSync("How Many Notes Can I Create", ["unchanged", num]);
       wx.showToast({
         title: "缓存已被清空",

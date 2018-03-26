@@ -2,10 +2,12 @@
 
 /* 写记事页面初始化 */
 
+//获取用户本机的相对像素比
+const SWT = 750 / wx.getSystemInfoSync().screenWidth;
+
 //用于监测变换图片的滑动操作起始的标识
-var lockA = true;
-var lockB = true;
-var current = wx.getStorageSync("bgiCurrent");
+var lockA = true; //获取滑动起始点信息的锁
+var lockB = true; //滑动达到指定值后的锁
 
 //用于监测是否已开启相关权限的标识初始化
 var getRecordAccess = true; //录音权限的标识，默认权限开启
@@ -28,18 +30,16 @@ var recordTimer; //使语音记事结束的定时器
 var startRecord; //启动语音记事的定时器，防止因点击语音按钮导致出错
 
 var shootTimer; //录像时长计时器的标识
-
 /* 页面构造器：页面功能初始化 */
 Page({
 
   /* 页面默认功能 */
-
   /* 页面的初始数据 */
   data: {
 
     //背景图切换功能初始化
     duration: 0, //背景图滑块切换的过渡时间
-    current: getApp().globalData.current, //背景图所在滑块序号
+    current: wx.getStorageSync("bgiCurrent") || 0, //背景图所在滑块序号
     bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
 
     //主功能区、相机组件、视频记事预览组件、图片记事预览组件切换功能初始化，默认主功能区启动，其他功能区待命
@@ -85,10 +85,8 @@ Page({
   /* 生命周期函数--监听页面加载 */
   onLoad: function (options) {
     console.log("CreateNote onLoad");
-    this.setData({
-      screenWidth: wx.getSystemInfoSync().screenWidth,
-      current: wx.getStorageSync("bgiCurrent") || 0
-    });
+    var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
+    if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
     //监测是否获取了设备的录音权限、相机权限和保存到相册的权限
     wx.getSetting({
       success(res) {
@@ -237,7 +235,10 @@ Page({
   /* 生命周期函数--监听页面显示 */
   onShow: function (res) {
     console.log("CreateNote onShow");
-    this.setData({ duration: 500 });
+    var bgiCurrent = wx.getStorageSync("bgiCurrent");
+    if (this.data.current === bgiCurrent) {
+      if (this.data.current !== 500) this.setData({ duration: 500 });
+    } else this.setData({ current: bgiCurrent });
     //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
     var num = wx.getStorageSync("How Many Notes Can I Create");
     if (num[0] === "unchanged") {
@@ -267,6 +268,7 @@ Page({
   /* 生命周期函数--监听页面初次渲染完成 */
   onReady: function (res) {
     console.log("CreateNote onReady");
+    if (this.data.current !== 500) this.setData({ duration: 500 });
   },
 
   /* 生命周期函数--监听页面隐藏 */
@@ -293,15 +295,17 @@ Page({
     if (res.changedTouches instanceof Array) {
       if (lockA) {
         lockA = false;
-        this.setData({ anchor: res.changedTouches[0].pageX });
+        this.anchor = res.changedTouches[0].pageX;
       }
-      var moveDistance = res.changedTouches[0].pageX - this.data.anchor;
-      if (!lockA && lockB && Math.abs(moveDistance) >= this.data.screenWidth / 3) {
+      var moveDistance = res.changedTouches[0].pageX - this.anchor;
+      if ((!lockA && lockB) && Math.abs(moveDistance) >= 750 / SWT / 3) {
         lockB = false;
         if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
           this.setData({ current: this.data.current + 1 });
+          wx.setStorageSync("bgiCurrent", this.data.current);
         } else if (moveDistance > 0 && this.data.current !== 0) {
           this.setData({ current: this.data.current - 1 });
+          wx.setStorageSync("bgiCurrent", this.data.current);
         }
       }
     }

@@ -2,7 +2,7 @@ console.clear();
 App({
 
   globalData: {
-    version: "MultiNote 1.16.4", //版本号
+    version: "MultiNote 1.16.5", //版本号
     current: wx.getStorageSync("bgiCurrent") || 0, //当前背景图序号
     bgiQueue: [ //背景图地址队列
       "../images/bgi1.jpg",
@@ -19,12 +19,6 @@ App({
    */
   onLaunch: function (res) {
     console.log("MultiNote onLaunch");
-    //首次使用的当前背景图序号缓存预置
-    if (wx.getStorageInfoSync().keys.indexOf("bgiCurrent") === -1) {
-      wx.setStorageSync("bgiCurrent", 0);
-    }
-    //首次使用的记事缓存预置
-    if (!wx.getStorageSync("note")) wx.setStorageSync("note", []);
     //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
     if (wx.getStorageInfoSync().keys.indexOf("How Many Notes Can I Create") === -1) {
       var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
