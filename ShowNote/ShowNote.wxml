@@ -41,8 +41,8 @@ bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
     <view class="text" wx:if="{{textDisplay}}" catchtouchmove="jumpToAnother">
       <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}" bindtouchstart="tapStart"bindtouchend="tapEnd" bindtap="textCheck"></textarea>
     </view>
-    <view class="record" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="recordCheck" catchtouchmove="jumpToAnother">
-      <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" bindtap="recordCheck">{{index + 1}}</button>
+    <view class="record" wx:if="{{recordDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" catchtap="recordCheck" catchtouchmove="jumpToAnother">
+      <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
     </view>
     <view class="photo" wx:if="{{photoDisplay}}" bindtouchstart="tapStart" bindtouchend="tapEnd" bindtap="photoCheck" catchtouchmove="jumpToAnother">
       <swiper>

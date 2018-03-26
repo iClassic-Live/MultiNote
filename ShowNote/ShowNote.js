@@ -11,6 +11,7 @@ var lockB = true; //滑动达到指定值后的锁
 
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
+var intervalQueue = []; //定时器阵列，获取有可能无法正常清除的定时器的ID;
 var invokeQueue = []; //监测tapEnd事件是否冒泡
 var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
 var anchor = ["changeBGI"]; //相应滑动操作的起始标识
@@ -259,8 +260,16 @@ Page({
     var that = this;
     var index = parseInt(res.currentTarget.id);
     invokeQueue.push(index);
-    if ((index || index === 0) && tag) {
+    if (((index || index === 0) && tag) && this.data.noteDisplay) {
       tag = false;
+      var array = [];
+      intervalQueue.forEach((ele, id, origin) => {
+        clearInterval(ele);
+        array.push(ele);
+      });
+      array.forEach((ele, id, origin) => {
+        intervalQueue.splice(origin.indexOf(ele), 1);
+      });
       var timer = setInterval(() => {
         var style = that.data.note[index].style;
         if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
@@ -295,7 +304,8 @@ Page({
           console.log("interval in tapEnd has been deleted");
         }
       }, 5);
-    } else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu();
+      intervalQueue.push(timer);
+    } else if ((!invokeQueue[0] && invokeQueue[0] !== 0) && this.data.noteDisplay ) this.hideMenu();
     setTimeout(() => { invokeQueue = []; }, 20);
     jumpNow = true;
     anchor = ["changeBGI"];
@@ -693,9 +703,9 @@ Page({
           setTimeout(() => {
             that.data.playback[index].opacity = 1;
             that.setData({ playback: that.data.playback });
-          }, 250);
-        }, 250);
-      }, 250);
+          }, 125);
+        }, 125);
+      }, 125);
     } else {
       this.setData({
         playback: null,
@@ -859,8 +869,19 @@ Page({
         if (ele.style.pullOutMenu < 300) arr.push({ tag: "pullOutMenu", index: index });
       }
     });
+    function clearIntervalQueue() {
+      var array = [];
+      intervalQueue.forEach((ele, id, origin) => {
+        clearInterval(ele);
+        array.push(ele);
+      });
+      array.forEach((ele, id, origin) => {
+        intervalQueue.splice(origin.indexOf(ele), 1);
+      });
+    }
     arr.forEach(ele => {
       if (ele.tag === "pullOutDelete") {
+        clearIntervalQueue();
         var timer1 = setInterval(() => {
           that.data.note[ele.index].style.pullOutDelete += 20;
           if (that.data.note[ele.index].style.pullOutDelete >= 120) {
@@ -870,8 +891,10 @@ Page({
           }
           that.setData({ note: that.data.note });
         }, 5);
+        intervalQueue.push(timer1);
       }
       if (ele.tag === "pullOutMenu") {
+        clearIntervalQueue();
         var timer2 = setInterval(() => {
           that.data.note[ele.index].style.pullOutMenu += 50;
           if (that.data.note[ele.index].style.pullOutMenu >= 300) {
@@ -881,6 +904,7 @@ Page({
           }
           that.setData({ note: that.data.note });
         }, 5);
+        intervalQueue.push(timer2);
       }
     });
   },

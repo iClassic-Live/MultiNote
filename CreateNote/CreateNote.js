@@ -1079,9 +1079,7 @@ Page({
                 mask: true
               });
               setTimeout(() => {
-                wx.redirectTo({
-                  url: "../ShowNote/ShowNote",
-                });
+                wx.redirectTo({ url: "../ShowNote/ShowNote" });
               }, 1000);
             } else {
               console.log("用户保存记事失败，重大故障：全局崩溃!");
@@ -1098,7 +1096,7 @@ Page({
               content: "是否继续当前记事？",
               success(res) {
                 if (res.cancel) {
-                  if (!!wx.getSystemInfoSync("note")) {
+                  if (wx.getStorageInfoSync().keys.indexOf("note") !== -1) {
                     wx.redirectTo({ url: "../ShowNote/ShowNote" });
                   } else wx.redirectTo({ url: "../Home/Home" });
                 }
