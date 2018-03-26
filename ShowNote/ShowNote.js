@@ -687,6 +687,7 @@ Page({
     var index = res.currentTarget.id;
     if (!!index) {
       index = index.match(/\d+/g)[0];
+      innerAudioContext.stop();
       innerAudioContext.autoplay = true;
       innerAudioContext.src = this.data.playback[index].url;
       this.data.playback[index].opacity = 0.5;
@@ -703,10 +704,11 @@ Page({
           setTimeout(() => {
             that.data.playback[index].opacity = 1;
             that.setData({ playback: that.data.playback });
-          }, 125);
-        }, 125);
-      }, 125);
+          }, 250);
+        }, 250);
+      }, 250);
     } else {
+      innerAudioContext.stop();
       this.setData({
         playback: null,
         noteDisplay: true,
