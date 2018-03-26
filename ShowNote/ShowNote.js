@@ -287,7 +287,7 @@ Page({
           console.log("interval in tapEnd has been deleted");
         }
       }, 5);
-    }else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu(this);
+    }else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu();
     setTimeout(() => { invokeQueue = []; }, 20);
     jumpNow = true;
     anchor = ["changeBGI"];
@@ -303,7 +303,7 @@ Page({
       console.log("invoke tapEnd");
       lock = !lock;
       anchor = ["pullOut", res.changedTouches[0].pageX];
-      this.hideMenu(this, index);
+      this.hideMenu(index);
     }
     if (anchor[0] === "pullOut") {
       tag = true;
@@ -326,7 +326,7 @@ Page({
     console.log("invoke deleteNote");
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
-    this.hideMenu(this);
+    this.hideMenu();
     wx.showModal({
       title: "读记事",
       content: "是否删除本条记事？",
@@ -383,7 +383,7 @@ Page({
     var id = res.currentTarget.id;
     var that = this;
     //当删除键或记事查看菜单已被拉出时取消操作拉出操作
-    this.hideMenu(this);
+    this.hideMenu();
     //当删除键和记事查看菜单都未被拉出且在记事标题展示状态时，默认点击当前条目为选择修改记事
     var style = this.data.note[id].style
     if ((style.pullOutDelete === 120 && style.pullOutMenu === 300) && this.data.noteDisplay) {
@@ -597,7 +597,7 @@ Page({
     index = index.match(/\d+/g)[0];
     var text = this.data.note[index].note.text;
     if (!!text) {
-      this.hideMenu(this);
+      this.hideMenu();
       this.setData({
         text: text,
         noteDisplay: false,
@@ -648,7 +648,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
     if (this.data.note[index].note.record.length > 0) {
-      this.hideMenu(this);
+      this.hideMenu();
       this.setData({
         playback: this.data.note[index].note.record,
         noteDisplay: false,
@@ -701,7 +701,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
     if (this.data.note[index].note.photo.length > 0) {
-      this.hideMenu(this);
+      this.hideMenu();
       this.setData({
         img: this.data.note[index].note.photo,
         noteDisplay: false,
@@ -760,7 +760,7 @@ Page({
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
     if (!!this.data.note[index].note.video) {
-      this.hideMenu(this);
+      this.hideMenu();
       this.setData({
         mainFnDisplay: false,
         videoDisplay: true,
@@ -815,10 +815,37 @@ Page({
       }
     });
   },
+
+  /* 新建记事区 */
+  //新建记事按钮：按下则跳转到写记事页
+  createNote(res) {
+    this.hideMenu();
+    var num = wx.getStorageSync("How Many Notes Can I Create");
+    if (num instanceof Array === false) {
+      var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+      wx.setStorageSync("How Many Notes Can I Create", ["unchanged", num]);
+      wx.showToast({
+        title: "缓存已被清空",
+        image: "../images/error.png"
+      });
+    }
+    if (this.data.note.length < num[1]) {
+      wx.redirectTo({ url: "../CreateNote/CreateNote" });
+    } else {
+      wx.showModal({
+        title: "读记事",
+        content: "记事条目已达上限！",
+        showCancel: false
+      });
+    }
+  },
+
+
   //当前页API: 以动画形式隐藏所有已拉出的菜单栏
-  hideMenu(that, id) {
+  hideMenu(id) {
     var arr = [];
-    that.data.note.forEach((ele, index) => {
+    var that = this;
+    this.data.note.forEach((ele, index) => {
       if (parseInt(id) !== index) {
         if (ele.style.pullOutDelete < 120) arr.push({ tag: "pullOutDelete", index: index });
         if (ele.style.pullOutMenu < 300) arr.push({ tag: "pullOutMenu", index: index });
@@ -848,29 +875,6 @@ Page({
         }, 5);
       }
     });
-  },
-
-  /* 新建记事区 */
-  //新建记事按钮：按下则跳转到写记事页
-  createNote(res) {
-    var num = wx.getStorageSync("How Many Notes Can I Create");
-    if (num instanceof Array === false) {
-      var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
-      wx.setStorageSync("How Many Notes Can I Create", ["unchanged", num]);
-      wx.showToast({
-        title: "缓存已被清空",
-        image: "../images/error.png"
-      });
-    }
-    if (this.data.note.length < num[1]) {
-      wx.redirectTo({ url: "../CreateNote/CreateNote" });
-    } else {
-      wx.showModal({
-        title: "读记事",
-        content: "记事条目已达上限！",
-        showCancel: false
-      });
-    }
   },
 
 });
