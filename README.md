@@ -1,7 +1,7 @@
 # MultiNote
 Mini Program: Make Noting Multiply
 
-Version: MultiNote 1.16.3
+Version: MultiNote 1.16.4
 
 Discription: Trial Version
 

@@ -12,10 +12,10 @@ var lockB = true;
 
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
-var invokeNum = 0; //监测tapStart事件被同
+var invokeQueue = []; //监测tapEnd事件是否冒泡
 var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
 var anchor = ["changeBGI"]; //相应滑动操作的起始标识
-var tag = null;
+var tag = false;
 //语音记事初始化
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部 audio 上下文
 
@@ -138,20 +138,18 @@ Page({
   /* 自定义用户交互逻辑 */
 
   changeBackgroundImage(res) {
-    if (res.changedTouches instanceof Array) {
-      if (lockA) {
-        lockA = false;
-        anchor[1] = res.changedTouches[0].pageX;
-      }
-      var moveDistance;
-      if (anchor[0] === "changeBGI") moveDistance = anchor[1] - res.changedTouches[0].pageX;
-      if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
-        lockB = false;
-        if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
-          this.setData({ current: this.data.current + 1 });
-        } else if (moveDistance < 0 && this.data.current !== 0) {
-          this.setData({ current: this.data.current - 1 });
-        }
+    if (lockA) {
+      lockA = false;
+      anchor[1] = res.changedTouches[0].pageX;
+    }
+    var moveDistance;
+    if (anchor[0] === "changeBGI") moveDistance = anchor[1] - res.changedTouches[0].pageX;
+    if (!lockA && lockB && Math.abs(moveDistance) >= wx.getSystemInfoSync().screenWidth / 3) {
+      lockB = false;
+      if (moveDistance > 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
+        this.setData({ current: this.data.current + 1 });
+      } else if (moveDistance < 0 && this.data.current !== 0) {
+        this.setData({ current: this.data.current - 1 });
       }
     }
   },
@@ -254,9 +252,11 @@ Page({
     lockB = true;
     var that = this;
     var index = parseInt(res.currentTarget.id);
-    if ((index || index === 0) && tag === "tapMove") {
-      tag = null;
+    invokeQueue.push(index);
+    if ((index || index === 0) && tag) {
+      tag = false;
       var timer = setInterval(() => {
+        console.log("tapEnd " + timer);
         var style = that.data.note[index].style;
         if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
           that.data.note[index].style.pullOutDelete -= 20;
@@ -291,14 +291,8 @@ Page({
         }
       }, 5);
       intervalQueue.push(timer);
-    }
-    invokeNum += 1;
-    setTimeout(() => {
-      if (invokeNum === 1) {
-        that.hideMenu(that);
-      }
-      invokeNum = 0;
-    });
+    }else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu(this);
+    setTimeout(() => { invokeQueue = []; }, 20);
     jumpNow = true;
     anchor = ["changeBGI"];
     if (wx.getStorageSync("bgiCurrent") !== this.data.current) {
@@ -306,6 +300,7 @@ Page({
       getApp().globalData.current = this.data.curent;
     }
   },
+  //菜单栏拉出操作
   tapMove(res) {
     var index = res.currentTarget.id;
     if (lock) {
@@ -316,7 +311,7 @@ Page({
       this.hideMenu(this, index);
     }
     if (anchor[0] === "pullOut") {
-      tag = "tapMove";
+      tag = true;
       var pullOutDelete = this.data.note[index].style.pullOutDelete;
       var pullOutMenu = this.data.note[index].style.pullOutMenu;
       var moveDistance = (res.changedTouches[0].pageX - anchor[1]) * SWT;
@@ -828,7 +823,7 @@ Page({
   //当前页API: 以动画形式隐藏所有已拉出的菜单栏
   hideMenu(that, id) {
     var arr = [];
-    this.data.note.forEach((ele, index) => {
+    that.data.note.forEach((ele, index) => {
       if (parseInt(id) !== index) {
         if (ele.style.pullOutDelete < 120) arr.push({ tag: "pullOutDelete", index: index });
         if (ele.style.pullOutMenu < 300) arr.push({ tag: "pullOutMenu", index: index });
@@ -836,7 +831,9 @@ Page({
     });
     arr.forEach(ele => {
       if (ele.tag === "pullOutDelete") {
+        intervalQueue.forEach(ele => { clearInterval(ele) });
         var timer1 = setInterval(() => {
+          console.log("pullOutDelete " + timer1);
           that.data.note[ele.index].style.pullOutDelete += 20;
           if (that.data.note[ele.index].style.pullOutDelete >= 120) {
             that.data.note[ele.index].style.pullOutDelete = 120;
@@ -845,11 +842,12 @@ Page({
           }
           that.setData({ note: that.data.note });
         }, 5);
-        intervalQueue.forEach(ele => { clearInterval(ele) });
         intervalQueue.push(timer1);
       }
       if (ele.tag === "pullOutMenu") {
+        intervalQueue.forEach(ele => { clearInterval(ele) });
         var timer2 = setInterval(() => {
+          console.log("pullOutMenu " + timer2);
           that.data.note[ele.index].style.pullOutMenu += 50;
           if (that.data.note[ele.index].style.pullOutMenu >= 300) {
             that.data.note[ele.index].style.pullOutMenu = 300;
@@ -858,7 +856,6 @@ Page({
           }
           that.setData({ note: that.data.note });
         }, 5);
-        intervalQueue.forEach(ele => { clearInterval(ele) });
         intervalQueue.push(timer2);
       }
     });
