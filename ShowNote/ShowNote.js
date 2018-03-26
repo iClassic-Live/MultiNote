@@ -344,6 +344,7 @@ Page({
     console.log("invoke deleteNote");
     var index = res.currentTarget.id;
     index = index.match(/\d+/g)[0];
+    var that = this;
     this.hideMenu();
     wx.showModal({
       title: "读记事",
@@ -371,22 +372,20 @@ Page({
             wx.showToast({
               title: "当前记事已删除",
               image: "../images/success.png",
-              mask: true
-            });
-            if (that.data.note.length === 0) {
-              setTimeout(() => {
-                wx.showModal({
-                  title: "读记事",
-                  content: "当前已无任何记事，将返回写记事",
-                  showCancel: false
-                });
+              mask: true,
+              complete(res) {
                 setTimeout(() => {
-                  wx.redirectTo({
-                    url: '../CreateNote/CreateNote',
-                  });
-                }, 1500);
-              }, 2000);
-            }
+                  if (!note.length) {
+                    wx.showModal({
+                      title: "读记事",
+                      content: "缓存中已无任何记事，将返回写记事！",
+                      showCancel: false,
+                      complete(res) { wx.redirectTo({ url: "../CreateNote/CreateNote" }); }
+                    })
+                  }
+                }, 500)
+              }
+            });
           }, 500);
         } else {
           that.data.note[index].style.pullOutDelete = 750;
