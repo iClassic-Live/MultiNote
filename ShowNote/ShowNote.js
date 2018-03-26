@@ -5,8 +5,6 @@
 //获取用户本机的相对像素比
 const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
-var intervalQueue = [];
-
 var lockA = true;
 var lockB = true;
 
@@ -256,7 +254,6 @@ Page({
     if ((index || index === 0) && tag) {
       tag = false;
       var timer = setInterval(() => {
-        console.log("tapEnd " + timer);
         var style = that.data.note[index].style;
         if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
           that.data.note[index].style.pullOutDelete -= 20;
@@ -287,10 +284,9 @@ Page({
           (that.data.note[index].style.pullOutDelete === 0 ||
             that.data.note[index].style.pullOutDelete === 120)) {
           clearInterval(timer);
-          console.log("tapMove timer has been cleared");
+          console.log("interval in tapEnd has been deleted");
         }
       }, 5);
-      intervalQueue.push(timer);
     }else if (!invokeQueue[0] && invokeQueue[0] !== 0) this.hideMenu(this);
     setTimeout(() => { invokeQueue = []; }, 20);
     jumpNow = true;
@@ -307,7 +303,6 @@ Page({
       console.log("invoke tapEnd");
       lock = !lock;
       anchor = ["pullOut", res.changedTouches[0].pageX];
-      intervalQueue.forEach(ele => { clearInterval(ele) });
       this.hideMenu(this, index);
     }
     if (anchor[0] === "pullOut") {
@@ -831,32 +826,26 @@ Page({
     });
     arr.forEach(ele => {
       if (ele.tag === "pullOutDelete") {
-        intervalQueue.forEach(ele => { clearInterval(ele) });
         var timer1 = setInterval(() => {
-          console.log("pullOutDelete " + timer1);
           that.data.note[ele.index].style.pullOutDelete += 20;
           if (that.data.note[ele.index].style.pullOutDelete >= 120) {
             that.data.note[ele.index].style.pullOutDelete = 120;
             clearInterval(timer1);
-            console.log("Del button has been hided");
+            console.log("interval for hiding Del button has been deleted");
           }
           that.setData({ note: that.data.note });
         }, 5);
-        intervalQueue.push(timer1);
       }
       if (ele.tag === "pullOutMenu") {
-        intervalQueue.forEach(ele => { clearInterval(ele) });
         var timer2 = setInterval(() => {
-          console.log("pullOutMenu " + timer2);
           that.data.note[ele.index].style.pullOutMenu += 50;
           if (that.data.note[ele.index].style.pullOutMenu >= 300) {
             that.data.note[ele.index].style.pullOutMenu = 300;
             clearInterval(timer2);
-            console.log("Menu has been hided");
+            console.log("interval for hiding Menu has been deleted");
           }
           that.setData({ note: that.data.note });
         }, 5);
-        intervalQueue.push(timer2);
       }
     });
   },
