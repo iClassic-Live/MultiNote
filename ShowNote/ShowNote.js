@@ -5,22 +5,17 @@
 //获取用户本机的相对像素比
 const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
-//用于监测变换图片的滑动操作起始的标识
+//用于监测相应滑动操作起始的标识
 var lockA = true; //获取滑动起始点信息的锁
 var lockB = true; //滑动达到指定值后的锁
 
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
-var intervalQueue = []; //定时器阵列，获取有可能无法正常清除的定时器的ID;
-var invokeQueue = []; //监测tapEnd事件是否冒泡
-var lock = true; //当相应记事的条目检测到滑动操作的时候加锁以获取滑动起始位置的锚点
+var intervalQueue = []; //定时器ID阵列，获取有可能无法正常清除的定时器的ID;
 var anchor = ["changeBGI"]; //相应滑动操作的起始标识
-var tag = false;
+var tag = false; //是否进行了相应删除按钮或菜单栏拉出操作的标识
 //语音记事初始化
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部 audio 上下文
-
-//同条目下不同记事类型快速跳转初始化
-var jumpNow = true; //监测当前是否正在进行同条目下不同记事类型间跳转，进入跳转时为false，否则为true
 
 /* 页面构造器：页面功能初始化 */
 Page({
@@ -141,6 +136,8 @@ Page({
 
   /* 自定义用户交互逻辑 */
 
+  /* 背景图切换区 */
+  //背景图切换
   changeBackgroundImage(res) {
     if (res.changedTouches instanceof Array && anchor[0] === "changeBGI") {
       if (lockA) {
@@ -162,6 +159,7 @@ Page({
   },
 
   /* 记事检索区 */
+  //记事检索框的聚焦、键入、失焦操作
   searchNote(res) {
     if (res.type === "focus") { //记事检索框聚焦时关闭未关闭的记事的删除和菜单栏、
       //隐藏记事展示，开启检索功能
@@ -212,7 +210,7 @@ Page({
       });
     }
   },
-  //点击相应记事检索结果的时候返回相应记事条目位置
+  //点击相应记事检索结果的时候返回相应记事条目的位置
   gotoResult(res) {
     var that = this;
     var id = res.currentTarget.id;
@@ -248,20 +246,17 @@ Page({
   },
 
   /* 读记事区 */
-  tapStart(res) {
-    console.log("invoke tapStart");
-    tapTime = new Date().getTime();
-  },
+  /* 同事件多复合操作：
+     1. 解开相应操作的锁
+     2. 若检测到菜单或删除按钮拉出操作则对相应菜单或删除按钮：
+        1) 当拉出已到达阈值则执行弹出操作
+        2）当拉出未达到阈值则执行弹回操作
+     3. 重设滑动操作的起始标识到切换背景图状态 */
   tapEnd(res) {
     console.log("invoke tapEnd");
-    lock = true;
-    lockA = true;
-    lockB = true;
     var that = this;
     var index = parseInt(res.currentTarget.id);
-    invokeQueue.push(index);
     if (((index || index === 0) && tag) && this.data.noteDisplay) {
-      tag = false;
       var array = [];
       intervalQueue.forEach((ele, id, origin) => {
         clearInterval(ele);
@@ -305,22 +300,20 @@ Page({
         }
       }, 5);
       intervalQueue.push(timer);
-    } else if ((!invokeQueue[0] && invokeQueue[0] !== 0) && this.data.noteDisplay ) this.hideMenu();
-    setTimeout(() => { invokeQueue = []; }, 20);
-    jumpNow = true;
-    anchor = ["changeBGI"];
-    if (wx.getStorageSync("bgiCurrent") !== this.data.current) {
-      wx.setStorageSync("bgiCurrent", this.data.current);
-      getApp().globalData.current = this.data.curent;
     }
+    lockA = true;
+    lockB = true;
+    tag = false;
+    lockB = true;
+    anchor = ["changeBGI"];
   },
   //菜单栏拉出操作
   tapMove(res) {
     var index = res.currentTarget.id;
-    if (lock) {
+    if (lockA) {
       console.log("invoke tapEnd");
-      lock = !lock;
-      anchor = ["pullOut", res.changedTouches[0].pageX];
+      lockA = !lockA;
+      anchor = ["pullOut", res.touches[0].pageX];
       this.hideMenu(index);
     }
     if (anchor[0] === "pullOut") {
@@ -383,7 +376,7 @@ Page({
                       complete(res) { wx.redirectTo({ url: "../CreateNote/CreateNote" }); }
                     })
                   }
-                }, 500)
+                }, 1500);
               }
             });
           }, 500);
@@ -399,30 +392,34 @@ Page({
     console.log("invoke cancel_editNote");
     var id = res.currentTarget.id;
     var that = this;
-    //当删除键或记事查看菜单已被拉出时取消操作拉出操作
-    this.hideMenu();
-    //当删除键和记事查看菜单都未被拉出且在记事标题展示状态时，默认点击当前条目为选择修改记事
-    var style = this.data.note[id].style
-    if ((style.pullOutDelete === 120 && style.pullOutMenu === 300) && this.data.noteDisplay) {
-      var that = this;
-      this.data.note[id].style.bgc = "red";
-      this.fontColor = this.data.note[id].style.fontColor;
-      this.data.note[id].style.fontColor = "#fff";
-      this.setData({ note: this.data.note });
-      wx.showModal({
-        title: "读记事",
-        content: "是否修改当前记事？",
-        success(res) {
-          that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
-          that.data.note[id].style.fontColor = that.fontColor;
-          that.setData({ note: that.data.note });
-          if (res.confirm) {
-            that.data.note[id].info.noteType = "edit";
-            wx.setStorageSync("noting", that.data.note[id]);
-            wx.redirectTo({ url: "../CreateNote/CreateNote" });
-          }
+    if (this.data.noteDisplay) {
+      //当删除键或记事查看菜单已被拉出时取消操作拉出操作
+      this.hideMenu();
+      //当删除键和记事查看菜单都未被拉出且在记事标题展示状态时，默认点击当前条目为选择修改记事
+      if (parseInt(id) < this.data.note.length) {
+        var style = this.data.note[id].style
+        if ((style.pullOutDelete === 120 && style.pullOutMenu === 300) && this.data.noteDisplay) {
+          var that = this;
+          this.data.note[id].style.bgc = "red";
+          this.fontColor = this.data.note[id].style.fontColor;
+          this.data.note[id].style.fontColor = "#fff";
+          this.setData({ note: this.data.note });
+          wx.showModal({
+            title: "读记事",
+            content: "是否修改当前记事？",
+            success(res) {
+              that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
+              that.data.note[id].style.fontColor = that.fontColor;
+              that.setData({ note: that.data.note });
+              if (res.confirm) {
+                that.data.note[id].info.noteType = "edit";
+                wx.setStorageSync("noting", that.data.note[id]);
+                wx.redirectTo({ url: "../CreateNote/CreateNote" });
+              }
+            }
+          });
         }
-      });
+      }
     }
   },
   //同条目下不同记事类型快速跳转功能
@@ -432,17 +429,15 @@ Page({
     this.data.note[this.data.noteIndex].note.record.length > 0 ? hasRecord = 1 : hasRecord = 0;
     this.data.note[this.data.noteIndex].note.photo.length > 0 ? hasPhoto = 1 : hasPhoto = 0;
     !!this.data.note[this.data.noteIndex].note.video ? hasVideo = 1 : hasVideo = 0;
-    hasText + hasRecord + hasPhoto + hasVideo >= 2 && jumpNow ? canIJump = true : canIJump = false;
-    if (lock) {
+    if (hasText + hasRecord + hasPhoto + hasVideo >= 2 && lockB) canIJump = true;
+    if (lockA) {
       console.log("invoke jumpToAnother");
-      lock = false;
-      anchor = ["JumpToAnother", res.changedTouches[0].pageY];
+      lockA = false;
+      anchor = ["JumpToAnother", res.touches[0].pageY];
     }
-    if (anchor[0] === "JumpToAnother" && jumpNow) {
+    if (anchor[0] === "JumpToAnother") {
       var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
       if (moveDistance >= 200 && canIJump) {
-        console.log("JumpDown");
-        jumpNow = false;
         if (this.data.textDisplay) {
           this.setData({
             textDisplay: false,
@@ -507,9 +502,8 @@ Page({
           console.log("jumpOut");
           if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
         }
+        lockA = true;
       } else if (moveDistance <= -200 && canIJump) {
-        console.log("JumpUp");
-        jumpNow = false;
         if (this.data.videoDisplay) {
           this.setData({
             videoDisplay: false,
@@ -574,8 +568,8 @@ Page({
           console.log("jumpOut");
           if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
         }
-      } else if (Math.abs(moveDistance) >= 200 && jumpNow) {
-        jumpNow = false;
+        lockA = true;
+      } else if (Math.abs(moveDistance) >= 200) {
         if (this.data.textDisplay) {
           this.setData({
             textDisplay: false,
@@ -598,13 +592,12 @@ Page({
           });
         }
         this.setData({ noteDisplay: true });
+        lockA = true;
+        console.log("jumpOut");
       }
-      if (this.data.noteDisplay) console.log("JumpOut");
       if (this.data.videoDisplay) {
         this.setData({ mainFnDisplay: false });
-      } else {
-        if (!this.data.mainFnDisplay) this.setData({ mainFnDisplay: true });
-      }
+      } else if (!this.data.mainFnDisplay) this.setData({ mainFnDisplay: true });
     }
 
   },
@@ -634,10 +627,7 @@ Page({
   },
   //文本记事操作：复制文本内容或退出查看
   textCheck(res) {
-    if (tapTime.toString().length === 13) {
-      tapTime = new Date().getTime() - tapTime;
-    } else tapTime = 0;
-    if (tapTime > 300) {
+    if (res.type === "longpress") {
       var that = this;
       wx.setClipboardData({
         data: that.data.text,

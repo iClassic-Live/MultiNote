@@ -284,13 +284,13 @@ Page({
 
   /* 自定义用户交互逻辑处理: 写记事  */
 
-  /* 变换背景图 */
+  /* 背景图 */
+  //背景图切花完成后解锁以备下一次切换操作
   tapEnd(res) {
     lockA = true;
     lockB = true;
-    wx.setStorageSync("bgiCurrent", this.data.current);
-    getApp().globalData.current = this.data.curent;
   },
+  //背景图滑动切换
   changeBackgroundImage(res) {
     if (res.changedTouches instanceof Array) {
       if (lockA) {
@@ -377,7 +377,14 @@ Page({
     if (this.data.recordAccess) this.setData({ recordAccess: false });
     if (this.data.playbackAccess) this.setData({ playbackAccess: false });
     if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
+    this.font = {
+      fontSize: this.data.fontSize,
+      fontWeight: this.data.fontWeight,
+      fontColor: this.data.fontColor,
+      fontIndex: this.data.fontIndex
+    }
   },
+  //修改字体样式
   changeFont(res) {
     if (res.detail.column === 0) {
       var fontSize;
@@ -411,6 +418,39 @@ Page({
     this.setData({ fontIndex: fontIndex });
     toShowNoteCargo.info.fontIndex = fontIndex;
   },
+  //恢复字体样式到上一次修改前的状态或默认状态
+  cancelFontSet(res) {
+    var that = this;
+    wx.showActionSheet({
+      itemList: ["恢复修改前的字体样式", "恢复默认字体样式"],
+      success(res) {
+        if (!res.tapIndex) {
+          that.setData({
+            fontSize: that.font.fontSize,
+            fontWeight: that.font.fontWeight,
+            fontColor: that.font.fontColor,
+            fontIndex: that.font.fontIndex
+          });
+          toShowNoteCargo.style.fontSize = that.font.fontSize,
+          toShowNoteCargo.style.fontWeight = that.font.fontWeight,
+          toShowNoteCargo.style.fontColor = that.font.fontColor,
+          toShowNoteCargo.info.fontIndex = that.font.fontIndex
+        }else {
+          that.setData({
+            fontSize: "100%",
+            fontWeight: "normal",
+            fontColor: "#000",
+            fontIndex: [2, 1, 0]
+          });
+          toShowNoteCargo.style.fontSize = "100%",
+          toShowNoteCargo.style.fontWeight = "normal",
+          toShowNoteCargo.style.fontColor = "#000",
+          toShowNoteCargo.info.fontIndex = [2, 1, 0]
+        }
+      }
+    });
+  },
+
 
   /* 语音记事 */
   //语音记事与返听功能权限的开启与关闭
@@ -917,6 +957,7 @@ Page({
       }
     }
   },
+  //照片全屏查看时的退出操作：返回进入此功能的界面
   photoFn(res) {
     this.setData({ photoDisplay: false });
     if (this.data.ifFromCamera) {
@@ -1128,12 +1169,14 @@ Page({
   },
 
   /* 相机组件 */
+  //退出相机组件
   goback(res) {
     this.setData({
       cameraFnDisplay: false,
       mainFnDisplay: true
     });
   },
+  //摄像头前后置设定
   camSet(res) {
     if (this.data.camSet === "front") {
       this.setData({ camSet: "back" });
@@ -1151,6 +1194,7 @@ Page({
       this.setData({ camSign: 1 });
     }, 500);
   },
+  //闪光灯设定
   flashSet(res) {
     if (this.data.camSet === "back") {
       if (this.data.flash === "off") {
@@ -1174,6 +1218,7 @@ Page({
       }
     }
   },
+  //照片预览
   preview(res) {
     if (toShowNoteCargo.note.photo.length > 0) {
       this.setData({
@@ -1190,6 +1235,7 @@ Page({
       });
     }
   },
+  //主按钮设定：拍照、开始录像、停止录像
   cameraSet(res) {
     const camera = wx.createCameraContext();
     var that, cameraSet;
@@ -1355,6 +1401,7 @@ Page({
       }else stopShoot();
     }
   },
+  //更换设想模式：拍照、录像
   changeMode(res) {
     if (this.data.changeMode === "../images/shoot.png") {
       this.setData({
@@ -1370,6 +1417,7 @@ Page({
       });
     }
   },
+  //照片拍摄质量设定
   qualitySet(res) {
     if (this.data.qualitySet === "Normal") {
       this.setData({ qualitySet: "High" });
