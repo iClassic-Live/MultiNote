@@ -144,22 +144,25 @@ page {
   height: 100%;
   width: 100%;
 }
-.readingZone .text {
-  height: 100%; 
-  width: auto;
-  box-sizing: border-box;
-  border: 6rpx solid black;
-  background-color: rgba(255, 255, 255, 0.4);
+.readingZone .content {
+  height: 100%;
+  width: 100%;
 }
-.readingZone .text textarea {
+.readingZone .content .text {
+  height: 100%; 
+  width: 100%;
+}
+.readingZone .content .text textarea {
   box-sizing: border-box;
   height: 100%;
   width: 100%;
+  border: 6rpx solid black;
   padding: 0 1%;
   background: -webkit-gradient(linear, left top, left bottom, from(#000), color-stop(5%, rgba(255, 255, 255, 0)));
   background-size: 100% 1em;
+  background-color: rgba(255, 255, 255, 0.4);   
 }
-.readingZone .record {
+.readingZone .content  .record {
   height: 100%;
   width: auto;
   box-sizing: border-box;
@@ -170,29 +173,42 @@ page {
   align-items: center;
   background-color: rgba(255, 255, 255, 0.4);
 }
-.readingZone .record button {
+.readingZone .content  .record button {
   height: 100rpx;
   line-height: 100rpx;
   width: 100rpx;
   border-radius: 50%;
 }
-.readingZone .photo {
+.readingZone .content  .photo {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  border: 6rpx solid black;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+.readingZone .content  .photo > swiper {
   height: 100%;
   width: 100%;
 }
-.readingZone .photo swiper {
-  height: 100%;
-  width: 100%;
-  background-color: #000;
-}
-.readingZone .photo swiper swiper-item {
+.readingZone .content  .photo > swiper swiper-item {
   height: 100%;
   width: 100%;
 }
-.readingZone .photo swiper swiper-item image {
+.readingZone .content  .photo > swiper swiper-item image {
   height: 100%;
   width: 100%;
 }
+.readingZone .content .video {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  border: 6rpx solid black;
+  background-color: rgba(255, 255, 255, 0.4);
+  }
+.readingZone .content .video video {
+    width: 100%;
+    height: 100%;
+  }
 
 .creatingZone {
   position: absolute;
@@ -213,16 +229,3 @@ page {
   font-weight: bold;
   letter-spacing: 0.5em;
 }
-
-
-  /* 录像记事查看组件  */
-    #videoFn {
-      position: absolute;
-      z-index: 999;
-      height: 100%;
-      width: 100%;
-    }
-    #videoFn video {
-      width: 100%;
-      height: 100%;
-    }

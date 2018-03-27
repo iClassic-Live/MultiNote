@@ -237,7 +237,7 @@ Page({
     console.log("CreateNote onShow");
     var bgiCurrent = wx.getStorageSync("bgiCurrent");
     if (this.data.current === bgiCurrent) {
-      if (this.data.current !== 500) this.setData({ duration: 500 });
+      if (this.data.duration !== 500) this.setData({ duration: 500 });
     } else this.setData({ current: bgiCurrent });
     //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
     var num = wx.getStorageSync("How Many Notes Can I Create");
@@ -268,7 +268,7 @@ Page({
   /* 生命周期函数--监听页面初次渲染完成 */
   onReady: function (res) {
     console.log("CreateNote onReady");
-    if (this.data.current !== 500) this.setData({ duration: 500 });
+    if (this.data.duration !== 500) this.setData({ duration: 500 });
   },
 
   /* 生命周期函数--监听页面隐藏 */

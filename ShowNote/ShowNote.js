@@ -26,13 +26,9 @@ Page({
   data: {
 
     //背景图切换功能初始化
-    duration: 0, //背景图滑块切换的过渡时间
-    current: wx.getStorageSync("bgiCurrent") || 0, //背景图所在滑块序号
+    bgiDuration: 0, //背景图滑块切换的过渡时间
+    bgiCurrent: wx.getStorageSync("bgiCurrent") || 0, //背景图所在滑块序号
     bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
-
-    //主功能区、视频查看组件切换功能初始化：默认主功能区启动，其他功能区待命
-    mainFnDisplay: true, //主功能区
-    videoDisplay: false, //视频查看组件
 
     //记事检索和记事创建功能使用权限初始化
     getUseAccess: true, //当正在查阅某项记事时记事检索和记事创建功能将不允许能使用
@@ -44,21 +40,20 @@ Page({
 
     //记事列表展示功能初始化
     note: wx.getStorageSync("note"), //全部记事信息的渲染
-    noteIndex: null, //正在查看的记事的索引
-    noteDisplay: true, //记事区Display，默认展示，其他记事查看或记事检索时隐藏
+    noteDisplay: true, //记事区Display，默认展示，记事内容查看或记事检索时隐藏
+    contentDuration: 0, //同条目下不同记事间切换的动画时长
+    contentCurrent: 0, //记事内容相对应的滑块索引指示
     textDisplay: false, //文本记事Display，默认隐藏
     text: null, //文本记事内容，默认为空
     recordDisplay: false, //语音记事Display，默认隐藏
     playback: null, //语音记事内容，默认为空
     photoDisplay: false,  //照相记事Display，默认隐藏
     img: null, //照相记事内容，默认为空
+    videoDisplay: false, //视频记事Display，默认隐藏 
+    videoSrc: null, //视频播放地址，默认为空    
 
     //记事创建功能更初始化
     createNote: "新建记事", //新建记事按钮字样
-
-
-    //录像记事查看组件功能初始化
-    videoSrc: null, //视频播放地址，默认为空
 
   },
 
@@ -66,7 +61,7 @@ Page({
   onLoad(res) {
     console.log("ShowNote onLoad");
     var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
-    if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
+    if (this.data.bgiCurrent !== bgiCurrent) this.setData({ bgiCurrent: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note") || [];
     var noting = wx.getStorageSync("noting");
@@ -113,15 +108,15 @@ Page({
   onShow(res) {
     console.log("ShowNote onShow");
     var bgiCurrent = wx.getStorageSync("bgiCurrent");
-    if (this.data.current === bgiCurrent) {
-      if (this.data.current !== 500) this.setData({ duration: 500 });
-    } else this.setData({ current: bgiCurrent });
+    if (this.data.bgiCurrent === bgiCurrent) {
+      if (this.data.bgiDuration !== 500) this.setData({ bgiDuration: 500 });
+    } else this.setData({ bgiCurrent: bgiCurrent });
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
   onReady(res) {
     console.log("ShowNote onReady");
-    if (this.data.current !== 500) this.setData({ duration: 500 });
+    if (this.data.bgiDuration !== 500) this.setData({ bgiDuration: 500 });
   },
 
   /* 生命周期函数--监听页面隐藏 */
@@ -139,20 +134,21 @@ Page({
   /* 背景图切换区 */
   //背景图切换
   changeBackgroundImage(res) {
-    if (res.changedTouches instanceof Array && anchor[0] === "changeBGI") {
+    if (res.changedTouches instanceof Array && anchor[0] === "changeBGI" && this.data.noteDisplay) {
       if (lockA) {
         lockA = false;
         anchor[1] = res.changedTouches[0].pageX;
       }
       var moveDistance = res.changedTouches[0].pageX - anchor[1];
       if ((!lockA && lockB) && Math.abs(moveDistance) >= 750 / SWT / 3) {
+        console.log("invoke changeBackgroundImage");
         lockB = false;
-        if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
-          this.setData({ current: this.data.current + 1 });
-          wx.setStorageSync("bgiCurrent", this.data.current);
-        } else if (moveDistance > 0 && this.data.current !== 0) {
-          this.setData({ current: this.data.current - 1 });
-          wx.setStorageSync("bgiCurrent", this.data.current);
+        if (moveDistance < 0 && this.data.bgiCurrent < getApp().globalData.bgiQueue.length - 1) {
+          this.setData({ bgiCurrent: this.data.bgiCurrent + 1 });
+          wx.setStorageSync("bgiCurrent", this.data.bgiCurrent);
+        } else if (moveDistance > 0 && this.data.bgiCurrent !== 0) {
+          this.setData({ bgiCurrent: this.data.bgiCurrent - 1 });
+          wx.setStorageSync("bgiCurrent", this.data.bgiCurrent);
         }
       }
     }
@@ -250,13 +246,15 @@ Page({
      1. 解开相应操作的锁
      2. 若检测到菜单或删除按钮拉出操作则对相应菜单或删除按钮：
         1) 当拉出已到达阈值则执行弹出操作
-        2）当拉出未达到阈值则执行弹回操作
-     3. 重设滑动操作的起始标识到切换背景图状态 */
+        2) 当拉出未达到阈值则执行弹回操作
+     3. 重置滑动操作的起始标识到切换背景图状态
+     4. 重置同条目下记事间快速跳转的滑动次数 */
   tapEnd(res) {
     console.log("invoke tapEnd");
     var that = this;
     var index = parseInt(res.currentTarget.id);
     if (((index || index === 0) && tag) && this.data.noteDisplay) {
+      tag = false;
       var array = [];
       intervalQueue.forEach((ele, id, origin) => {
         clearInterval(ele);
@@ -301,9 +299,8 @@ Page({
       }, 5);
       intervalQueue.push(timer);
     }
+    if (this.data.noteDisplay)  this.slideTimes = 0;
     lockA = true;
-    lockB = true;
-    tag = false;
     lockB = true;
     anchor = ["changeBGI"];
   },
@@ -311,7 +308,7 @@ Page({
   tapMove(res) {
     var index = res.currentTarget.id;
     if (lockA) {
-      console.log("invoke tapEnd");
+      console.log("invoke tapMove");
       lockA = !lockA;
       anchor = ["pullOut", res.touches[0].pageX];
       this.hideMenu(index);
@@ -422,211 +419,132 @@ Page({
       }
     }
   },
-  //同条目下不同记事类型快速跳转功能
-  jumpToAnother(res) {
-    var hasText, hasRecord, hasPhoto, hasVideo, canIJump;
-    !!this.data.note[this.data.noteIndex].note.text ? hasText = 1 : hasText = 0;
-    this.data.note[this.data.noteIndex].note.record.length > 0 ? hasRecord = 1 : hasRecord = 0;
-    this.data.note[this.data.noteIndex].note.photo.length > 0 ? hasPhoto = 1 : hasPhoto = 0;
-    !!this.data.note[this.data.noteIndex].note.video ? hasVideo = 1 : hasVideo = 0;
-    if (hasText + hasRecord + hasPhoto + hasVideo >= 2 && lockB) canIJump = true;
-    if (lockA) {
-      console.log("invoke jumpToAnother");
-      lockA = false;
-      anchor = ["JumpToAnother", res.touches[0].pageY];
-    }
-    if (anchor[0] === "JumpToAnother") {
-      var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
-      if (moveDistance >= 200 && canIJump) {
-        if (this.data.textDisplay) {
-          this.setData({
-            textDisplay: false,
-            text: null,
-            noteDisplay: false
-          });
-          if (hasRecord) {
-            this.setData({
-              recordDisplay: true,
-              playback: this.data.note[this.data.noteIndex].note.record
-            });
-          } else if (hasPhoto) {
-            this.setData({
-              photoDisplay: true,
-              img: this.data.note[this.data.noteIndex].note.photo
-            });
-          } else {
-            this.setData({
-              videoDisplay: true,
-              videoSrc: this.data.note[this.data.noteIndex].note.video
-            });
-          }
-        } else if (this.data.recordDisplay) {
-          this.setData({
-            recordDisplay: false,
-            playback: null,
-            noteDisplay: false
-          });
-          if (hasPhoto) {
-            this.setData({
-              photoDisplay: true,
-              img: this.data.note[this.data.noteIndex].note.photo
-            });
-          } else if (hasVideo) {
-            this.setData({
-              videoDisplay: true,
-              videoSrc: this.data.note[this.data.noteIndex].note.video
-            });
-          } else this.setData({ noteDisplay: true });
-        } else if (this.data.photoDisplay) {
-          this.setData({
-            photoDisplay: false,
-            img: null,
-            noteDisplay: false
-          });
-          if (hasVideo) {
-            this.setData({
-              videoDisplay: true,
-              videoSrc: this.data.note[this.data.noteIndex].note.video
-            });
-          } else this.setData({ noteDisplay: true });
-        } else if (this.data.videoDisplay) {
-          this.setData({
-            videoDisplay: false,
-            videoSrc: null,
-            noteDisplay: true
-          });
-        }
-        if (!this.data.noteDisplay) {
-          console.log("jumpDown");
-        } else {
-          console.log("jumpOut");
-          if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
-        }
-        lockA = true;
-      } else if (moveDistance <= -200 && canIJump) {
-        if (this.data.videoDisplay) {
-          this.setData({
-            videoDisplay: false,
-            videoSrc: null,
-            noteDisplay: false
-          });
-          if (hasPhoto) {
-            this.setData({
-              photoDisplay: true,
-              img: this.data.note[this.data.noteIndex].note.photo
-            });
-          } else if (hasRecord) {
-            this.setData({
-              recordDisplay: true,
-              playback: this.data.note[this.data.noteIndex].note.record
-            });
-          } else {
-            this.setData({
-              textDisplay: true,
-              text: this.data.note[this.data.noteIndex].note.text
-            });
-          }
-        } else if (this.data.photoDisplay) {
-          this.setData({
-            photoDisplay: false,
-            img: null,
-            noteDisplay: false
-          });
-          if (hasRecord) {
-            this.setData({
-              recordDisplay: true,
-              playback: this.data.note[this.data.noteIndex].note.record
-            });
-          } else if (hasText) {
-            this.setData({
-              textDisplay: true,
-              text: this.data.note[this.data.noteIndex].note.text
-            });
-          } else this.setData({ noteDisplay: true });
-        } else if (this.data.recordDisplay) {
-          this.setData({
-            recordDisplay: false,
-            playback: null,
-            noteDisplay: false
-          });
-          if (hasText) {
-            this.setData({
-              textDisplay: true,
-              text: this.data.note[this.data.noteIndex].note.text
-            });
-          } else this.setData({ noteDisplay: true });
-        } else if (this.data.textDisplay) {
-          this.setData({
-            textDisplay: false,
-            text: null,
-            noteDisplay: true
-          });
-        }
-        if (!this.data.noteDisplay) {
-          console.log("jumpUp");
-        } else {
-          console.log("jumpOut");
-          if (!this.data.noteDisplay) this.setData({ noteDisplay: true });
-        }
-        lockA = true;
-      } else if (Math.abs(moveDistance) >= 200) {
-        if (this.data.textDisplay) {
-          this.setData({
-            textDisplay: false,
-            text: null
-          });
-        } else if (this.data.recordDisplay) {
-          this.setData({
-            recordDisplay: false,
-            playback: []
-          });
-        } else if (this.data.photoDisplay) {
-          this.setData({
-            photoDisplay: false,
-            img: []
-          });
-        } else if (this.data.videoDisplay) {
-          this.setData({
-            videoDisplay: false,
-            videoSrc: null
-          });
-        }
-        this.setData({ noteDisplay: true });
-        lockA = true;
-        console.log("jumpOut");
+  //获取相应记事内容并展示
+  getContent(res, sign) {
+    var that = this;
+    var label = res.currentTarget.id;
+    var index = label.match(/\d+/g)[0];
+    var note = this.data.note[index].note;
+    label = label.slice(0, label.indexOf("_"));
+    if (note[label].length > 0) {
+      that.hideMenu();
+      if (that.data.contentDuration) that.setData({ contentDuration: 0 });
+      if (that.data.noteDisplay) that.setData({ noteDisplay: false });
+      that.setData({ [label + "Display"]: note[label] });
+      function setData(target) { that.setData({ [target]: note[label] }); }
+      if (label === "text") {
+        var style = that.data.note[index].style
+        setData("text");
+        that.setData({
+          fontSize: style.fontSize,
+          fontWeight: style.fontWeight,
+          fontColor: style.fontColor
+        });
       }
-      if (this.data.videoDisplay) {
-        this.setData({ mainFnDisplay: false });
-      } else if (!this.data.mainFnDisplay) this.setData({ mainFnDisplay: true });
-    }
-
-  },
-  //开启读文本记事功能
-  readText(res) {
-    var index = res.currentTarget.id;
-    index = index.match(/\d+/g)[0];
-    var text = this.data.note[index].note.text;
-    if (!!text) {
-      this.hideMenu();
-      this.setData({
-        text: text,
-        noteDisplay: false,
-        textDisplay: true,
-        noteIndex: index,
-        fontSize: this.data.note[index].style.fontSize || "100%",
-        fontWeight: this.data.note[index].style.fontWeight || "normal",
-        fontColor: this.data.note[index].style.fontColor || "#000"
-      })
+      if (label === "record") setData("playback");
+      if (label === "photo") setData("img");
+      if (label === "video") setData("videoSrc");
+      that.noteIndex = index;
     } else {
-      wx.showModal({
-        title: '读记事',
-        content: '该条目没有文本记事',
-        showCancel: false
-      });
+      var content;
+      switch (label) {
+        case "text": content = "文本记事"; break;
+        case "record": content = "语音记事"; break;
+        case "photo": content = "图片记事"; break;
+        case "video": content = "视频记事"; break;
+      }
+      if (!sign) {
+        wx.showToast({
+          title: "该项无" + content,
+          image: "../images/warning.png"
+        });
+      }
+    }
+  },
+  //同条目下不同记事间快速跳转
+  jumpToAnother(res) {
+    if (lockA) {
+      lockA = false;
+      anchor = ["jumpToAnother", res.touches[0].pageY];
+      var whichDisplay;
+      var whichCanShow = [];
+      var note = this.data.note[this.noteIndex].note;
+      if (this.data.textDisplay) whichDisplay = "text";
+      if (this.data.recordDisplay) whichDisplay = "record";
+      if (this.data.photoDisplay) whichDisplay = "photo";
+      if (this.data.videoDisplay) whichDisplay = "video";
+      if (note.text.length > 0) whichCanShow.push("text");
+      if (note.record.length > 0) whichCanShow.push("record");
+      if (note.photo.length > 0) whichCanShow.push("photo");
+      if (note.video.length > 0) whichCanShow.push("video");
+      this.whichDisplay = whichDisplay;
+      this.whichCanShow = whichCanShow;
+    }
+    if ((anchor[0] === "jumpToAnother" && this.whichCanShow.length > 0) && ( !lockA && lockB) ) {
+      var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
+      if (Math.abs(moveDistance) > 200) {
+        console.log("invoke jumpToAnother");
+        if (typeof this.slideTimes !== "number") this.slideTimes = 0;
+        this.slideTimes += 1;
+        lockB = false;
+        var that = this;
+        var note = this.data.note[this.noteIndex].note;
+        var whichCanShow = this.whichCanShow;
+        var index = whichCanShow.indexOf(this.whichDisplay);
+        setTimeout(() => { that.setData({ [that.whichDisplay + "Display"]: false }); }, 250);
+        if (moveDistance > 0) {
+          if (whichCanShow[index + 1]) {
+            var item = whichCanShow[index + 1];
+            function setData(target) { that.setData({ [target]: note[item] }); }
+            setTimeout(() => {
+              that.setData({ [item + "Display"]: true });
+              switch (item) {
+                case "record": setData("playback"); break;
+                case "photo": setData("img"); break;
+                case "video": setData("videoSrc"); break
+              }
+            }, 250);
+          }else this.setData({ noteDisplay: true });
+        }else {
+          if (whichCanShow[index - 1]) {
+            var item = whichCanShow[index - 1];
+            function setData(target) { that.setData({ [target]: note[item] }); }
+            setTimeout(() => {
+              that.setData({ [item + "Display"]: true });
+              switch (item) {
+                case "text":
+                  var style = that.data.note[that.noteIndex].style;
+                  setData("text");
+                  that.setData({
+                    fontSize: style.fontSize,
+                    fontWeight: style.fontWeight,
+                    fontColor: style.fontColor
+                  });
+                case "record": setData("playback"); break;
+                case "photo": setData("img"); break;
+              }
+            }, 250);
+          } else this.setData({ noteDisplay: true });
+        }
+        setTimeout(() => {
+          if (((!lockA || !lockB) && !that.data.noteDisplay) && that.slideTimes >= 2) {
+            wx.showModal({
+              title: "读记事",
+              content: "警告：请勿在长滑后仍保持触摸屏幕，否则下一步操作将有可能被阻塞！",
+              showCancel: false,
+              complete(res) {
+                lockA = true;
+                lockB = true;
+              }
+            })
+          }
+        }, 250);
+      }
     }
   },
   //文本记事操作：复制文本内容或退出查看
   textCheck(res) {
+    console.log("invoke textCheck");
     if (res.type === "longpress") {
       var that = this;
       wx.setClipboardData({
@@ -646,32 +564,14 @@ Page({
     } else {
       this.setData({
         noteDisplay: true,
-        textDisplay: false
-      });
-    }
-  },
-  //开启听语音记事功能
-  listenRecord(res) {
-    var index = res.currentTarget.id;
-    index = index.match(/\d+/g)[0];
-    if (this.data.note[index].note.record.length > 0) {
-      this.hideMenu();
-      this.setData({
-        playback: this.data.note[index].note.record,
-        noteDisplay: false,
-        recordDisplay: true,
-        noteIndex: index
-      });
-    } else {
-      wx.showModal({
-        title: '读记事',
-        content: '该条目没有语音记事',
-        showCancel: false
+        textDisplay: false,
+        contentCurrent: 0
       });
     }
   },
   //语音记事操作：返听相应条目下的相应语音或退出查看
   recordCheck(res) {
+    console.log("invoke recordCheck");
     var that = this;
     var index = res.currentTarget.id;
     if (!!index) {
@@ -701,32 +601,14 @@ Page({
       this.setData({
         playback: null,
         noteDisplay: true,
-        recordDisplay: false
-      });
-    }
-  },
-  //开启看图片记事功能
-  seePhoto(res) {
-    var index = res.currentTarget.id;
-    index = index.match(/\d+/g)[0];
-    if (this.data.note[index].note.photo.length > 0) {
-      this.hideMenu();
-      this.setData({
-        img: this.data.note[index].note.photo,
-        noteDisplay: false,
-        photoDisplay: true,
-        noteIndex: index
-      });
-    } else {
-      wx.showModal({
-        title: "读记事",
-        content: "该条目没有图片记事",
-        showCancel: false
+        recordDisplay: false,
+        contentCurrent: 0
       });
     }
   },
   //图片记事操作：查看相应条目下的相应图片或退出查看
   photoCheck(res) {
+    console.log("invoke photoCheck")
     if (res.type === "longpress") {
       var index = res.currentTarget.id;
       index = index.match(/\d+/g)[0];
@@ -760,41 +642,24 @@ Page({
       this.setData({
         img: null,
         noteDisplay: true,
-        photoDisplay: false
+        photoDisplay: false,
+        contentCurrent: 0
       });
     }
   },
-  //开启看录像记事功能
-  watchVideo(res) {
-    var index = res.currentTarget.id;
-    index = index.match(/\d+/g)[0];
-    if (!!this.data.note[index].note.video) {
-      this.hideMenu();
-      this.setData({
-        mainFnDisplay: false,
-        videoDisplay: true,
-        videoSrc: this.data.note[index].note.video,
-        noteIndex: index
-      });
-    } else {
-      wx.showModal({
-        title: "读记事",
-        content: "该条目没有录像记事",
-        showCancel: false
-      });
-    }
-  },
-  //录像记事操作：退出查看(注：相应查看操作在视频浏览组件中进行)
+  //录像记事操作：退出查看、保存到手机相册
   videoCheck(res) {
+    console.log("invoke videoCheck");
     var that = this;
     wx.showActionSheet({
       itemList: ["退出查看", "保存视频到手机相册"],
       success: function (res) {
-        if (res.tapIndex === 0) {
+        if (!res.tapIndex) {
           that.setData({
-            mainFnDisplay: true,
+            noteDisplay: true,
             videoDisplay: false,
-            videoSrc: null
+            videoSrc: null,
+            contentCurrent: 0
           });
         } else {
           wx.getSetting({
