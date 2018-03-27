@@ -1,67 +1,65 @@
-
 <scroll-view id="background">
-    <swiper current="{{bgiCurrent}}" circular="true" duration="{{bgiDuration}}">
-      <swiper-item wx:for="{{bgiQueue}}" wx:for-item="item" wx:key="bgiQueue">
-        <image mode="aspectFill" src="{{item}}"></image>
-      </swiper-item>
-    </swiper>
-  </scroll-view>
-  
-  <scroll-view id="mainFn">
-  
-    <view class="searchZone" style="background-color:{{bgc}}">
-      <view class="search">
-        <input type="text" placeholder="{{searchNote}}" disabled="{{!getUseAccess}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+  <swiper current="{{current}}" circular="true" duration="{{duration}}">
+    <swiper-item wx:for="{{bgiQueue}}" wx:for-item="item" wx:key="bgiQueue">
+      <image mode="aspectFill" src="{{item}}"></image>
+    </swiper-item>
+  </swiper>
+</scroll-view>
+
+<scroll-view id="mainFn">
+
+  <view class="searchZone" style="background-color:{{bgc}}">
+    <view class="search">
+      <input type="text" placeholder="{{searchNote}}" disabled="{{!getUseAccess}}" bindfocus="searchNote" bindblur="searchNote" bindinput="searchNote" value="{{resultKey}}"></input>
+    </view>
+    <view class="result">
+      <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
+        <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
       </view>
-      <view class="result">
-        <view class="showResult" wx:for="{{result}}" wx:for-item="item" wx:key="{{item.style.timeStamp}}">
-          <input id="result_{{item.id}}" disabled="true" value="{{item.note.title}}" bindtap="gotoResult"></input>
+    </view>
+  </view>
+
+  <scroll-view class="readingZone" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd" bindtap="cancel_editNote">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
+      <view class="title">
+        <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
+      </view>
+      <view class="menu" style="right:{{-item.style.pullOutMenu}}rpx">
+        <image id="text_{{item.id}}" src="../images/text.png" catchtap="getContent"></image>
+        <image id="record_{{item.id}}" src="../images/voice.png" catchtap="getContent"></image>
+        <image id="photo_{{item.id}}" src="../images/camera.png" catchtap="getContent"></image>
+        <image id="video_{{item.id}}" src="../images/VCR.png" catchtap="getContent"></image>
+      </view>
+      <view class="delete" style="left:{{-item.style.pullOutDelete}}rpx">
+        <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">
+          <text>删除</text>
         </view>
       </view>
     </view>
-  
-    <scroll-view class="readingZone" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd" bindtap="cancel_editNote">
-      <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}"
-  bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
-        <view class="title">
-          <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
-        </view>
-        <view class="menu" style="right:{{-item.style.pullOutMenu}}rpx">
-          <image id="text_{{item.id}}" src="../images/text.png" catchtap="getContent"></image>
-          <image id="record_{{item.id}}"  src="../images/voice.png" catchtap="getContent"></image>
-          <image id="photo_{{item.id}}"  src="../images/camera.png" catchtap="getContent"></image>
-          <image id="video_{{item.id}}" src="../images/VCR.png" catchtap="getContent"></image>
-        </view>
-        <view class="delete" style="left:{{-item.style.pullOutDelete}}rpx">
-          <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">
-            <text>删除</text>
-          </view>
-        </view>
+    <view class="content" wx:if="{{ !noteDisplay }}" data-id="content" bindtouchmove="jumpToAnother">
+      <view class="text" wx:if="{{textDisplay}}" bindtap="textCheck" bindlongpress="textCheck">
+        <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}"></textarea>
       </view>
-      <view class="content" wx:if="{{ !noteDisplay }}" data-id="content" bindtouchmove="jumpToAnother">
-          <view class="text" wx:if="{{textDisplay}}" bindtap="textCheck" bindlongpress="textCheck">
-            <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}"></textarea>
-          </view>
-          <view class="record" wx:if="{{recordDisplay}}" catchtap="recordCheck">
-            <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
-          </view>
-          <view class="photo" wx:if="{{photoDisplay}}" bindtap="photoCheck">
-            <swiper>
-              <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
-                <image id="photo_{{item.photo_index}}" mode="aspectFill" src="{{item.url}}" bindlongpress="photoCheck"></image>
-              </swiper-item>
-            </swiper>
-          </view>
-          <view class="video" wx:if="{{videoDisplay}}"  bindlongpress="videoCheck">
-            <video src="{{videoSrc}}"></video>
-          </view>
+      <view class="record" wx:if="{{recordDisplay}}" catchtap="recordCheck">
+        <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
       </view>
-    </scroll-view>
-  
-     <view class="creatingZone common">
-       <button disabled="{{!getUseAccess}}" class="createNote" bindtap="createNote">
-        <text>{{createNote}}</text>
-       </button> 
-    </view> 
-  
+      <view class="photo" wx:if="{{photoDisplay}}" bindtap="photoCheck">
+        <swiper>
+          <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
+            <image id="photo_{{item.photo_index}}" mode="aspectFill" src="{{item.url}}" bindlongpress="photoCheck"></image>
+          </swiper-item>
+        </swiper>
+      </view>
+      <view class="video" wx:if="{{videoDisplay}}" bindlongpress="videoCheck">
+        <video src="{{videoSrc}}"></video>
+      </view>
+    </view>
   </scroll-view>
+
+  <view class="creatingZone common">
+    <button disabled="{{!getUseAccess}}" class="createNote" bindtap="createNote">
+      <text>{{createNote}}</text>
+    </button>
+  </view>
+
+</scroll-view>

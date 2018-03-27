@@ -26,8 +26,8 @@ Page({
   data: {
 
     //背景图切换功能初始化
-    bgiDuration: 0, //背景图滑块切换的过渡时间
-    bgiCurrent: wx.getStorageSync("bgiCurrent") || 0, //背景图所在滑块序号
+    duration: 0, //背景图滑块切换的过渡时间
+    current: wx.getStorageSync("bgiCurrent") || 0, //背景图所在滑块序号
     bgiQueue: getApp().globalData.bgiQueue, //背景图地址队列
 
     //记事检索和记事创建功能使用权限初始化
@@ -41,8 +41,6 @@ Page({
     //记事列表展示功能初始化
     note: wx.getStorageSync("note"), //全部记事信息的渲染
     noteDisplay: true, //记事区Display，默认展示，记事内容查看或记事检索时隐藏
-    contentDuration: 0, //同条目下不同记事间切换的动画时长
-    contentCurrent: 0, //记事内容相对应的滑块索引指示
     textDisplay: false, //文本记事Display，默认隐藏
     text: null, //文本记事内容，默认为空
     recordDisplay: false, //语音记事Display，默认隐藏
@@ -61,7 +59,7 @@ Page({
   onLoad(res) {
     console.log("ShowNote onLoad");
     var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
-    if (this.data.bgiCurrent !== bgiCurrent) this.setData({ bgiCurrent: bgiCurrent });
+    if (this.data.current !== bgiCurrent) this.setData({ bgiCurrent: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note") || [];
     var noting = wx.getStorageSync("noting");
@@ -108,15 +106,15 @@ Page({
   onShow(res) {
     console.log("ShowNote onShow");
     var bgiCurrent = wx.getStorageSync("bgiCurrent");
-    if (this.data.bgiCurrent === bgiCurrent) {
-      if (this.data.bgiDuration !== 500) this.setData({ bgiDuration: 500 });
+    if (this.data.current === bgiCurrent) {
+      if (this.data.duration !== 500) this.setData({ duration: 500 });
     } else this.setData({ bgiCurrent: bgiCurrent });
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
   onReady(res) {
     console.log("ShowNote onReady");
-    if (this.data.bgiDuration !== 500) this.setData({ bgiDuration: 500 });
+    if (this.data.duration !== 500) this.setData({ duration: 500 });
   },
 
   /* 生命周期函数--监听页面隐藏 */
@@ -143,12 +141,12 @@ Page({
       if ((!lockA && lockB) && Math.abs(moveDistance) >= 750 / SWT / 3) {
         console.log("invoke changeBackgroundImage");
         lockB = false;
-        if (moveDistance < 0 && this.data.bgiCurrent < getApp().globalData.bgiQueue.length - 1) {
-          this.setData({ bgiCurrent: this.data.bgiCurrent + 1 });
-          wx.setStorageSync("bgiCurrent", this.data.bgiCurrent);
-        } else if (moveDistance > 0 && this.data.bgiCurrent !== 0) {
-          this.setData({ bgiCurrent: this.data.bgiCurrent - 1 });
-          wx.setStorageSync("bgiCurrent", this.data.bgiCurrent);
+        if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
+          this.setData({ current: this.data.current + 1 });
+          wx.setStorageSync("bgiCurrent", this.data.current);
+        } else if (moveDistance > 0 && this.data.current !== 0) {
+          this.setData({ current: this.data.current - 1 });
+          wx.setStorageSync("bgiCurrent", this.data.current);
         }
       }
     }
@@ -299,7 +297,7 @@ Page({
       }, 5);
       intervalQueue.push(timer);
     }
-    if (this.data.noteDisplay)  this.slideTimes = 0;
+    if (this.data.noteDisplay) this.slideTimes = 0;
     lockA = true;
     lockB = true;
     anchor = ["changeBGI"];
@@ -480,7 +478,7 @@ Page({
       this.whichDisplay = whichDisplay;
       this.whichCanShow = whichCanShow;
     }
-    if ((anchor[0] === "jumpToAnother" && this.whichCanShow.length > 0) && ( !lockA && lockB) ) {
+    if ((anchor[0] === "jumpToAnother" && this.whichCanShow.length > 0) && (!lockA && lockB)) {
       var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
       if (Math.abs(moveDistance) > 200) {
         console.log("invoke jumpToAnother");
@@ -504,8 +502,8 @@ Page({
                 case "video": setData("videoSrc"); break
               }
             }, 250);
-          }else this.setData({ noteDisplay: true });
-        }else {
+          } else this.setData({ noteDisplay: true });
+        } else {
           if (whichCanShow[index - 1]) {
             var item = whichCanShow[index - 1];
             function setData(target) { that.setData({ [target]: note[item] }); }
