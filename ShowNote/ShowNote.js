@@ -157,15 +157,20 @@ Page({
   searchNote(res) {
     if (res.type === "focus") { //记事检索框聚焦时关闭未关闭的记事的删除和菜单栏、
       //隐藏记事展示，开启检索功能
-      this.data.note.forEach((ele, index, origin) => {
-        this.data.note[index].style.pullOutDelete = 120;
-        this.data.note[index].style.pullOutMenu = 300;
-      });
+      this.hideMenu();
       this.setData({
         bgc: "rgba(255, 255, 255, 0.4)",
-        noteDisplay: false,
-        note: this.data.note
+        noteDisplay: false
       });
+      var that = this;
+      setTimeout(() => {
+        if (!that.data.noteDisplay) {
+          that.setData({
+            bgc: "rgba(255, 255, 255, 0.4)",
+            noteDisplay: false
+          });
+        }
+      }, 100);
     } else if (res.type === "input") { //记事检索框正在键入时展示与键入值相关的记事条目标题
       if (this.data.noteDisplay) {
         //隐藏记事展示，开启检索功能
