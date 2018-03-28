@@ -36,7 +36,7 @@
         </view>
       </view>
     </view>
-    <view class="content" wx:if="{{ !noteDisplay }}" data-id="content" bindtouchmove="jumpToAnother">
+    <view class="content" wx:if="{{ !noteDisplay }}" bindtouchstart="jumpToAnother" bindtouchend="jumpToAnother">
       <view class="text" wx:if="{{textDisplay}}" bindtap="textCheck" bindlongpress="textCheck">
         <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}"></textarea>
       </view>

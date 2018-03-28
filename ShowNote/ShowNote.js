@@ -466,8 +466,7 @@ Page({
   },
   //同条目下不同记事间快速跳转
   jumpToAnother(res) {
-    if (lockA) {
-      lockA = false;
+    if (res.type === "touchstart") {
       anchor = ["jumpToAnother", res.touches[0].pageY];
       var whichDisplay;
       var whichCanShow = [];
@@ -482,66 +481,42 @@ Page({
       if (note.video.length > 0) whichCanShow.push("video");
       this.whichDisplay = whichDisplay;
       this.whichCanShow = whichCanShow;
-    }
-    if ((anchor[0] === "jumpToAnother" && this.whichCanShow.length > 0) && (!lockA && lockB)) {
+    }else if ((anchor[0] === "jumpToAnother" && this.whichCanShow.length > 0)
+              && res.type === "touchend") {
       var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
       if (Math.abs(moveDistance) > 200) {
         console.log("invoke jumpToAnother");
-        if (typeof this.slideTimes !== "number") this.slideTimes = 0;
-        this.slideTimes += 1;
-        lockB = false;
         var that = this;
         var note = this.data.note[this.noteIndex].note;
         var whichCanShow = this.whichCanShow;
         var index = whichCanShow.indexOf(this.whichDisplay);
-        setTimeout(() => { that.setData({ [that.whichDisplay + "Display"]: false }); }, 250);
+        function getContent(ele) {
+          function setData(target) { that.setData({ [target]: note[ele] }); }
+          that.setData({ [ele+ "Display"]: true });
+          switch (ele) {
+            case "text":
+              var style = that.data.note[that.noteIndex].style;
+              setData("text");
+              that.setData({
+                fontSize: style.fontSize,
+                fontWeight: style.fontWeight,
+                fontColor: style.fontColor
+              });
+            case "record": setData("playback"); break;
+            case "photo": setData("img"); break;
+            case "video": setData("videoSrc"); break
+          }
+        }
+        this.setData({ [this.whichDisplay + "Display"]: false });
         if (moveDistance > 0) {
           if (whichCanShow[index + 1]) {
-            var item = whichCanShow[index + 1];
-            function setData(target) { that.setData({ [target]: note[item] }); }
-            setTimeout(() => {
-              that.setData({ [item + "Display"]: true });
-              switch (item) {
-                case "record": setData("playback"); break;
-                case "photo": setData("img"); break;
-                case "video": setData("videoSrc"); break
-              }
-            }, 250);
+            getContent(whichCanShow[index + 1]);
           } else this.setData({ noteDisplay: true });
         } else {
           if (whichCanShow[index - 1]) {
-            var item = whichCanShow[index - 1];
-            function setData(target) { that.setData({ [target]: note[item] }); }
-            setTimeout(() => {
-              that.setData({ [item + "Display"]: true });
-              switch (item) {
-                case "text":
-                  var style = that.data.note[that.noteIndex].style;
-                  setData("text");
-                  that.setData({
-                    fontSize: style.fontSize,
-                    fontWeight: style.fontWeight,
-                    fontColor: style.fontColor
-                  });
-                case "record": setData("playback"); break;
-                case "photo": setData("img"); break;
-              }
-            }, 250);
+            getContent(whichCanShow[index - 1]);
           } else this.setData({ noteDisplay: true });
         }
-        setTimeout(() => {
-          if (((!lockA || !lockB) && !that.data.noteDisplay) && that.slideTimes >= 2) {
-            wx.showModal({
-              title: "读记事",
-              content: "警告：请勿在长滑后仍保持触摸屏幕，否则下一步操作将有可能被阻塞！",
-              showCancel: false,
-              complete(res) {
-                lockA = true;
-                lockB = true;
-              }
-            })
-          }
-        }, 250);
       }
     }
   },
