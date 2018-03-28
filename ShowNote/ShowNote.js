@@ -502,14 +502,15 @@ Page({
           }
         }
         this.setData({ [this.whichDisplay + "Display"]: false });
-        if (moveDistance > 0) {
-          if (whichCanShow[index + 1]) {
-            getContent(whichCanShow[index + 1]);
-          } else this.setData({ noteDisplay: true });
+        if (moveDistance > 0 && !!whichCanShow[index + 1]) {
+          getContent(whichCanShow[index + 1]);
+        } else if (moveDistance < 0 && !!whichCanShow[index - 1]) {
+          getContent(whichCanShow[index - 1]);
         } else {
-          if (whichCanShow[index - 1]) {
-            getContent(whichCanShow[index - 1]);
-          } else this.setData({ noteDisplay: true });
+          this.setData({
+            noteDisplay: true,
+            getUseAccess: true
+          });
         }
       }
     }
