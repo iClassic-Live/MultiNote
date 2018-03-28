@@ -38,10 +38,10 @@ var lockB = true; //滑动达到指定值后的锁
         var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
         if (creatingSign[0][0] === "unchanged") {
           creatingSign[1] = setInterval(() => {
-            var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);
+            var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5);
             if (creatingSign[0][1] > num) {
               wx.setStorageSync("How Many Notes Can I Create", ["changed", num]);
-              clearInterval(timer);
+              clearInterval(creatingSign[1]);
             }
           });
         }

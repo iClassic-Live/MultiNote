@@ -101,9 +101,7 @@ Page({
                 mask: true
               });
             },
-            complete(e) {
-              if (!res.authSetting["scope.camera"]) scopeCamera();
-            }
+            complete(e) { if (!res.authSetting["scope.camera"]) scopeCamera(); }
           });
         }
         function scopeCamera() {
@@ -117,9 +115,7 @@ Page({
                 mask: true
               });
             },
-            complete(e) {
-              if (!res.authSetting["scope.writePhotosAlbum"]) scopeAlbum();
-            }
+            complete(e) { if (!res.authSetting["scope.writePhotosAlbum"]) scopeAlbum(); }
           });
         }
         function scopeAlbum() {
@@ -142,12 +138,16 @@ Page({
         } else if (!res.authSetting["scope.writePhotosAlbum"]) scopeAlbum();
       },
       fail(res) {
+        var note = wx.getStorageSync("note");
+        if (note instanceof Array && !!note.length) {
+          var content = "将返回读记事页！"
+        } else var content = "将返回启动页！"
         wx.showModal({
           title: "写记事",
-          content: "无法检测相关权限获取情况！",
+          content: "无法检测相关权限获取情况，" + content,
           showCancel: false,
           complete(res) {
-            if (!!wx.getStorageSync("note")) {
+            if (note instanceof Array && !!note.length) {
               wx.redirectTo({ url: "../ShowNote/ShowNote" });
             } else wx.redirectTo({ url: "../Home/Home" });
           }
@@ -155,8 +155,9 @@ Page({
       }
     });
     //监测当前是修改记事还是新建记事，并相应地为接下来的记事存储做准备
-    if (!!wx.getStorageSync("noting")) {
+    if (wx.getStorageInfoSync().keys.indexOf("noting") !== -1) {
       toShowNoteCargo = wx.getStorageSync("noting");
+      wx.removeStorageSync("noting");
       console.log("用户开始修改记事", toShowNoteCargo);
       this.setData({
         title: toShowNoteCargo.note.title,
@@ -168,7 +169,6 @@ Page({
         fontColor: toShowNoteCargo.style.fontColor,
         fontIndex: toShowNoteCargo.info.fontIndex
       });
-      console.log("fontIndex", this.data.fontIndex);
       console.log("各项记事存储情况如下",
         "\n记事标题：" + this.data.title,
         "\n记事文本：" + this.data.title,
@@ -208,7 +208,7 @@ Page({
       var record = toShowNoteCargo.note.record;
       var photo = toShowNoteCargo.note.photo;
       var video = toShowNoteCargo.note.video;
-      if (!!title && !sign) { //只有在已写标题的情况下才可以保存记事，否则不允许保存
+      if (!!title && !sign) { //只有在已写标题且当前记事条目未达上限的情况下才可以保存记事，否则不允许保存
         if (((!text && record.length === 0) && photo.length === 0) && !video) { //当有任意一种记事时可以保存记事，否则不允许保存
           this.data.save_cancel === "取消记事" ? "" : this.setData({ save_cancel: "取消记事" });
         } else {
@@ -251,7 +251,7 @@ Page({
           wx.setStorageSync("How Many Notes Can I Create", ["changed", Num]);
           if (length >= Num) {
             if (ifCreatingNote) {
-              sign = true;
+              sign = true; //检测到应用视口高度发生变化导致记事条目已达上限
               var content = "当前记事将不能保存，";
             } else var content = "";
             wx.showModal({
@@ -356,9 +356,11 @@ Page({
   /* 文本记事 */
   //文本记事的创建
   textContent(res) {
-    if (this.data.recordAccess) this.setData({ recordAccess: false });
-    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
-    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
+    for (let prop in this.data) {
+      if (/Access/.test(prop) && this.data[prop]) {
+        this.setData({ [prop]: false }); //关闭所有其他类型记事读写的权限
+      }
+    }
     if (res.type === "input") {
       toShowNoteCargo.note.text = res.detail.value;
     } else if (res.type === "blur") {
@@ -373,82 +375,81 @@ Page({
     }
   },
   //获取字体样式修改功能
-  getFontSet(res) {
-    if (this.data.recordAccess) this.setData({ recordAccess: false });
-    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
-    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
-    this.font = {
-      fontSize: this.data.fontSize,
-      fontWeight: this.data.fontWeight,
-      fontColor: this.data.fontColor,
-      fontIndex: this.data.fontIndex
-    }
-  },
-  //修改字体样式
-  changeFont(res) {
-    if (res.detail.column === 0) {
-      var fontSize;
-      if (res.detail.value === 0) fontSize = "50%";
-      if (res.detail.value === 1) fontSize = "75%";
-      if (res.detail.value === 2) fontSize = "100%";
-      if (res.detail.value === 3) fontSize = "150%";
-      if (res.detail.value === 4) fontSize = "200%";
-      this.setData({ fontSize: fontSize });
-      toShowNoteCargo.style.fontSize = fontSize;
-    }else if (res.detail.column === 1) {
-      var fontWeight;
-      if (res.detail.value === 0) fontWeight = "lighter";
-      if (res.detail.value === 1) fontWeight = "normal";
-      if (res.detail.value === 2) fontWeight = "bolder";
-      this.setData({ fontWeight: fontWeight });
-      toShowNoteCargo.style.fontWeight = fontWeight;
-    }else if (res.detail.column === 2) {
-      var fontColor;
-      if (res.detail.value === 0) fontColor = "#000";
-      if (res.detail.value === 1) fontColor = "#F00";
-      if (res.detail.value === 2) fontColor = "#8A2BE2";
-      if (res.detail.value === 3) fontColor = "#00BFFF";
-      if (res.detail.value === 4) fontColor = "#228B22";
-      if (res.detail.value === 5) fontColor = "#D2691E";
-      this.setData({ fontColor: fontColor });
-      toShowNoteCargo.style.fontColor = fontColor;
-    }
-    var fontIndex = this.data.fontIndex;
-    fontIndex[res.detail.column] = res.detail.value;
-    this.setData({ fontIndex: fontIndex });
-    toShowNoteCargo.info.fontIndex = fontIndex;
-  },
-  //恢复字体样式到上一次修改前的状态或默认状态
-  cancelFontSet(res) {
+  setFontStyle(res) {
     var that = this;
-    wx.showActionSheet({
-      itemList: ["恢复修改前的字体样式", "恢复默认字体样式"],
-      success(res) {
-        if (!res.tapIndex) {
-          that.setData({
-            fontSize: that.font.fontSize,
-            fontWeight: that.font.fontWeight,
-            fontColor: that.font.fontColor,
-            fontIndex: that.font.fontIndex
-          });
-          toShowNoteCargo.style.fontSize = that.font.fontSize,
-          toShowNoteCargo.style.fontWeight = that.font.fontWeight,
-          toShowNoteCargo.style.fontColor = that.font.fontColor,
-          toShowNoteCargo.info.fontIndex = that.font.fontIndex
-        }else {
-          that.setData({
-            fontSize: "100%",
-            fontWeight: "normal",
-            fontColor: "#000",
-            fontIndex: [2, 1, 0]
-          });
-          toShowNoteCargo.style.fontSize = "100%",
-          toShowNoteCargo.style.fontWeight = "normal",
-          toShowNoteCargo.style.fontColor = "#000",
-          toShowNoteCargo.info.fontIndex = [2, 1, 0]
+    if (res.type === "tap") { //获取字体样式修改功能
+      var fontStyle = {};
+      for (let prop in this.data) {
+        if (/Access/.test(prop) && this.data[prop] ) {
+          this.setData({ [prop]: false }); //关闭所有其他类型记事读写的权限
+        }
+        if (/font/.test(prop) && prop !== "font") {
+          fontStyle[prop] = this.data[prop]; //获取当前字体样式的设定信息
         }
       }
-    });
+      this.fontStyle = fontStyle; //在this中存入当前字体样式的设定信息以供取消时恢复当前字体样式
+    }else if (res.type === "columnchange") { //字体样式的展示
+      switch(res.detail.column) {
+        case 0: { //字体大小的设定；
+          switch (res.detail.value) {
+            case 0: { that.setData({ fontSize: "50%" }); }; break;
+            case 1: { that.setData({ fontSize: "75%" }); }; break;
+            case 2: { that.setData({ fontSize: "100%" }); }; break;
+            case 3: { that.setData({ fontSize: "150%" }); }; break;
+            case 4: { that.setData({ fontSize: "200%" }); }; break;
+          }
+        }; break;
+        case 1: { //字体粗细的设定
+          switch (res.detail.value) {
+            case 0: { that.setData({ fontWeight: "lighter" }); }; break;
+            case 1: { that.setData({ fontWeight: "normal" }); }; break;
+            case 2: { that.setData({ fontWeight: "bolder" }); }; break;
+          }
+        }; break;
+        case 2: { //字体颜色的设定
+          switch (res.detail.value) {
+            case 0: { that.setData({ fontColor: "#000" }); }; break;
+            case 1: { that.setData({ fontColor: "#F00" }); }; break;
+            case 2: { that.setData({ fontColor: "#8A2BE2" }); }; break;
+            case 3: { that.setData({ fontColor: "#00BFFF" }); }; break;
+            case 4: { that.setData({ fontColor: "#228B22" }); }; break;
+            case 5: { that.setData({ fontColor: "#D2691E" }); }; break;
+          }
+        }; break;
+      }
+    }else if (res.type === "change") { //确认字体样式的设定
+      for (let prop in this.data) {
+        if (!!toShowNoteCargo["style"][prop]) toShowNoteCargo["style"][prop] = this.fontStyle[prop];
+      }
+      this.setData({ fontIndex: res.detail.value });
+      toShowNoteCargo.info.fontIndex = res.detail.value;
+    }else if (res.type === "cancel") { //取消字体样式的设定
+      for (let prop in this.fontStyle) {
+        this.setData({ [prop]: this.fontStyle[prop] });
+      }
+    }else if (res.type === "longpress") { //重设字体到默认样式
+      var style = {};
+      for (let prop in toShowNoteCargo["style"]) {
+        if (/font/.test(prop)) style[prop] = toShowNoteCargo["style"][prop];
+      }
+      style["fontIndex"] = toShowNoteCargo.info["fontIndex"];
+      var origin = { fontSize: "100%", fontWeight: "normal", fontColor: "#000", fontIndex: [2, 1, 0] };
+      if (JSON.stringify(style) !== JSON.stringify(origin)) {
+        wx.showModal({
+          title: "写记事",
+          content: "是否重设字体到默认样式？",
+          success(res) {
+            if (res.confirm) {
+              for (let prop in origin) {
+                that.setData({ [prop]: origin[prop] });
+                if (toShowNoteCargo["style"][prop]) toShowNoteCargo["style"][prop] = origin[prop];
+              }
+              toShowNoteCargo.info.fontIndex = [2, 1, 0];
+            }
+          }
+        });
+      }
+    }
   },
 
 
@@ -485,7 +486,7 @@ Page({
           wx.showActionSheet({
             itemList: ["录音", "返听语音"],
             success(res) {
-              if (res.tapIndex === 0) {
+              if (!res.tapIndex) {
                 if (that.data.playbackAccess) that.setData({ playbackAccess: false });
                 that.data.recordAccess ?
                   that.setData({ recordAccess: false }) :
@@ -584,27 +585,27 @@ Page({
             that.animation.backgroundColor("#F5F5DC").step();
             that.setData({ breathingEffection: that.animation.export() });
             console.log("动画：按钮呼吸状态成功截停");
+            wx.vibrateLong();
             wx.showModal({
               title: "语音记事",
               content: "每条语音记事最长为两分钟",
-              showCancel: false
+              showCancel: false,
+              complete(res) {
+                if (toShowNoteCargo.note.record.length >= 5) {
+                  that.animation = wx.createAnimation({ duration: 1000 });
+                  that.animation.opacity(0).step();
+                  that.setData({ breathingEffection: that.animation.export() });
+                  wx.showToast({
+                    title: "语音记事已满",
+                    image: "../images/warning.png",
+                    mask: true
+                  });
+                  setTimeout(() => {
+                    that.setData({ recordAccess: false });
+                  }, 1000);
+                }
+              }
             });
-            if (toShowNoteCargo.note.record.length >= 5) {
-              that.animation = wx.createAnimation({ duration: 1000 });
-              that.animation.backgroundColor("#FF0000").step();
-              that.setData({ breathingEffection: that.animation.export() });
-              wx.showToast({
-                title: "语音记事已满",
-                image: "../images/warning.png",
-                mask: true
-              });
-              wx.vibrateLong();
-              setTimeout(() => {
-                that.setData({ recordAccess: false });
-              }, 1000);
-            } else {
-              wx.vibrateShort();
-            }
           });
         }, 12000);
       }, 200);
@@ -637,12 +638,12 @@ Page({
           that.animation = wx.createAnimation({ duration: 1000 });
           that.animation.opacity(0).step();
           that.setData({ breathingEffection: that.animation.export() });
+          wx.vibrateLong();
           wx.showToast({
             title: "语音记事已满",
             image: "../images/warning.png",
             mask: true
           });
-          wx.vibrateLong();
           setTimeout(() => {
             that.setData({ recordAccess: false });
           }, 1000);
@@ -662,9 +663,9 @@ Page({
   playback_delete(res) {
     if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     var that = this;
-    var index = res.currentTarget.id;
-    index = index.split("")[index.split("").length - 1];
+    var index = res.currentTarget.id.match(/\d+/g)[0];
     if (res.type === "tap") {
+      innerAudioContext.stop();
       innerAudioContext.autoplay = true;
       innerAudioContext.src = toShowNoteCargo.note.record[index].url;
       that.data.playback[index].opacity = 0.5
@@ -727,11 +728,11 @@ Page({
     if (this.data.playbackAccess) this.setData({ playbackAccess: false });
     var that = this;
     if (getCameraAccess) {
-      if (toShowNoteCargo.note.photo.length === 0) {
+      if (!toShowNoteCargo.note.photo.length) {
         wx.showActionSheet({
           itemList: ["拍照", "从手机相册获取图片"],
           success(res) {
-            if (res.tapIndex === 0) {
+            if (!res.tapIndex) {
               that.setData({
                 mainFnDisplay: false,
                 cameraFnDisplay: true,
@@ -884,8 +885,7 @@ Page({
   check_deletePhoto(res) {
     if (this.data.recordAccess) this.setData({ recordAccess: false });
     if (this.data.playbackAccess) this.setData({ playbackAccess: false });
-    var index = res.currentTarget.id;
-    index = index.split("")[index.split("").length - 1];
+    var index = res.currentTarget.id.match(/\d+/g)[0];
     if (res.type === "tap") {
       this.setData({
         mainFnDisplay: false,
@@ -923,7 +923,7 @@ Page({
         wx.showActionSheet({
           itemList: ["保存图片到手机相册", "删除本张图片"],
           success(res) {
-            if (res.tapIndex === 0) {
+            if (!res.tapIndex) {
               wx.saveImageToPhotosAlbum({
                 filePath: toShowNoteCargo.note.photo[index].url,
                 success(res) {
@@ -941,9 +941,7 @@ Page({
                   });
                 }
               });
-            } else {
-              deletePhoto();
-            }
+            } else deletePhoto();
           }
         });
       } else {
@@ -957,7 +955,7 @@ Page({
       }
     }
   },
-  //照片全屏查看时的退出操作：返回进入此功能的界面
+  //应用视口内照片全屏查看时的退出操作：返回进入此功能的界面
   photoFn(res) {
     this.setData({ photoDisplay: false });
     if (this.data.ifFromCamera) {
@@ -971,16 +969,16 @@ Page({
   /* 视频记事 */
   //视频记事尚的创建及查看功能权限的开启
   getShootFn(res) {
-    if (this.data.recordAccess) this.setData({ recordAccess: false });
-    if (this.data.playbackAccess) this.setData({ playbackAccess: false });
-    if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
     var that = this;
+    for (let prop in this.data) {
+      if (/Access/.test(prop) && this.data[prop]) this.setData({ [prop]: false });
+    }
     if (getCameraAccess) {
       if (!toShowNoteCargo.note.video) {
         wx.showActionSheet({
           itemList: ["录像", "从手机相册获取视频"],
           success(res) {
-            if (res.tapIndex === 0) {
+            if (!res.tapIndex) {
               that.setData({
                 mainFnDisplay: false,
                 cameraFnDisplay: true,
@@ -1048,15 +1046,15 @@ Page({
     wx.showActionSheet({
       itemList: ["退出预览", "保存视频到手机相册", "删除视频"],
       success(res) {
-        const videoControl = wx.createVideoContext(that.data.videoSrc);
-        if (res.tapIndex === 0) {
-          videoControl.pause();
+        if (!res.tapIndex) {
           that.setData({
             mainFnDisplay: true,
             videoDisplay: false,
             videoSrc: ""
           });
         } else if (res.tapIndex === 1) {
+          const videoControl = wx.createVideoContext(that.data.videoSrc);
+          videoControl.pause();
           wx.saveVideoToPhotosAlbum({
             filePath: that.data.videoSrc,
             success(res) {
@@ -1075,8 +1073,7 @@ Page({
             }
           });
         } else {
-          videoControl.pause();
-          toShowNoteCargo.note.video = null;
+          toShowNoteCargo.note.video = "";
           that.setData({
             mainFnDisplay: true,
             videoDisplay: false,
@@ -1266,14 +1263,7 @@ Page({
       });
     }
     if (cameraSet === "../images/photo.png") {
-      var quality = this.data.qualitySet;
-      if (quality === "Normal") {
-        quality = "normal";
-      }else if (quality === "High") {
-        quality = "high";
-      }else if (quality === "Low") {
-        quality = "Low";
-      }
+      var quality = this.data.qualitySet.toLowerCase();
       camera.takePhoto({
         quality: quality,
         success(res) {
@@ -1388,15 +1378,11 @@ Page({
                 title: "录像限时两分钟",
                 images: "../images/warning.png",
                 mask: false,
-                success(res) {
-                  stopShoot();
-                }
+                success(res) { stopShoot(); }
               });
             }, 120000);
           },
-          fail(res) {
-            failure();
-          }
+          fail(res) { failure(); }
         });
       }else stopShoot();
     }

@@ -18,7 +18,7 @@
         <textarea class="text" placeholder="{{textDefault}}" value="{{text}}" maxlength="none" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}};" bindfocus="textContent" bindinput="textContent" bindblur="textContent"></textarea>
       </view>
       <view class="font">
-        <picker mode="multiSelector" value="{{fontIndex}}" range="{{font}}" bindtap="getFontSet" bindcolumnchange="changeFont" bindcancel="cancelFontSet">
+        <picker mode="multiSelector" value="{{fontIndex}}" range="{{font}}" bindtap="setFontStyle" bindlongpress="setFontStyle" bindcolumnchange="setFontStyle" bindchange="setFontStyle" bindcancel="setFontStyle">
           <image src="../images/text.png"></image>
         </picker>
       </view>

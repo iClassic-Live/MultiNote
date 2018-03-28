@@ -59,7 +59,7 @@ Page({
   onLoad(res) {
     console.log("ShowNote onLoad");
     var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
-    if (this.data.current !== bgiCurrent) this.setData({ bgiCurrent: bgiCurrent });
+    if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note") || [];
     var noting = wx.getStorageSync("noting");
@@ -80,7 +80,7 @@ Page({
     });
     wx.setStorageSync("note", note);
     this.setData({ note: note });
-    // console.log("当前记事存储状况", wx.getStorageSync("note"));
+    console.log("当前记事存储状况", wx.getStorageSync("note"));
     //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
     var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
     if (creatingSign[0][0] === "unchanged") {
@@ -92,6 +92,8 @@ Page({
         }
       });
     }
+
+    //在this中创建并置空记事索引
     this.noteIndex = -1;
   },
 
@@ -101,7 +103,7 @@ Page({
     var bgiCurrent = wx.getStorageSync("bgiCurrent");
     if (this.data.current === bgiCurrent) {
       if (this.data.duration !== 500) this.setData({ duration: 500 });
-    } else this.setData({ bgiCurrent: bgiCurrent });
+    } else this.setData({ current: bgiCurrent });
   },
 
   /* 生命周期函数--监听页面初次渲染完成 */
@@ -422,6 +424,7 @@ Page({
     var note = this.data.note[index].note;
     label = label.slice(0, label.indexOf("_"));
     if (note[label].length > 0) {
+      wx.hideToast();
       this.hideMenu();
       this.setData({ getUseAccess: false });
       if (this.data.contentDuration) this.setData({ contentDuration: 0 });
@@ -534,7 +537,7 @@ Page({
           });
         }
       });
-    } else {
+    } else if (res.type === "tap") {
       this.noteIndex = -1;
       this.setData({
         noteDisplay: true,
@@ -672,7 +675,7 @@ Page({
   createNote(res) {
     this.hideMenu();
     var num = wx.getStorageSync("How Many Notes Can I Create");
-    if (num instanceof Array === false) {
+    if (!(num instanceof Array)) {
       var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5);
       wx.setStorageSync("How Many Notes Can I Create", ["unchanged", num]);
       wx.showToast({
@@ -693,26 +696,26 @@ Page({
 
 
   //当前页API: 以动画形式隐藏所有已拉出的菜单栏
-  hideMenu(id) {
-    var arr = [];
+  hideMenu(item) {
     var that = this;
+    var unhiddenQueue = [];
     this.data.note.forEach((ele, index) => {
-      if (parseInt(id) !== index) {
-        if (ele.style.pullOutDelete < 120) arr.push({ tag: "pullOutDelete", index: index });
-        if (ele.style.pullOutMenu < 300) arr.push({ tag: "pullOutMenu", index: index });
+      if (parseInt(item) !== index) {
+        if (ele.style.pullOutDelete < 120) unhiddenQueue.push({ tag: "pullOutDelete", index: index });
+        if (ele.style.pullOutMenu < 300) unhiddenQueue.push({ tag: "pullOutMenu", index: index });
       }
     });
     function clearIntervalQueue() {
-      var array = [];
+      var deletedIntervalQueue = [];
       intervalQueue.forEach((ele, id, origin) => {
         clearInterval(ele);
-        array.push(ele);
+        deletedIntervalQueue.push(ele);
       });
-      array.forEach((ele, id, origin) => {
+      deletedIntervalQueue.forEach((ele, id, origin) => {
         intervalQueue.splice(origin.indexOf(ele), 1);
       });
     }
-    arr.forEach(ele => {
+    unhiddenQueue.forEach(ele => {
       if (ele.tag === "pullOutDelete") {
         clearIntervalQueue();
         var timer1 = setInterval(() => {
