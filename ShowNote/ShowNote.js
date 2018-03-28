@@ -81,14 +81,6 @@ Page({
     wx.setStorageSync("note", note);
     this.setData({ note: note });
     // console.log("当前记事存储状况", wx.getStorageSync("note"));
-    // 使用定时器进行扫描操作：监测当前是否在查看记事，是则屏蔽记事检索功能和新建记事功能，否则取消屏蔽;
-    var timer = setInterval(() => {
-      if (!this.data.noteDisplay) {
-        if (this.data.getUseAccess) this.setData({ getUseAccess: false });
-      } else {
-        if (!this.data.getUseAccess) this.setData({ getUseAccess: true });
-      }
-    }, 10);
     //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
     var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
     if (creatingSign[0][0] === "unchanged") {
@@ -100,6 +92,7 @@ Page({
         }
       });
     }
+    this.noteIndex = -1;
   },
 
   /* 生命周期函数--监听页面显示 */
@@ -424,21 +417,22 @@ Page({
   },
   //获取相应记事内容并展示
   getContent(res, sign) {
-    var that = this;
     var label = res.currentTarget.id;
     var index = label.match(/\d+/g)[0];
     var note = this.data.note[index].note;
     label = label.slice(0, label.indexOf("_"));
     if (note[label].length > 0) {
-      that.hideMenu();
-      if (that.data.contentDuration) that.setData({ contentDuration: 0 });
-      if (that.data.noteDisplay) that.setData({ noteDisplay: false });
-      that.setData({ [label + "Display"]: note[label] });
+      this.hideMenu();
+      this.setData({ getUseAccess: false });
+      if (this.data.contentDuration) this.setData({ contentDuration: 0 });
+      if (this.data.noteDisplay) this.setData({ noteDisplay: false });
+      this.setData({ [label + "Display"]: note[label] });
+      var that = this;
       function setData(target) { that.setData({ [target]: note[label] }); }
       if (label === "text") {
-        var style = that.data.note[index].style
+        var style = this.data.note[index].style
         setData("text");
-        that.setData({
+        this.setData({
           fontSize: style.fontSize,
           fontWeight: style.fontWeight,
           fontColor: style.fontColor
@@ -447,7 +441,7 @@ Page({
       if (label === "record") setData("playback");
       if (label === "photo") setData("img");
       if (label === "video") setData("videoSrc");
-      that.noteIndex = index;
+      this.noteIndex = index;
     } else {
       var content;
       switch (label) {
@@ -466,7 +460,7 @@ Page({
   },
   //同条目下不同记事间快速跳转
   jumpToAnother(res) {
-    if (res.type === "touchstart") {
+    if (res.type === "touchstart" && this.noteIndex !== -1) {
       anchor = ["jumpToAnother", res.touches[0].pageY];
       var whichDisplay;
       var whichCanShow = [];
@@ -540,10 +534,11 @@ Page({
         }
       });
     } else {
+      this.noteIndex = -1;
       this.setData({
         noteDisplay: true,
         textDisplay: false,
-        contentCurrent: 0
+        getUseAccess: true
       });
     }
   },
@@ -576,11 +571,12 @@ Page({
       }, 250);
     } else {
       innerAudioContext.stop();
+      this.noteIndex = -1;
       this.setData({
         playback: null,
         noteDisplay: true,
         recordDisplay: false,
-        contentCurrent: 0
+        getUseAccess: true
       });
     }
   },
@@ -617,11 +613,12 @@ Page({
         }
       });
     } else if (res.type === "tap") {
+      this.noteIndex = -1;
       this.setData({
         img: null,
         noteDisplay: true,
         photoDisplay: false,
-        contentCurrent: 0
+        getUseAccess: true
       });
     }
   },
@@ -633,11 +630,12 @@ Page({
       itemList: ["退出查看", "保存视频到手机相册"],
       success: function (res) {
         if (!res.tapIndex) {
+          that.noteIndex = -1;
           that.setData({
             noteDisplay: true,
             videoDisplay: false,
             videoSrc: null,
-            contentCurrent: 0
+            getUseAccess: true
           });
         } else {
           wx.getSetting({
