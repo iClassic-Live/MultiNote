@@ -2,7 +2,7 @@ console.clear();
 App({
 
   globalData: {
-    version: "MultiNote 1.19.4", //版本号
+    version: "MultiNote 1.19.5", //版本号
     current: wx.getStorageSync("bgiCurrent") || 0, //当前背景图序号
     bgiQueue: [ //背景图地址队列
       "../images/bgi1.jpg",
