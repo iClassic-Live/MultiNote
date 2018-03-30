@@ -449,7 +449,14 @@ Page({
   getRecordFn(res) {
     var that = this;
     if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
-    innerAudioContext.onPlay(() => {innerAudioContext.stop(); });
+    if (this.timerQueue instanceof Array) {
+      innerAudioContext.stop();
+      for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
+      this.data.playback.forEach((ele, id, origin) => {
+        if (ele.opacity !== 1) ele.opacity = 1;
+      });
+      this.setData({ playback: that.data.playback });
+    }
     if (getRecordAccess) {
       if (!toShowNoteCargo.note.record.length) {
         this.data.recordAccess ?
@@ -633,10 +640,10 @@ Page({
     var that = this;
     var index = res.currentTarget.id.match(/\d+/g)[0];
     if (res.type === "tap") {
-      innerAudioContext.stop();
+      console.log(this.data.playback[index]);
       innerAudioContext.autoplay = true;
-      innerAudioContext.src = toShowNoteCargo.note.record[index].url;
-      var duration = toShowNoteCargo.note.record[index].duration;
+      innerAudioContext.src = this.data.playback[index].url;
+      var duration = this.data.playback[index].duration;
       if (!duration || duration > 12000) duration = 500;
         var flag = true;
         var timeStamp = new Date().getTime();
@@ -1230,12 +1237,7 @@ Page({
                         title: "正在进入读记事",
                         mask: true,
                       });
-                      wx.redirectTo({
-                        url: "../ShowNote/ShowNote",
-                        success(res) {
-                          console.log("跳转");
-                        }
-                      });
+                      wx.redirectTo({ url: "../ShowNote/ShowNote" });
                     }, 1500);
                   }
                 });
