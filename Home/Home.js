@@ -60,25 +60,16 @@ var lockB = true; //滑动达到指定值后的锁
 
     /* 自定义用户交互逻辑 */
       /* 背景图切换 */
-      tapEnd(res) {
-        lockA = true;
-        lockB = true;
-        wx.setStorageSync("bgiCurrent", this.data.current);
-        getApp().globalData.current = this.data.curent;
-      },
       changeBackgroundImage(res) {
-        if (res.changedTouches instanceof Array) {
-          if (lockA) {
-            lockA = false;
-            this.anchor = res.changedTouches[0].pageX
-          }
+        if (res.type === "touchstart") {
+          this.anchor = res.touches[0].pageX
+        } else if (res.type === "touchend") {
           var moveDistance = res.changedTouches[0].pageX - this.anchor;
-          if ((!lockA && lockB) && Math.abs(moveDistance) >= 750 / SWT / 3) {
-            lockB = false;
+          if (Math.abs(moveDistance) >= 750 / SWT / 3) {
             if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
               this.setData({ current: this.data.current + 1 });
               wx.setStorageSync("bgiCurrent", this.data.current);
-            } else if (moveDistance > 0 && this.data.current !== 0) {
+            } else if (moveDistance > 0 && !!this.data.current) {
               this.setData({ current: this.data.current - 1 });
               wx.setStorageSync("bgiCurrent", this.data.current);
             }
@@ -90,10 +81,18 @@ var lockB = true; //滑动达到指定值后的锁
       //MultiNote开始使用按钮，当用户缓存中有记事时则跳转到读记事页，否则跳转到写记事页
       startUsing (res) {
         if (wx.getStorageSync("note").length > 0) {
-
+          wx.showLoading({
+            title: "正在进入读记事",
+            mask: true
+          });
           wx.redirectTo({ url: "../ShowNote/ShowNote" });
-
-        } else wx.redirectTo({ url: "../CreateNote/CreateNote" });
+        } else {
+          wx.showLoading({
+            title: "正在进入写记事",
+            mask: true
+          });
+          wx.redirectTo({ url: "../CreateNote/CreateNote" });
+        }
       }
 
   });

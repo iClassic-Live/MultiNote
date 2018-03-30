@@ -5,15 +5,10 @@
 //获取用户本机的相对像素比
 const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
-//用于监测相应滑动操作起始的标识
-var lockA = true; //获取滑动起始点信息的锁
-var lockB = true; //滑动达到指定值后的锁
-
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
-var intervalQueue = []; //定时器ID阵列，获取有可能无法正常清除的定时器的ID;
-var anchor = ["changeBGI"]; //相应滑动操作的起始标识
-var tag = false; //是否进行了相应删除按钮或菜单栏拉出操作的标识
+var intervalQueue = []; //定时器ID阵列，获取有可能没有正常清除的定时器的ID;
+var anchor = [[null, null], [null, null], [null, null]]; //相应滑动操作的起始标识
 //语音记事初始化
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部 audio 上下文
 
@@ -58,6 +53,7 @@ Page({
   /* 生命周期函数--监听页面加载 */
   onLoad(res) {
     console.log("ShowNote onLoad");
+    wx.hideLoading();
     var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
     if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
@@ -127,15 +123,15 @@ Page({
   /* 背景图切换区 */
   //背景图切换
   changeBackgroundImage(res) {
-    if (res.changedTouches instanceof Array && anchor[0] === "changeBGI" && this.data.noteDisplay) {
-      if (lockA) {
-        lockA = false;
-        anchor[1] = res.changedTouches[0].pageX;
-      }
-      var moveDistance = res.changedTouches[0].pageX - anchor[1];
-      if ((!lockA && lockB) && Math.abs(moveDistance) >= 750 / SWT / 3) {
+    if (res.type === "touchstart" && this.data.noteDisplay) {
+      anchor[0] = [res.changedTouches[0].pageX, new Date().getTime()];
+    } else if (res.type === "touchend"
+      && this.data.noteDisplay
+      && new Date().getTime() - anchor[0][1] < 1000) {
+      this.hideMenu();
+      var moveDistance = res.changedTouches[0].pageX - anchor[0][0];
+      if (Math.abs(moveDistance) >= 750 / SWT / 3) {
         console.log("invoke changeBackgroundImage");
-        lockB = false;
         if (moveDistance < 0 && this.data.current < getApp().globalData.bgiQueue.length - 1) {
           this.setData({ current: this.data.current + 1 });
           wx.setStorageSync("bgiCurrent", this.data.current);
@@ -240,19 +236,34 @@ Page({
   },
 
   /* 读记事区 */
-  /* 同事件多复合操作：
-     1. 解开相应操作的锁
-     2. 若检测到菜单或删除按钮拉出操作则对相应菜单或删除按钮：
-        1) 当拉出已到达阈值则执行弹出操作
-        2) 当拉出未达到阈值则执行弹回操作
-     3. 重置滑动操作的起始标识到切换背景图状态
-     4. 重置同条目下记事间快速跳转的滑动次数 */
-  tapEnd(res) {
-    console.log("invoke tapEnd");
+  //删除按钮或菜单栏拉出操作
+  pullOutDel_Menu(res) {
     var that = this;
     var index = parseInt(res.currentTarget.id);
-    if (((index || index === 0) && tag) && this.data.noteDisplay) {
-      tag = false;
+    if (res.type === "touchmove") {
+      this.hideMenu(index);
+      if (!this.tagA) {
+        this.tagA = true;
+        anchor[1] = [res.changedTouches[0].pageX, new Date().getTime()];
+      } else if (new Date().getTime() - anchor[1][1] < 1000) {
+        this.tagB = true;
+        var pullOutDelete = this.data.note[index].style.pullOutDelete;
+        var pullOutMenu = this.data.note[index].style.pullOutMenu;
+        var moveDistance = (res.changedTouches[0].pageX - anchor[1][0]) * SWT;
+        if ((pullOutDelete >= 0 && pullOutDelete <= 120) && (moveDistance > 0 && Math.abs(moveDistance) < 120)) {
+          if (pullOutMenu !== 300) this.data.note[index].style.pullOutMenu = 300;
+          this.data.note[index].style.pullOutDelete = 120 - Math.abs(moveDistance);
+        }
+        if ((pullOutMenu >= 0 && pullOutMenu <= 300) && (moveDistance < 0 && Math.abs(moveDistance) < 300)) {
+          if (pullOutDelete !== 120) this.data.note[index].style.pullOutDelete = 120;
+          this.data.note[index].style.pullOutMenu = 300 - Math.abs(moveDistance);
+        }
+        this.setData({ note: this.data.note });
+      }
+    } else if (res.type === "touchend" && this.tagB) {
+      this.tagA = false;
+      this.tagB = false;
+      setTimeout(() => { that.hideMenu(index) }, 10);
       var array = [];
       intervalQueue.forEach((ele, id, origin) => {
         clearInterval(ele);
@@ -262,6 +273,7 @@ Page({
         intervalQueue.splice(origin.indexOf(ele), 1);
       });
       var timer = setInterval(() => {
+        if (intervalQueue.indexOf(timer) === -1) intervalQueue.push(timer);
         var style = that.data.note[index].style;
         if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
           that.data.note[index].style.pullOutDelete -= 20;
@@ -292,39 +304,12 @@ Page({
           (that.data.note[index].style.pullOutDelete === 0 ||
             that.data.note[index].style.pullOutDelete === 120)) {
           clearInterval(timer);
-          console.log("interval in tapEnd has been deleted");
+          if (intervalQueue.indexOf(timer) !== -1) {
+            intervalQueue.splice(intervalQueue.indexOf(timer), 1);
+          }
+          console.log("interval in pullOutDel_Menu has been deleted");
         }
       }, 5);
-      intervalQueue.push(timer);
-    }
-    if (this.data.noteDisplay) this.slideTimes = 0;
-    lockA = true;
-    lockB = true;
-    anchor = ["changeBGI"];
-  },
-  //菜单栏拉出操作
-  tapMove(res) {
-    var index = res.currentTarget.id;
-    if (lockA) {
-      console.log("invoke tapMove");
-      lockA = !lockA;
-      anchor = ["pullOut", res.touches[0].pageX];
-      this.hideMenu(index);
-    }
-    if (anchor[0] === "pullOut") {
-      tag = true;
-      var pullOutDelete = this.data.note[index].style.pullOutDelete;
-      var pullOutMenu = this.data.note[index].style.pullOutMenu;
-      var moveDistance = (res.changedTouches[0].pageX - anchor[1]) * SWT;
-      if ((pullOutDelete >= 0 && pullOutDelete <= 120) && (moveDistance > 0 && Math.abs(moveDistance) < 120)) {
-        if (pullOutMenu !== 300) this.data.note[index].style.pullOutMenu = 300;
-        this.data.note[index].style.pullOutDelete = 120 - Math.abs(moveDistance);
-      }
-      if ((pullOutMenu >= 0 && pullOutMenu <= 300) && (moveDistance < 0 && Math.abs(moveDistance) < 300)) {
-        if (pullOutDelete !== 120) this.data.note[index].style.pullOutDelete = 120;
-        this.data.note[index].style.pullOutMenu = 300 - Math.abs(moveDistance);
-      }
-      this.setData({ note: this.data.note });
     }
   },
   //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
@@ -339,42 +324,77 @@ Page({
       content: "是否删除本条记事？",
       success(res) {
         if (res.confirm) {
-          var timer = setInterval(() => {
-            that.data.note[index].style.opacity -= 0.1;
-            that.setData({ note: that.data.note });
-          }, 50);
-          setTimeout(() => {
-            clearInterval(timer);
-            var note = that.data.note;
-            note.splice(index, 1);
-            if (!!note.length) {
-              note.forEach((ele, index, origin) => {
-                if (ele.id !== index) {
-                  ele.id = index;
-                  ele.style.marginTop = index * 9.5;
-                }
+          wx.showLoading({
+            title: "开始删除本记事",
+            mask: true
+          });
+          var tag = 0;
+          var note = that.data.note;
+          if (note[index].note.record.length > 0) {
+            note[index].note.record.forEach((ele, id, origin) => {
+              wx.removeSavedFile({
+                filePath: ele.url,
+                complete(res) { if (id === origin.length - 1) tag += 1; }
               });
-            }
-            that.setData({ note: note });
-            wx.setStorageSync("note", note);
-            wx.showToast({
-              title: "当前记事已删除",
-              image: "../images/success.png",
-              mask: true,
-              complete(res) {
-                setTimeout(() => {
-                  if (!note.length) {
-                    wx.showModal({
-                      title: "读记事",
-                      content: "缓存中已无任何记事，将返回写记事！",
-                      showCancel: false,
-                      complete(res) { wx.redirectTo({ url: "../CreateNote/CreateNote" }); }
-                    })
-                  }
-                }, 1500);
-              }
             });
-          }, 500);
+          } else tag += 1;
+          if (note[index].note.photo.length > 0) {
+            note[index].note.photo.forEach((ele, id, origin) => {
+              wx.removeSavedFile({
+                filePath: ele.url,
+                complete(res) { if (id === origin.length - 1) tag += 1; }
+              });
+            });
+          } else tag += 1;
+          if (note[index].note.video.length > 0) {
+            wx.removeSavedFile({
+              filePath: note[index].note.video,
+              complete(res) { tag += 1; }
+            })
+          } else tag += 1;
+          (function deleting () {
+            if (tag < 3) {
+              setTimeout(() => {
+                deleting();
+              }, 20)
+            }else {
+              that.data.note[index].style.opacity -= 0.05;
+              that.setData({ note: that.data.note });
+              setTimeout(() => {
+                if (that.data.note[index].style.opacity <= 0) {
+                  wx.hideLoading();
+                  note.splice(index, 1);
+                  if (!!note.length) {
+                    note.forEach((ele, index, origin) => {
+                      if (ele.id !== index) {
+                        ele.id = index;
+                        ele.style.marginTop = index * 9.5;
+                      }
+                    });
+                  }
+                  that.setData({ note: note });
+                  wx.setStorageSync("note", note);
+                  wx.showToast({
+                    title: "当前记事已删除",
+                    image: "../images/success.png",
+                    mask: true,
+                    complete(res) {
+                      setTimeout(() => {
+                        if (!note.length) {
+                          wx.showModal({
+                            title: "读记事",
+                            content: "缓存中已无任何记事，将返回写记事！",
+                            showCancel: false,
+                            complete(res) { wx.redirectTo({ url: "../CreateNote/CreateNote" }); }
+                          })
+                        }
+                      }, 1500);
+                    }
+                  });
+                } else deleting();
+              }, 25)
+            }
+          })();
         } else {
           that.data.note[index].style.pullOutDelete = 750;
           that.setData({ note: that.data.note });
@@ -389,7 +409,9 @@ Page({
     var that = this;
     if (this.data.noteDisplay) {
       //当删除键或记事查看菜单已被拉出时取消操作拉出操作
-      this.hideMenu();
+      if (parseInt(id) && !this.data.note[parseInt(id)].style.pullOutMenu) {
+        if (res.touches[0].pageX * SWT < 450) this.hideMenu();
+      } else this.hideMenu();
       //当删除键和记事查看菜单都未被拉出且在记事标题展示状态时，默认点击当前条目为选择修改记事
       if (parseInt(id) < this.data.note.length) {
         var style = this.data.note[id].style
@@ -418,7 +440,7 @@ Page({
     }
   },
   //获取相应记事内容并展示
-  getContent(res, sign) {
+  getContent(res) {
     var label = res.currentTarget.id;
     var index = label.match(/\d+/g)[0];
     var note = this.data.note[index].note;
@@ -427,93 +449,79 @@ Page({
       wx.hideToast();
       this.hideMenu();
       this.setData({ getUseAccess: false });
-      if (this.data.contentDuration) this.setData({ contentDuration: 0 });
-      if (this.data.noteDisplay) this.setData({ noteDisplay: false });
-      this.setData({ [label + "Display"]: note[label] });
-      var that = this;
-      function setData(target) { that.setData({ [target]: note[label] }); }
-      if (label === "text") {
+      this.setData({
+        [label + "Display"]: note[label],
+        noteDisplay: false
+      });
+      // 预先渲染相应条目下可以展示的记事类型
+      if (note["text"].length > 0) {
         var style = this.data.note[index].style
-        setData("text");
         this.setData({
+          text: note.text,
           fontSize: style.fontSize,
           fontWeight: style.fontWeight,
           fontColor: style.fontColor
         });
       }
-      if (label === "record") setData("playback");
-      if (label === "photo") setData("img");
-      if (label === "video") setData("videoSrc");
+      if (note["record"].length > 0) this.setData({ playback: note["record"] });
+      if (note["photo"].length > 0) this.setData({ img: note["photo"] });
+      if (note["video"].length > 0) this.setData({ videoSrc: note["video"] });
+      var whichCanShow = []; //可以展示的记事类型
+      for (let prop in note) {
+        if (note[prop].length > 0 && prop !== "title") whichCanShow.push(prop + "Display");
+      }
+      this.whichCanShow = whichCanShow;
       this.noteIndex = index;
     } else {
-      var content;
       switch (label) {
-        case "text": content = "文本记事"; break;
-        case "record": content = "语音记事"; break;
-        case "photo": content = "图片记事"; break;
-        case "video": content = "视频记事"; break;
+        case "text": var content = "文本记事"; break;
+        case "record": var content = "语音记事"; break;
+        case "photo": var content = "图片记事"; break;
+        case "video": var content = "视频记事"; break;
       }
-      if (!sign) {
-        wx.showToast({
-          title: "该项无" + content,
-          image: "../images/warning.png"
-        });
-      }
+      wx.showToast({
+        title: "该项无" + content,
+        image: "../images/warning.png"
+      });
     }
   },
   //同条目下不同记事间快速跳转
   jumpToAnother(res) {
-    if (res.type === "touchstart" && this.noteIndex !== -1) {
-      anchor = ["jumpToAnother", res.touches[0].pageY];
-      var whichDisplay;
-      var whichCanShow = [];
-      var note = this.data.note[this.noteIndex].note;
-      if (this.data.textDisplay) whichDisplay = "text";
-      if (this.data.recordDisplay) whichDisplay = "record";
-      if (this.data.photoDisplay) whichDisplay = "photo";
-      if (this.data.videoDisplay) whichDisplay = "video";
-      if (note.text.length > 0) whichCanShow.push("text");
-      if (note.record.length > 0) whichCanShow.push("record");
-      if (note.photo.length > 0) whichCanShow.push("photo");
-      if (note.video.length > 0) whichCanShow.push("video");
-      this.whichDisplay = whichDisplay;
-      this.whichCanShow = whichCanShow;
-    }else if ((anchor[0] === "jumpToAnother" && this.whichCanShow.length > 0)
-              && res.type === "touchend") {
-      var moveDistance = (res.changedTouches[0].pageY - anchor[1]) * SWT;
-      if (Math.abs(moveDistance) > 200) {
-        console.log("invoke jumpToAnother");
-        var that = this;
-        var note = this.data.note[this.noteIndex].note;
+    var note = this.data.note[this.noteIndex].note;
+    if (res.type === "touchstart") {
+      var whichShowNow; //正在展示的记事类型
+      for (let prop in this.data) {
+        let condition = (/Display/g.test(prop) && prop !== "noteDisplay") && this.data[prop];
+        if (condition) { whichShowNow = prop; break; }
+      }
+      this.whichShowNow = whichShowNow;
+      anchor[2] = [res.touches[0].pageY, new Date().getTime()];
+    } else if (res.type === "touchend") {
+      innerAudioContext.stop();
+      var moveDistance = (res.changedTouches[0].pageY - anchor[2][0]) * SWT;
+      if (Math.abs(moveDistance) >= 375 && new Date().getTime() - anchor[2][1] < 2500) {
+        var whichShowNow = this.whichShowNow;
         var whichCanShow = this.whichCanShow;
-        var index = whichCanShow.indexOf(this.whichDisplay);
-        function getContent(ele) {
-          function setData(target) { that.setData({ [target]: note[ele] }); }
-          that.setData({ [ele+ "Display"]: true });
-          switch (ele) {
-            case "text":
-              var style = that.data.note[that.noteIndex].style;
-              setData("text");
-              that.setData({
-                fontSize: style.fontSize,
-                fontWeight: style.fontWeight,
-                fontColor: style.fontColor
-              });
-            case "record": setData("playback"); break;
-            case "photo": setData("img"); break;
-            case "video": setData("videoSrc"); break
+        var index = whichCanShow.indexOf(whichShowNow);
+        this.setData({ [whichShowNow]: false });
+        if (moveDistance > 0) {
+          if (!!whichCanShow[index + 1]) { //判断下一种记事类型是否存在
+            this.setData({ [whichCanShow[index + 1]]: true });
+          } else {
+            this.setData({
+              noteDisplay: true,
+              getUseAccess: true
+            });
           }
-        }
-        this.setData({ [this.whichDisplay + "Display"]: false });
-        if (moveDistance > 0 && !!whichCanShow[index + 1]) {
-          getContent(whichCanShow[index + 1]);
-        } else if (moveDistance < 0 && !!whichCanShow[index - 1]) {
-          getContent(whichCanShow[index - 1]);
         } else {
-          this.setData({
-            noteDisplay: true,
-            getUseAccess: true
-          });
+          if (!!whichCanShow[index - 1]) { //判断上一种记事类型是否存在
+            this.setData({ [whichCanShow[index - 1]]: true });
+          } else {
+            this.setData({
+              noteDisplay: true,
+              getUseAccess: true
+            });
+          }
         }
       }
     }
@@ -556,23 +564,36 @@ Page({
       innerAudioContext.stop();
       innerAudioContext.autoplay = true;
       innerAudioContext.src = this.data.playback[index].url;
-      this.data.playback[index].opacity = 0.5;
-      this.setData({
-        playback: this.data.playback,
-        noteIndex: index
-      });
-      setTimeout(() => {
-        that.data.playback[index].opacity = 1;
-        that.setData({ playback: that.data.playback });
-        setTimeout(() => {
-          that.data.playback[index].opacity = 0.5;
+      var duration = this.data.playback[index].duration;
+      if (!duration || duration > 12000) duration = 500;
+      var flag = true;
+      var timeStamp = new Date().getTime();
+      if (!this.timerQueue) that.timerQueue = [];
+      for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
+      this.data.playback[index].opacity = 1;
+      this.setData({ playback: that.data.playback });
+      (function breathingEffection() {
+        if (that.data.playback[index].opacity < 0.3) flag = false;
+        if (that.data.playback[index].opacity > 1) flag = true;
+        if (flag) {
+          that.data.playback[index].opacity -= 0.025;
           that.setData({ playback: that.data.playback });
-          setTimeout(() => {
+        } else {
+          that.data.playback[index].opacity += 0.025;
+          that.setData({ playback: that.data.playback });
+        }
+        var timeout = setTimeout(() => {
+          if (new Date().getTime() - timeStamp < duration - 35) {
+            breathingEffection();
+          } else {
+            console.log("breathingEffection 误差: "
+                                + Math.abs(new Date().getTime() - timeStamp - duration));
             that.data.playback[index].opacity = 1;
             that.setData({ playback: that.data.playback });
-          }, 250);
-        }, 250);
-      }, 250);
+          }
+        }, 35);
+        that.timerQueue.push(timeout);
+      })()
     } else {
       innerAudioContext.stop();
       this.noteIndex = -1;
@@ -684,6 +705,10 @@ Page({
       });
     }
     if (this.data.note.length < num[1]) {
+      wx.showLoading({
+        title: "正在进入写记事",
+        mask: true,
+      });
       wx.redirectTo({ url: "../CreateNote/CreateNote" });
     } else {
       wx.showModal({
@@ -719,28 +744,34 @@ Page({
       if (ele.tag === "pullOutDelete") {
         clearIntervalQueue();
         var timer1 = setInterval(() => {
+          if (intervalQueue.indexOf(timer1) === -1) intervalQueue.push(timer1);
           that.data.note[ele.index].style.pullOutDelete += 20;
           if (that.data.note[ele.index].style.pullOutDelete >= 120) {
             that.data.note[ele.index].style.pullOutDelete = 120;
             clearInterval(timer1);
+            if (intervalQueue.indexOf(timer2) !== -1) {
+              intervalQueue.splice(intervalQueue.indexOf(timer2), 1);
+            }
             console.log("interval for hiding Del button has been deleted");
           }
           that.setData({ note: that.data.note });
         }, 5);
-        intervalQueue.push(timer1);
       }
       if (ele.tag === "pullOutMenu") {
         clearIntervalQueue();
         var timer2 = setInterval(() => {
+          if (intervalQueue.indexOf(timer2) === -1) intervalQueue.push(timer2);
           that.data.note[ele.index].style.pullOutMenu += 50;
           if (that.data.note[ele.index].style.pullOutMenu >= 300) {
             that.data.note[ele.index].style.pullOutMenu = 300;
             clearInterval(timer2);
+            if (intervalQueue.indexOf(timer2) !== -1) {
+              intervalQueue.splice(intervalQueue.indexOf(timer2), 1);
+            }
             console.log("interval for hiding Menu has been deleted");
           }
           that.setData({ note: that.data.note });
         }, 5);
-        intervalQueue.push(timer2);
       }
     });
   },

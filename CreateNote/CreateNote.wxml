@@ -7,7 +7,7 @@
   </swiper>
 </scroll-view>
 
-<scroll-view id="mainFn" wx:if="{{mainFnDisplay}}" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
+<scroll-view id="mainFn" wx:if="{{mainFnDisplay}}" bindtouchstart="changeBackgroundImage" bindtouchend="changeBackgroundImage">
 
   <view class="notingZone">
     <view class="titleZone">
@@ -19,7 +19,7 @@
       </view>
       <view class="font">
         <picker mode="multiSelector" value="{{fontIndex}}" range="{{font}}" bindtap="setFontStyle" bindlongpress="setFontStyle" bindcolumnchange="setFontStyle" bindchange="setFontStyle" bindcancel="setFontStyle">
-          <image src="../images/text.png"></image>
+          <image mode="aspectFit" src="../images/text.png"></image>
         </picker>
       </view>
     </view>
@@ -35,7 +35,7 @@
         <button class="takingRecord" animation="{{breathingEffection}}" bindtouchstart="startRecord" bindtouchend="stopRecord"></button>
       </view>
       <view class="playback" wx:if="{{playbackAccess}}">
-        <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}" bindtap="playback_delete" bindlongpress="playback_delete">{{index + 1}}</button>
+        <button id="rec_{{item.record_index}}" src="{{item.url}}" wx:for="{{playback}}" wx:for-item="item" wx:key="{{item}}" style="opacity:{{item.opacity}}" bindtap="playback_delete" bindlongpress="playback_delete" bindended="playback_delete">{{index + 1}}</button>
       </view>
     </view>
 
@@ -72,7 +72,7 @@
         <cover-image mode="widthFix" src="../images/goback.png"></cover-image>
       </cover-view>
       <cover-view class="camSet" wx:if="{{!shootNow}}" bindtap="camSet">
-        <cover-image mode="widthFix" src="../images/camSet.png" style="opacity:{{camSign}}"></cover-image>
+        <cover-image mode="widthFix" src="../images/camSet.png" style="opacity: {{ camSign }}"></cover-image>
       </cover-view>
       <cover-view class="flashSet" wx:if="{{ifPhoto}}" bindtap="flashSet">
         <cover-image mode="widthFix" src="{{flashSet}}"></cover-image>

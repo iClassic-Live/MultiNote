@@ -7,7 +7,7 @@
   </swiper>
 </scroll-view> 
 
-<view id="mainFn" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd">
+<view id="mainFn" bindtouchstart="changeBackgroundImage" bindtouchend="changeBackgroundImage">
   <view class="logo module">
     <image mode="widthFix" src="../images/logo.png"></image>
   </view>

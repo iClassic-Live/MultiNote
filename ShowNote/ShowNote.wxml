@@ -19,8 +19,8 @@
     </view>
   </view>
 
-  <scroll-view class="readingZone" bindtouchmove="changeBackgroundImage" bindtouchend="tapEnd" bindtap="cancel_editNote">
-    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}" bindtouchend="tapEnd" bindtouchmove="tapMove" bindtap="cancel_editNote">
+  <scroll-view class="readingZone"  bindtouchstart="changeBackgroundImage" bindtouchend="changeBackgroundImage" bindtap="cancel_editNote">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}" catchtouchmove="pullOutDel_Menu" catchtouchend="pullOutDel_Menu" catchtap="cancel_editNote">
       <view class="title">
         <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
       </view>
@@ -37,21 +37,21 @@
       </view>
     </view>
     <view class="content" wx:if="{{ !noteDisplay }}" bindtouchstart="jumpToAnother" bindtouchend="jumpToAnother">
-      <view class="text" wx:if="{{textDisplay}}" bindtap="textCheck" bindlongpress="textCheck">
+      <view class="text" wx:if="{{textDisplay}}"catchtap="textCheck"catchlongpress="textCheck">
         <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}"></textarea>
       </view>
       <view class="record" wx:if="{{recordDisplay}}" catchtap="recordCheck">
         <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
       </view>
-      <view class="photo" wx:if="{{photoDisplay}}" bindtap="photoCheck">
+      <view class="photo" wx:if="{{photoDisplay}}" catchtap="photoCheck">
         <swiper>
           <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
-            <image id="photo_{{item.photo_index}}" mode="aspectFill" src="{{item.url}}" bindlongpress="photoCheck"></image>
+            <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" catchlongpress="photoCheck"></image>
           </swiper-item>
         </swiper>
       </view>
-      <view class="video" wx:if="{{videoDisplay}}" bindlongpress="videoCheck">
-        <video src="{{videoSrc}}"></video>
+      <view class="video" wx:if="{{videoDisplay}}">
+        <video src="{{videoSrc}}" bindlongpress="videoCheck"></video>
       </view>
     </view>
   </scroll-view>
