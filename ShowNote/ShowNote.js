@@ -497,7 +497,13 @@ Page({
       this.whichShowNow = whichShowNow;
       anchor[2] = [res.touches[0].pageY, new Date().getTime()];
     } else if (res.type === "touchend") {
-      innerAudioContext.stop();
+      if (that.timerQueue instanceof Array) {
+        innerAudioContext.stop();
+        for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
+        this.data.playback.forEach((ele, id, origin) => {
+          if (ele.opacity !== 1) ele.opacity = 1;
+        });
+      }
       var moveDistance = (res.changedTouches[0].pageY - anchor[2][0]) * SWT;
       if (Math.abs(moveDistance) >= 375 && new Date().getTime() - anchor[2][1] < 2500) {
         var whichShowNow = this.whichShowNow;
