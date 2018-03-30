@@ -447,14 +447,15 @@ Page({
   /* 语音记事 */
   //语音记事与返听功能权限的开启与关闭
   getRecordFn(res) {
+    var that = this;
     if (this.data.photoPreviewAccess) this.setData({ photoPreviewAccess: false });
+    innerAudioContext.onPlay(() => {innerAudioContext.stop(); });
     if (getRecordAccess) {
-      if (toShowNoteCargo.note.record.length === 0) {
+      if (!toShowNoteCargo.note.record.length) {
         this.data.recordAccess ?
           this.setData({ recordAccess: false }) :
           this.setData({ recordAccess: true });
       } else if (toShowNoteCargo.note.record.length < 5) {
-        var that = this;
         if (this.data.recordAccess) {
           wx.showModal({
             title: "语音记事",
@@ -641,7 +642,9 @@ Page({
         var timeStamp = new Date().getTime();
         if (!this.timerQueue) that.timerQueue = [];
         for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
-        this.data.playback[index].opacity = 1;
+        this.data.playback.forEach((ele, id, origin) => {
+          if (ele.opacity !== 1) ele.opacity = 1;
+        });
         this.setData({ playback: that.data.playback });
         (function breathingEffection() {
           if (that.data.playback[index].opacity < 0.3) flag = false;

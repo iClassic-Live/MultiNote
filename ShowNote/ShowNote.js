@@ -570,7 +570,9 @@ Page({
       var timeStamp = new Date().getTime();
       if (!this.timerQueue) that.timerQueue = [];
       for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
-      this.data.playback[index].opacity = 1;
+      this.data.playback.forEach((ele, id, origin) => {
+        if (ele.opacity !== 1) ele.opacity = 1;
+      });
       this.setData({ playback: that.data.playback });
       (function breathingEffection() {
         if (that.data.playback[index].opacity < 0.3) flag = false;
