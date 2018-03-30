@@ -756,7 +756,7 @@ Page({
         success(res) {
           var logs;
           res.tempFiles.forEach((ele, index, origin) => {
-            logs = { photo_index: index, url: ele.path, opacity: 1 };
+            logs = { photo_index: toShowNoteCargo.note.photo.length, url: ele.path, opacity: 1 };
             toShowNoteCargo.note.photo.push(logs);
             that.data.img.push(logs);
             that.setData({ img: that.data.img });
@@ -875,7 +875,7 @@ Page({
         mainFnDisplay: false,
         photoDisplay: true,
         img: toShowNoteCargo.note.photo,
-        current: index
+        imgCurrent: index
       });
     } else if (res.type === "longpress") {
       var that = this;
@@ -984,6 +984,28 @@ Page({
     for (let prop in this.data) {
       if (/Access/.test(prop) && this.data[prop]) this.setData({ [prop]: false });
     }
+    function selectVideo() {
+      wx.chooseVideo({
+        sourceType: ["album"],
+        camera: "back",
+        success(res) {
+          toShowNoteCargo.note.video = res.tempFilePath;
+          wx.showModal({
+            title: "视频记事",
+            content: "是否即刻预览视频？",
+            success(res) {
+              if (res.confirm) {
+                that.setData({
+                  mainFnDisplay: false,
+                  videoDisplay: true,
+                  videoSrc: toShowNoteCargo.note.video
+                });
+              }
+            }
+          });
+        }
+      });
+    }
     if (getCameraAccess) {
       if (!toShowNoteCargo.note.video) {
         wx.showActionSheet({
@@ -1000,15 +1022,7 @@ Page({
               if (toShowNoteCargo.note.photo.length < 3) {
                 that.setData({ changeMode: "../images/photo.png" });
               } else that.setData({ changeMode: "../images/null.png" });
-            } else {
-              wx.chooseVideo({
-                sourceType: ["album"],
-                camera: "back",
-                success(res) {
-                  toShowNoteCargo.note.video = res.tempFilePath;
-                }
-              });
-            }
+            } else selectVideo();
           }
         });
       } else {
@@ -1038,14 +1052,7 @@ Page({
           title: "视频记事",
           content: "无相机权限，只能从手机相册获取视频",
           success(res) {
-            if (res.confirm) {
-              wx.chooseVideo({
-                sourceType: ["album"],
-                success(res) {
-                  toShowNoteCargo.note.video = res.tempFilePath;
-                }
-              });
-            }
+            if (res.confirm) selectVideo();
           }
         });
       }

@@ -71,8 +71,8 @@
       <cover-view class="goback" wx:if="{{!shootNow}}" bindtap="goback">
         <cover-image mode="widthFix" src="../images/goback.png"></cover-image>
       </cover-view>
-      <cover-view class="camSet" wx:if="{{!shootNow}}" bindtap="camSet">
-        <cover-image mode="widthFix" src="../images/camSet.png" style="opacity: {{ camSign }}"></cover-image>
+      <cover-view class="camSet" wx:if="{{!shootNow}}" style="transform: rotate({{ 180 * (rotating || 0) }}deg);" bindtap="camSet">
+        <cover-image mode="widthFix" src="../images/camSet.png" style="opacity: {{ camSign }};  "></cover-image>
       </cover-view>
       <cover-view class="flashSet" wx:if="{{ifPhoto}}" bindtap="flashSet">
         <cover-image mode="widthFix" src="{{flashSet}}"></cover-image>
@@ -99,7 +99,7 @@
 </scroll-view>
 
 <scroll-view id="photoFn" wx:if="{{photoDisplay}}" bindtap="photoFn">
-  <swiper current="{{current}}">
+  <swiper current="{{imgCurrent}}">
     <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="{{item.photo}}">
         <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}"></image>
     </swiper-item>
