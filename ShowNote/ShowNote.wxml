@@ -24,13 +24,13 @@
       <view class="title">
         <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.note.text.fontWeight || 'normal'}};color:{{item.note.text.fontColor || '#000'}}"></input>
       </view>
-      <view class="menu" style="right:{{-item.style.pullOutMenu}}rpx">
+      <view class="menu" style="right:{{-item.style.pullOutMenu === undefined ? -300 : -item.style.pullOutMenu }}rpx">
         <image id="text_{{item.id}}" src="../images/text.png" catchtap="getContent"></image>
         <image id="record_{{item.id}}" src="../images/voice.png" catchtap="getContent"></image>
         <image id="photo_{{item.id}}" src="../images/camera.png" catchtap="getContent"></image>
         <image id="video_{{item.id}}" src="../images/VCR.png" catchtap="getContent"></image>
       </view>
-      <view class="delete" style="left:{{-item.style.pullOutDelete}}rpx">
+      <view class="delete" style="left:{{-item.style.pullOutDelete === undefined ? -300 : -item.style.pullOutDelete }}rpx">
         <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">
           <text>删除</text>
         </view>
@@ -44,7 +44,7 @@
         <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
       </view>
       <view class="photo" wx:if="{{photoDisplay}}" catchtap="photoCheck">
-        <swiper indicator-dots="true" circular="true" indicator-active-color="#fff">
+        <swiper circular="true" indicator-dots="true" indicator-active-color="#fff">
           <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
             <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" catchlongpress="photoCheck"></image>
           </swiper-item>

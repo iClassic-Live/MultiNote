@@ -155,13 +155,13 @@ Page({
       var index = wx.getStorageSync("item_to_edit")
       item = note[index];
       delete item.note["style"];
-      console.log("用户开始修改记事", item.note);
-      console.log("各项记事存储情况如下：",
-        "\n记事标题：" + item.note.title,
-        "\n记事文本：" + item.note.text,
-        "\n语音记事：" + item.note.record,
-        "\n图片记事：" + item.note.photo,
-        "\n视频记事：" + item.note.video);
+      console.log("修改前的记事存储情况如下：",
+        "\n记事标题：", item.note.title,
+        "\n记事文本：", item.note.text,
+        "\n语音记事：", item.note.record,
+        "\n图片记事：", item.note.photo,
+        "\n视频记事：", item.note.video);
+      console.log("用户开始修改记事");
     } else {
       console.log("用户开始新建记事");
       //初始化向写记事页发送数据的载体
@@ -591,9 +591,9 @@ Page({
         var logs = { record_index: length, url: res.tempFilePath, duration: 12000 };
         item.note.record.push(logs);
         console.log("语音记事暂存，路径为", item.note.record[length].url);
-        logs["opacity"] = 1;
-        that.data.playback.push(logs);
-        that.setData({ playback: that.data.playback });
+        var recordQueue = item.note.record;
+        recordQueue.forEach(ele => { ele["opacity"] = 1; });
+        that.setData({ playback: recordQueue });
         canIRecord = true;
         //截停呼吸效果动画
         that.breathingEffection("stop");
@@ -753,11 +753,11 @@ Page({
           res.tempFiles.forEach((ele, index, origin) => {
             var logs = { photo_index: item.note.photo.length, url: ele.path };
             item.note.photo.push(logs);
-            logs["opacity"] = 1;
-            that.data.img.push(logs);
           });
+          var photoQueue = item.note.photo;
+          photoQueue.forEach(ele => { ele["opacity"] = 1; });
           that.setData({
-            img: that.data.img,
+            img: photoQueue,
             photoPreviewAccess: true
           });
         },
@@ -1129,7 +1129,12 @@ Page({
   //记事保存与取消
   save_cancel(res) {
     console.log("用户试图保存或取消当前记事");
-    console.log("item.note的记事存储状态", item.note);
+    console.log("保存前的记事存储状态：",
+      "\n记事标题：", item.note.title,
+      "\n记事文本：", item.note.text,
+      "\n语音记事：", item.note.record,
+      "\n图片记事：", item.note.photo,
+      "\n视频记事：", item.note.video);
     var that = this;
     //操作记事保存与取消时关闭已开启的所有记事的权限以免误操作
     for (let prop in this.data) {
@@ -1387,8 +1392,7 @@ Page({
           };
           item.note.photo.push(logs);
           var photoQueue = item.note.photo;
-          logs["opacity"] = 1;
-          photoQueue.push(logs);
+          photoQueue.forEach(ele => { ele["opacity"] = 1 });
           that.setData({
             preview: logs.url,
             img: photoQueue
@@ -1427,6 +1431,11 @@ Page({
                         });
                       }
                     }
+                  });
+                }else if (that.data.img.length >= 3) {
+                  that.setData({
+                    cameraFnDisplay: false,
+                    mainFnDisplay: true
                   });
                 }
               }, 1000);

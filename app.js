@@ -19,6 +19,7 @@ App({
    */
   onLaunch: function (res) {
     console.log("MultiNote onLaunch");
+    if (wx.getStorageInfoSync().keys.indexOf("note") === -1) wx.setStorageSync("note", []);
     //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
     if (wx.getStorageInfoSync().keys.indexOf("How Many Notes Can I Create") === -1) {
       var num = Math.floor(wx.getSystemInfoSync().windowHeight * (750 / wx.getSystemInfoSync().windowWidth) * 0.85 / 73.5);

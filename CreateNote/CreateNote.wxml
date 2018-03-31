@@ -99,7 +99,7 @@
 </scroll-view>
 
 <scroll-view id="photoFn" wx:if="{{photoDisplay}}" bindtap="photoFn">
-  <swiper current="{{imgCurrent}}">
+  <swiper current="{{imgCurrent}}" circular="true" indicator-dots="true" indicator-active-color="#fff">
     <swiper-item wx:for="{{img}}" wx:for-item="item" wx:key="{{item.photo}}">
         <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}"></image>
     </swiper-item>

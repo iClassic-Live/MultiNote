@@ -34,7 +34,7 @@ Page({
     result: [], //记事检索结果汇总，默认为空
 
     //记事列表展示功能初始化
-    note: wx.getStorageSync("note"), //全部记事信息的渲染
+    note: wx.getStorageSync("note") || [], //全部记事信息的渲染
     noteDisplay: true, //记事区Display，默认展示，记事内容查看或记事检索时隐藏
     textDisplay: false, //文本记事Display，默认隐藏
     text: null, //文本记事内容，默认为空
@@ -49,7 +49,6 @@ Page({
     createNote: "新建记事", //新建记事按钮字样
 
   },
-
   /* 生命周期函数--监听页面加载 */
   onLoad(res) {
     console.log("ShowNote onLoad");
