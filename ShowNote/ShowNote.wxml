@@ -24,13 +24,13 @@
       <view class="title">
         <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.note.text.fontWeight || 'normal'}};color:{{item.note.text.fontColor || '#000'}}"></input>
       </view>
-      <view class="menu" style="right:{{-item.style.pullOutMenu === undefined ? -300 : -item.style.pullOutMenu }}rpx">
+      <view class="menu" style="right:-{{item.style.pullOutMenu >= 0 ? item.style.pullOutMenu : 300 }}rpx">
         <image id="text_{{item.id}}" src="../images/text.png" catchtap="getContent"></image>
         <image id="record_{{item.id}}" src="../images/voice.png" catchtap="getContent"></image>
         <image id="photo_{{item.id}}" src="../images/camera.png" catchtap="getContent"></image>
         <image id="video_{{item.id}}" src="../images/VCR.png" catchtap="getContent"></image>
       </view>
-      <view class="delete" style="left:{{-item.style.pullOutDelete === undefined ? -300 : -item.style.pullOutDelete }}rpx">
+      <view class="delete" style="left:-{{item.style.pullOutDelete >= 0 ? item.style.pullOutDelete : 120  }}rpx">
         <view id="deleteNote_{{item.id}}" class="deleteNote" catchtap="deleteNote">
           <text>删除</text>
         </view>
@@ -50,8 +50,8 @@
           </swiper-item>
         </swiper>
       </view>
-      <view class="video" wx:if="{{videoDisplay}}">
-        <video src="{{videoSrc}}" bindlongpress="videoCheck"></video>
+      <view class="video" wx:if="{{videoDisplay}}" bindlongpress="videoCheck">
+        <video src="{{videoSrc}}"></video>
       </view>
     </view>
   </scroll-view>

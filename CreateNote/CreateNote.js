@@ -521,7 +521,7 @@ Page({
     if (canIRecord) {
       startRecord = setTimeout(() => {
         recorderManager.start({
-          duration: 1200000,
+          duration: 120000,
           sampleRate: 44100,
           numberOfChannels: 2,
           encodeBitRate: 192000,
@@ -543,7 +543,7 @@ Page({
           recorderManager.onStop((res) => {
             console.log("用户成功进行语音记事");
             var length = item.note.record.length;
-            var logs = { record_index: length, url: res.tempFilePath, duration: 12000 };
+            var logs = { record_index: length, url: res.tempFilePath, duration: 120000 };
             item.note.record.push(logs);
             console.log("语音记事暂存，路径为", item.note.record[length].url);
             logs["opacity"] = 1;
@@ -574,7 +574,7 @@ Page({
               }
             });
           });
-        }, 12000);
+        }, 120000);
       }, 200);
     }
   },
@@ -588,7 +588,8 @@ Page({
       recorderManager.onStop((res) => {
         console.log("用户成功进行语音记事");
         var length = item.note.record.length;
-        var logs = { record_index: length, url: res.tempFilePath, duration: 12000 };
+        var logs = { record_index: length, url: res.tempFilePath, 
+                            duration: new Date().getTime() - that.recordDuration };
         item.note.record.push(logs);
         console.log("语音记事暂存，路径为", item.note.record[length].url);
         var recordQueue = item.note.record;
