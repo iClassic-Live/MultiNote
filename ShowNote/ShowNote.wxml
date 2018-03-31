@@ -22,7 +22,7 @@
   <scroll-view class="readingZone"  bindtouchstart="changeBackgroundImage" bindtouchend="changeBackgroundImage" bindtap="cancel_editNote">
     <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}" catchtouchmove="pullOutDel_Menu" catchtouchend="pullOutDel_Menu" catchtap="cancel_editNote">
       <view class="title">
-        <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.style.fontWeight}};color:{{item.style.fontColor}}"></input>
+        <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.note.text.fontWeight || 'normal'}};color:{{item.note.text.fontColor || '#000'}}"></input>
       </view>
       <view class="menu" style="right:{{-item.style.pullOutMenu}}rpx">
         <image id="text_{{item.id}}" src="../images/text.png" catchtap="getContent"></image>
@@ -38,13 +38,13 @@
     </view>
     <view class="content" wx:if="{{ !noteDisplay }}" bindtouchstart="jumpToAnother" bindtouchend="jumpToAnother">
       <view class="text" wx:if="{{textDisplay}}"catchtap="textCheck"catchlongpress="textCheck">
-        <textarea disabled="true" style="font-size:{{fontSize}};font-weight:{{fontWeight}};color:{{fontColor}}" value="{{text}}"></textarea>
+        <textarea disabled="true" style="font-size:{{text.fontSize || '100%'}};font-weight:{{text.fontWeight || 'normal'}};color:{{text.fontColor || '#000'}}" value="{{text.content || ''}}"></textarea>
       </view>
       <view class="record" wx:if="{{recordDisplay}}" catchtap="recordCheck">
         <button id="rec_{{item.record_index}}" wx:for="{{playback}}" wx:for-item="item" wx:key="rec_{{item.record_index}}" style="opacity:{{item.opacity}}" catchtap="recordCheck">{{index + 1}}</button>
       </view>
       <view class="photo" wx:if="{{photoDisplay}}" catchtap="photoCheck">
-        <swiper>
+        <swiper indicator-dots="true" circular="true" indicator-active-color="#fff">
           <swiper-item id="photo_{{item.photo_index}}" wx:for="{{img}}" wx:for-item="item" wx:key="photo_{{item.photo_index}}">
             <image id="photo_{{item.photo_index}}" mode="aspectFit" src="{{item.url}}" catchlongpress="photoCheck"></image>
           </swiper-item>

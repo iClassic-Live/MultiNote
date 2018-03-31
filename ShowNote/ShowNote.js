@@ -58,39 +58,31 @@ Page({
     if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
     var note = wx.getStorageSync("note") || [];
-    var noting = wx.getStorageSync("noting");
-    if (!!noting) {
-      wx.removeStorageSync("noting");
-      if (noting.info.noteType === "new") {
-        note.push(noting);
-      } else if (noting.info.noteType === "edit") {
-        note[noting.id] = noting;
-      } else if (!note) wx.redirectTo({ url: "../Home/Home" });
-    }
-    note.forEach((ele, index, origin) => {
-      ele.id = index;
-      ele.style.opacity = 1;
-      ele.style.pullOutDelete = 120;
-      ele.style.pullOutMenu = 300;
-      ele.style.bgc = "rgba(255, 255, 255, 0.4)";
-    });
-    wx.setStorageSync("note", note);
-    this.setData({ note: note });
-    console.log("当前记事存储状况", wx.getStorageSync("note"));
-    //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
-    var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
-    if (creatingSign[0][0] === "unchanged") {
-      creatingSign[1] = setInterval(() => {
-        var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5);
-        if (creatingSign[0][1] > num) {
-          wx.setStorageSync("How Many Notes Can I Create", ["changed", num]);
-          clearInterval(creatingSign[1]);
-        }
+    if (note.length > 0) {
+      note.forEach((ele, index, origin) => {
+        ele.id = index;
+        ele.style = new Object();
+        ele.style.opacity = 1;
+        ele.style.pullOutDelete = 120;
+        ele.style.pullOutMenu = 300;
+        ele.style.bgc = "rgba(255, 255, 255, 0.5)";
       });
-    }
-
-    //在this中创建并置空记事索引
-    this.noteIndex = -1;
+      this.setData({ note: note });
+      console.log("当前记事存储状况", this.data.note);
+      //针对系统存在虚拟导航栏的安卓用户进行优化以避免因记事条目过多导致读记事页的检索功能失常;
+      var creatingSign = [wx.getStorageSync("How Many Notes Can I Create"), null];
+      if (creatingSign[0][0] === "unchanged") {
+        creatingSign[1] = setInterval(() => {
+          var num = Math.floor(wx.getSystemInfoSync().windowHeight * SWT * 0.85 / 73.5);
+          if (creatingSign[0][1] > num) {
+            wx.setStorageSync("How Many Notes Can I Create", ["changed", num]);
+            clearInterval(creatingSign[1]);
+          }
+        });
+      }
+      //在this中创建并置空记事索引
+      this.noteIndex = -1;
+    }else wx.redirectTo({ url: "../Home/Home" });
   },
 
   /* 生命周期函数--监听页面显示 */
@@ -416,21 +408,19 @@ Page({
       if (parseInt(id) < this.data.note.length) {
         var style = this.data.note[id].style
         if ((style.pullOutDelete === 120 && style.pullOutMenu === 300) && this.data.noteDisplay) {
-          var that = this;
-          this.data.note[id].style.bgc = "red";
-          this.fontColor = this.data.note[id].style.fontColor;
-          this.data.note[id].style.fontColor = "#fff";
+          this.data.note[id].style.bgc = "#f00";
+          this.fontColor = this.data.note[id].note.text.fontColor;
+          this.data.note[id].note.text.fontColor = "#fff";
           this.setData({ note: this.data.note });
           wx.showModal({
             title: "读记事",
             content: "是否修改当前记事？",
             success(res) {
-              that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
-              that.data.note[id].style.fontColor = that.fontColor;
+              that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.5)";
+              that.data.note[id].note.text.fontColor = that.fontColor;
               that.setData({ note: that.data.note });
               if (res.confirm) {
-                that.data.note[id].info.noteType = "edit";
-                wx.setStorageSync("noting", that.data.note[id]);
+                wx.setStorageSync("item_to_edit", id);
                 wx.redirectTo({ url: "../CreateNote/CreateNote" });
               }
             }
@@ -445,7 +435,9 @@ Page({
     var index = label.match(/\d+/g)[0];
     var note = this.data.note[index].note;
     label = label.slice(0, label.indexOf("_"));
-    if (note[label].length > 0) {
+    var condition = note[label].length > 0;
+    if (label === "text") condition = note[label].content.length > 0;
+    if (condition) {
       wx.hideToast();
       this.hideMenu();
       this.setData({ getUseAccess: false });
@@ -454,19 +446,12 @@ Page({
         noteDisplay: false
       });
       // 预先渲染相应条目下可以展示的记事类型
-      if (note["text"].length > 0) {
-        var style = this.data.note[index].style
-        this.setData({
-          text: note.text,
-          fontSize: style.fontSize,
-          fontWeight: style.fontWeight,
-          fontColor: style.fontColor
-        });
-      }
+      if (note["text"].content.length > 0) { this.setData({ text: note["text"] }); }
       if (note["record"].length > 0) this.setData({ playback: note["record"] });
       if (note["photo"].length > 0) this.setData({ img: note["photo"] });
       if (note["video"].length > 0) this.setData({ videoSrc: note["video"] });
       var whichCanShow = []; //可以展示的记事类型
+      if (note["text"].content.length > 0) whichCanShow.push("textDisplay");
       for (let prop in note) {
         if (note[prop].length > 0 && prop !== "title") whichCanShow.push(prop + "Display");
       }
