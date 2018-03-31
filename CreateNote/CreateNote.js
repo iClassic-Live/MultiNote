@@ -296,7 +296,7 @@ Page({
   /* 记事标题 */
   //记事标题的创建
   titleContent(res) {
-    //编辑文本时关闭其他所有正在进行的事件类型的读写权限
+    //编辑标题时关闭其他所有正在进行的事件类型的读写权限
     for (let prop in this.data) {
       if (/Access/g.test(prop) && this.data[prop]) this.setData({ [prop]: false });
     }
@@ -345,6 +345,7 @@ Page({
     }
     if (res.type === "input") {
       item.note.text.content = res.detail.value;
+      this.setData({ text: item.note.text });
     } else if (res.type === "blur") {
       if (res.detail.value.length > 0 && !res.detail.value.trim()) {
         item.note.text.content = "";
@@ -400,7 +401,6 @@ Page({
         }; break;
       }
       this.data.text.fontIndex[res.detail.column] = res.detail.value;
-      this.data.text.content = item.note.text.content;
       this.setData({ text: this.data.text });
     } else if (res.type === "change") { //确认字体样式的设定
       for (let prop in this.data.text) item.note["text"][prop] = this.data.text[prop];
@@ -1141,7 +1141,6 @@ Page({
         content: "是否保存当前记事？",
         success(res) {
           if (res.confirm) {
-            wx.removeStorageSync("item_to_edit");
             wx.showLoading({
               title: "正在保存记事！",
               mask: true
@@ -1238,7 +1237,6 @@ Page({
               content: "是否继续当前记事？",
               success(res) {
                 if (res.cancel) {
-                  wx.removeStorageSync("item_to_edit");
                   if (wx.getStorageSync("note").length > 0) {
                     wx.showLoading({
                       title: "正在进入读记事",
@@ -1264,7 +1262,6 @@ Page({
         content: "是否取消当前记事？",
         success(res) {
           if (res.confirm) {
-            wx.removeStorageSync("item_to_edit");
             if (wx.getStorageSync("note").length > 0) {
               wx.showLoading({
                 title: "正在进入读记事",

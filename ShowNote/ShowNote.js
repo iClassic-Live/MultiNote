@@ -57,6 +57,7 @@ Page({
     var bgiCurrent = wx.getStorageSync("bgiCurrent") || 0;
     if (this.data.current !== bgiCurrent) this.setData({ current: bgiCurrent });
     //当记事类型为新建时则增加记事条目，记事类型为修改时则修改相应条目
+    wx.removeStorageSync("item_to_edit");
     var note = wx.getStorageSync("note") || [];
     if (note.length > 0) {
       note.forEach((ele, index, origin) => {
