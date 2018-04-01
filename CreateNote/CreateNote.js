@@ -340,10 +340,11 @@ Page({
   //文本记事的创建
   textContent(res) {
     //编辑文本内容时关闭其他所有正在进行的事件类型的读写权限
-    for (let prop in this.data) {
-      if (/Access/g.test(prop) && this.data[prop]) this.setData({ [prop]: false });
-    }
-    if (res.type === "input") {
+    if (res.type === "focus") {
+      for (let prop in this.data) {
+        if (/Access/g.test(prop) && this.data[prop]) this.setData({ [prop]: false });
+      }
+    }else if (res.type === "input") {
       item.note.text.content = res.detail.value;
       this.setData({ text: item.note.text });
     } else if (res.type === "blur") {
@@ -546,9 +547,11 @@ Page({
             var logs = { record_index: length, url: res.tempFilePath, duration: 120000 };
             item.note.record.push(logs);
             console.log("语音记事暂存，路径为", item.note.record[length].url);
-            logs["opacity"] = 1;
-            that.data.playback.push(logs);
+            that.data.playback = JSON.parse(JSON.stringify(item.note.record));
+            that.data.playback.forEach(ele => { ele["opacity"] = 1; });
             that.setData({ playback: that.data.playback });
+            //真的不明白这个opacity属性是怎么从别的值溜进来的
+            item.note.record.forEach(ele => { delete ele["opacity"] });
             canIRecord = true;
             //截停呼吸效果动画
             that.breathingEffection("stop");
@@ -588,13 +591,17 @@ Page({
       recorderManager.onStop((res) => {
         console.log("用户成功进行语音记事");
         var length = item.note.record.length;
-        var logs = { record_index: length, url: res.tempFilePath, 
-                            duration: new Date().getTime() - that.recordDuration };
+        var logs = {
+          record_index: length, url: res.tempFilePath,
+          duration: new Date().getTime() - that.recordDuration
+        };
         item.note.record.push(logs);
         console.log("语音记事暂存，路径为", item.note.record[length].url);
-        var recordQueue = item.note.record;
-        recordQueue.forEach(ele => { ele["opacity"] = 1; });
-        that.setData({ playback: recordQueue });
+        that.data.playback = JSON.parse(JSON.stringify(item.note.record));
+        console.log(that.data.playback, item.note.record);
+        that.data.playback.forEach(ele => { ele["opacity"] = 1; });
+        console.log(that.data.playback, item.note.record);
+        that.setData({ playback: that.data.playback });
         canIRecord = true;
         //截停呼吸效果动画
         that.breathingEffection("stop");
@@ -611,9 +618,7 @@ Page({
           setTimeout(() => {
             that.setData({ recordAccess: false });
           }, 1000);
-        } else {
-          wx.vibrateShort();
-        }
+        } else wx.vibrateShort();
       })
     } else {
       wx.showModal({
@@ -755,10 +760,10 @@ Page({
             var logs = { photo_index: item.note.photo.length, url: ele.path };
             item.note.photo.push(logs);
           });
-          var photoQueue = item.note.photo;
-          photoQueue.forEach(ele => { ele["opacity"] = 1; });
+          that.data.img = JSON.parse(JSON.stringify(item.note.photo));
+          that.data.img.forEach(ele => { ele["opacity"] = 1; });
           that.setData({
-            img: photoQueue,
+            img: that.data.img,
             photoPreviewAccess: true
           });
         },
@@ -889,7 +894,7 @@ Page({
               wx.hideLoading();
               item.note.photo.splice(index, 1);
               if (item.note.photo.length > 0) {
-                item.note.photo.forEach((ele, id, origin) => { ele.photo_index = id;  });
+                item.note.photo.forEach((ele, id, origin) => { ele.photo_index = id; });
               }
               that.setData({ img: item.note.photo });
               if (item.note.photo.length === 0) {
@@ -920,7 +925,7 @@ Page({
                     deletion();
                     var note = wx.getStorageSync("note");
                     note[item.id] = item;
-                    wx.setStorageSync("note", note);                
+                    wx.setStorageSync("note", note);
                   }
                 });
               } else deletion();
@@ -1152,12 +1157,10 @@ Page({
               mask: true
             });
             var tag = 0;
-            var saveQueue =[];
             if (item.note.record.length > 0) {
               item.note.record.forEach((ele, index, origin) => {
                 if (/tmp/g.test(ele.url)) {
                   console.log("开始保存第" + (index + 1) + "条语音");
-                  saveQueue.push("语音");
                   wx.saveFile({
                     tempFilePath: ele.url,
                     success(res) {
@@ -1179,7 +1182,6 @@ Page({
               item.note.photo.forEach((ele, index, origin) => {
                 if (/tmp/g.test(ele.url)) {
                   console.log("开始保存第" + (index + 1) + "张图片");
-                  saveQueue.push("图片");
                   wx.saveFile({
                     tempFilePath: ele.url,
                     success(res) {
@@ -1199,7 +1201,6 @@ Page({
             } else tag += 1;
             if (item.note.video.length > 0 && /tmp/g.test(item.note.video)) {
               console.log("开始保存视频");
-              saveQueue.push("视频");
               wx.saveFile({
                 tempFilePath: item.note.video,
                 success(res) {
@@ -1217,12 +1218,8 @@ Page({
             } else tag += 1;
             (function save_jump() {
               if (tag < 3) {
-                var content; 
-                if (saveQueue[tag - 1]) {
-                  content = saveQueue[tag - 1] + "保存正在阻塞进程！";
-                }else content = "尚未有保存进程已完成";
-                console.log("API wx.saveFile() 调用未完成, " + content, saveQueue);
                 setTimeout(() => {
+                  console.log("API wx.saveFile() 调用未完成,");
                   save_jump();
                 }, 10);
               } else {
@@ -1402,11 +1399,11 @@ Page({
             url: res.tempImagePath
           };
           item.note.photo.push(logs);
-          var photoQueue = item.note.photo;
-          photoQueue.forEach(ele => { ele["opacity"] = 1 });
+          that.data.img = JSON.parse(JSON.stringify(item.note.photo));
+          that.data.img.forEach(ele => { ele["opacity"] = 1; });
           that.setData({
             preview: logs.url,
-            img: photoQueue
+            img: that.data.img
           });
           wx.showToast({
             title: "第" + that.data.img.length + "张图片记事",
@@ -1443,7 +1440,7 @@ Page({
                       }
                     }
                   });
-                }else if (that.data.img.length >= 3) {
+                } else if (that.data.img.length >= 3) {
                   that.setData({
                     cameraFnDisplay: false,
                     mainFnDisplay: true
