@@ -1152,10 +1152,12 @@ Page({
               mask: true
             });
             var tag = 0;
+            var saveQueue =[];
             if (item.note.record.length > 0) {
               item.note.record.forEach((ele, index, origin) => {
                 if (/tmp/g.test(ele.url)) {
                   console.log("开始保存第" + (index + 1) + "条语音");
+                  saveQueue.push("语音");
                   wx.saveFile({
                     tempFilePath: ele.url,
                     success(res) {
@@ -1177,6 +1179,7 @@ Page({
               item.note.photo.forEach((ele, index, origin) => {
                 if (/tmp/g.test(ele.url)) {
                   console.log("开始保存第" + (index + 1) + "张图片");
+                  saveQueue.push("图片");
                   wx.saveFile({
                     tempFilePath: ele.url,
                     success(res) {
@@ -1196,6 +1199,7 @@ Page({
             } else tag += 1;
             if (item.note.video.length > 0 && /tmp/g.test(item.note.video)) {
               console.log("开始保存视频");
+              saveQueue.push("视频");
               wx.saveFile({
                 tempFilePath: item.note.video,
                 success(res) {
@@ -1213,8 +1217,14 @@ Page({
             } else tag += 1;
             (function save_jump() {
               if (tag < 3) {
-                console.log("API wx.saveFile() 调用未完成！");
-                setTimeout(() => { save_jump(); }, 10);
+                var content; 
+                if (saveQueue[tag - 1]) {
+                  content = saveQueue[tag - 1] + "保存正在阻塞进程！";
+                }else content = "尚未有保存进程已完成";
+                console.log("API wx.saveFile() 调用未完成, " + content, saveQueue);
+                setTimeout(() => {
+                  save_jump();
+                }, 10);
               } else {
                 wx.hideLoading();
                 var note = wx.getStorageSync("note");
