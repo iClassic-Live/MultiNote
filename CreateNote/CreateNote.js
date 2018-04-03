@@ -10,7 +10,7 @@ var getRecordAccess = true; //录音权限的标识，默认权限开启
 var getCameraAccess = true; //相机权限的标识，默认权限开启
 var getAlbumAccess = true; //存图到相册权限的标识，默认权限开启
 
-//创建承载当前记事的全局变量
+//记录当前记事的全局载体
 var item;
 
 //记事保存初始化
@@ -296,11 +296,12 @@ Page({
   /* 记事标题 */
   //记事标题的创建
   titleContent(res) {
-    //编辑标题时关闭其他所有正在进行的事件类型的读写权限
-    for (let prop in this.data) {
-      if (/Access/g.test(prop) && this.data[prop]) this.setData({ [prop]: false });
-    }
-    if (res.type === "input") {
+    if (res.type === "focus") {
+      //编辑标题时关闭其他所有正在进行的事件类型的读写权限
+      for (let prop in this.data) {
+        if (/Access/g.test(prop) && this.data[prop]) this.setData({ [prop]: false });
+      } 
+    } else if (res.type === "input") {
       var value = res.detail.value;
       if (/\s+/.test(value)) {
         value = value.replace(/\s+/, "");
@@ -310,7 +311,7 @@ Page({
           item.note.title = value;
           this.setData({ title: item.note.title });
           wx.showModal({
-            title: "写记事",
+            title: "标题",
             content: "警告：首字符不能为空格，且标题最长为二十字，相应空格已删除，且删除相应空格后超出的字符已删除",
             showCancel: false
           });
@@ -318,7 +319,7 @@ Page({
           item.note.title = value;
           this.setData({ title: item.note.title });
           wx.showModal({
-            title: "写记事",
+            title: "标题",
             content: "警告：首字符不能为空格，相应空格已删除",
             showCancel: false
           });
@@ -328,19 +329,19 @@ Page({
         item.note.title = value;
         this.setData({ title: item.note.title });
         wx.showModal({
-          title: "写记事",
+          title: "标题",
           content: "警告：标题最长为三十字，超出的字符已删除",
           showCancel: false
         });
       } else item.note.title = value;
-    }
+    } else if (res.type === "blur") this.setData({ title: item.note.title });
   },
 
   /* 文本记事 */
   //文本记事的创建
   textContent(res) {
-    //编辑文本内容时关闭其他所有正在进行的事件类型的读写权限
     if (res.type === "focus") {
+       //编辑文本内容时关闭其他所有正在进行的事件类型的读写权限
       for (let prop in this.data) {
         if (/Access/g.test(prop) && this.data[prop]) this.setData({ [prop]: false });
       }

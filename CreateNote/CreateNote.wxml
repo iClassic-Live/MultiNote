@@ -11,7 +11,7 @@
 
   <view class="notingZone">
     <view class="titleZone">
-      <input class="title" value="{{title}}" style="font-weight:{{text.fontWeight || 'normal'}};color:{{text.fontColor || '#000'}}" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent"></input>
+      <input class="title" value="{{title}}" style="font-weight:{{text.fontWeight || 'normal'}};color:{{text.fontColor || '#000'}}" placeholder="{{titleDefault}}" bindfocus="titleContent" bindinput="titleContent" bindblur="titleContent"></input>
     </view>
     <view class="textZone">
       <view class="text">

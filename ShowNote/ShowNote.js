@@ -1,7 +1,5 @@
 // ShowNote/ShowNote.js
-
 /* 读记事页初始化 */
-
 //获取用户本机的相对像素比
 const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
