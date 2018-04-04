@@ -202,22 +202,22 @@ Page({
         result: []
       });
     };
-    this.fontColor = this.data.note[id].style.fontColor;
+    this.fontColor = this.data.note[id].note.text.fontColor;
     setTimeout(() => {
       that.data.note[id].style.bgc = "red";
-      that.data.note[id].style.fontColor = "#fff";
+      that.data.note[id].note.text.fontColor = "#fff";
       that.setData({ note: that.data.note });
       setTimeout(() => {
         that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
-        that.data.note[id].style.fontColor = that.fontColor;
+        that.data.note[id].note.text.fontColor = that.fontColor;
         that.setData({ note: that.data.note });
         setTimeout(() => {
           that.data.note[id].style.bgc = "red";
-          that.data.note[id].style.fontColor = "#fff";
+          that.data.note[id].note.text.fontColor = "#fff";
           that.setData({ note: that.data.note });
           setTimeout(() => {
             that.data.note[id].style.bgc = "rgba(255, 255, 255 ,0.4)";
-            that.data.note[id].style.fontColor = that.fontColor;
+            that.data.note[id].note.text.fontColor = that.fontColor;
             that.setData({ note: that.data.note });
           }, 350);
         }, 350);
@@ -309,6 +309,19 @@ Page({
     index = index.match(/\d+/g)[0];
     var that = this;
     this.hideMenu();
+    (function tips () {
+      setTimeout(() => {
+        if (that.data.note[index].style.pullOutDelete !== 120
+          && that.data.note[index].style.pullOutMenu !== 300) {
+          tips();
+        } else {
+          that.fontColor = that.data.note[index].note.text.fontColor;
+          that.data.note[index].style.bgc = "#f00";
+          that.data.note[index].note.text.fontColor = "#fff";
+          that.setData({ note: that.data.note });
+        }
+      }, 10);
+    })()
     wx.showModal({
       title: "读记事",
       content: "是否删除本条记事？",
@@ -389,6 +402,11 @@ Page({
           that.data.note[index].style.pullOutDelete = 750;
           that.setData({ note: that.data.note });
         }
+      },
+      complete(res) {
+        that.data.note[index].style.bgc = "rgba(255, 255, 255 ,0.5)";
+        that.data.note[index].note.text.fontColor = that.fontColor;
+        that.setData({ note: that.data.note });
       }
     });
   },
