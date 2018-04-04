@@ -312,7 +312,7 @@ Page({
     (function tips () {
       setTimeout(() => {
         if (that.data.note[index].style.pullOutDelete !== 120
-          && that.data.note[index].style.pullOutMenu !== 300) {
+          || that.data.note[index].style.pullOutMenu !== 300) {
           tips();
         } else {
           that.fontColor = that.data.note[index].note.text.fontColor;
@@ -399,7 +399,7 @@ Page({
             }
           })();
         } else {
-          that.data.note[index].style.pullOutDelete = 750;
+          that.data.note[index].style.pullOutDelete = 120;
           that.setData({ note: that.data.note });
         }
       },
