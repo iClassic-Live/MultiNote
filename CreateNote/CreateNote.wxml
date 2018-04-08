@@ -19,7 +19,7 @@
       </view>
       <view class="font">
         <picker mode="multiSelector" value="{{text.fontIndex}}" range="{{font}}" bindtap="setFontStyle" bindlongpress="setFontStyle" bindcolumnchange="setFontStyle" bindchange="setFontStyle" bindcancel="setFontStyle">
-          <image mode="aspectFit" src="../images/text.png"></image>
+          <image mode="aspectFit" src="../images/font-set.png"></image>
         </picker>
       </view>
     </view>

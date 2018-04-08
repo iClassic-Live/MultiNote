@@ -25,6 +25,7 @@ var recordTimer; //使语音记事结束的定时器
 var startRecord; //启动语音记事的定时器，防止因点击语音按钮导致出错
 
 var shootTimer; //录像时长计时器的标识
+
 /* 页面构造器：页面功能初始化 */
 Page({
 

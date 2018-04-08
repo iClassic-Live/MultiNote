@@ -488,47 +488,49 @@ Page({
   },
   //同条目下不同记事间快速跳转
   jumpToAnother(res) {
-    var note = this.data.note[this.noteIndex].note;
-    if (res.type === "touchstart") {
-      var whichShowNow; //正在展示的记事类型
-      for (let prop in this.data) {
-        let condition = (/Display/g.test(prop) && prop !== "noteDisplay") && this.data[prop];
-        if (condition) { whichShowNow = prop; break; }
-      }
-      this.whichShowNow = whichShowNow;
-      anchor[2] = [res.touches[0].pageY, new Date().getTime()];
-    } else if (res.type === "touchend") {
-      if (this.timerQueue instanceof Array) {
-        innerAudioContext.stop();
-        for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
-        this.data.playback.forEach((ele, id, origin) => {
-          if (ele.opacity !== 1) ele.opacity = 1;
-        });
-        this.setData({ playback: this.data.playback });
-      }
-      var moveDistance = (res.changedTouches[0].pageY - anchor[2][0]) * SWT;
-      if (Math.abs(moveDistance) >= 375 && new Date().getTime() - anchor[2][1] < 2500) {
-        var whichShowNow = this.whichShowNow;
-        var whichCanShow = this.whichCanShow;
-        var index = whichCanShow.indexOf(whichShowNow);
-        this.setData({ [whichShowNow]: false });
-        if (moveDistance > 0) {
-          if (!!whichCanShow[index + 1]) { //判断下一种记事类型是否存在
-            this.setData({ [whichCanShow[index + 1]]: true });
+    if (!this.data.getUseAccess) {
+      var note = this.data.note[this.noteIndex].note;
+      if (res.type === "touchstart") {
+        var whichShowNow; //正在展示的记事类型
+        for (let prop in this.data) {
+          let condition = (/Display/g.test(prop) && prop !== "noteDisplay") && this.data[prop];
+          if (condition) { whichShowNow = prop; break; }
+        }
+        this.whichShowNow = whichShowNow;
+        anchor[2] = [res.touches[0].pageY, new Date().getTime()];
+      } else if (res.type === "touchend") {
+        if (this.timerQueue instanceof Array) {
+          innerAudioContext.stop();
+          for (let i = this.timerQueue.length - 1; i > 0; i--) clearTimeout(this.timerQueue[i]);
+          this.data.playback.forEach((ele, id, origin) => {
+            if (ele.opacity !== 1) ele.opacity = 1;
+          });
+          this.setData({ playback: this.data.playback });
+        }
+        var moveDistance = (res.changedTouches[0].pageY - anchor[2][0]) * SWT;
+        if (Math.abs(moveDistance) >= 375 && new Date().getTime() - anchor[2][1] < 2500) {
+          var whichShowNow = this.whichShowNow;
+          var whichCanShow = this.whichCanShow;
+          var index = whichCanShow.indexOf(whichShowNow);
+          this.setData({ [whichShowNow]: false });
+          if (moveDistance > 0) {
+            if (!!whichCanShow[index + 1]) { //判断下一种记事类型是否存在
+              this.setData({ [whichCanShow[index + 1]]: true });
+            } else {
+              this.setData({
+                noteDisplay: true,
+                getUseAccess: true
+              });
+            }
           } else {
-            this.setData({
-              noteDisplay: true,
-              getUseAccess: true
-            });
-          }
-        } else {
-          if (!!whichCanShow[index - 1]) { //判断上一种记事类型是否存在
-            this.setData({ [whichCanShow[index - 1]]: true });
-          } else {
-            this.setData({
-              noteDisplay: true,
-              getUseAccess: true
-            });
+            if (!!whichCanShow[index - 1]) { //判断上一种记事类型是否存在
+              this.setData({ [whichCanShow[index - 1]]: true });
+            } else {
+              this.setData({
+                noteDisplay: true,
+                getUseAccess: true
+              });
+            }
           }
         }
       }
