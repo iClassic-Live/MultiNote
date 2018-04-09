@@ -20,7 +20,7 @@
   </view>
 
   <scroll-view class="readingZone"  bindtouchstart="changeBackgroundImage" bindtouchend="changeBackgroundImage" bindtap="cancel_editNote">
-    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}" catchtouchmove="pullOutDel_Menu" catchtouchend="pullOutDel_Menu" catchtap="cancel_editNote">
+    <view class="note" id="{{item.id}}" wx:for="{{note}}" wx:for-item="item" wx:key="{{item.id}}" wx:if="{{ noteDisplay }}" style="opacity:{{item.style.opacity}};background-color:{{item.style.bgc}}" catchtouchmove="pullOutDel_Menu" catchtouchend="pullOutDel_Menu" catchtap="cancel_editNote">
       <view class="title">
         <input disabled="true" value="{{item.note.title}}" style="opacity:{{item.style.opacity}};font-weight:{{item.note.text.fontWeight || 'normal'}};color:{{item.note.text.fontColor || '#000'}}"></input>
       </view>

@@ -5,7 +5,6 @@ const SWT = 750 / wx.getSystemInfoSync().screenWidth;
 
 //记事展示初始化
 var tapTime; //监测相应按钮的按下时长
-var intervalQueue = []; //定时器ID阵列，获取有可能没有正常清除的定时器的ID;
 var anchor = [[null, null], [null, null], [null, null]]; //相应滑动操作的起始标识
 //语音记事初始化
 const innerAudioContext = wx.createInnerAudioContext(); //创建并返回内部 audio 上下文
@@ -231,75 +230,72 @@ Page({
     var that = this;
     var index = parseInt(res.currentTarget.id);
     if (res.type === "touchmove") {
-      this.hideMenu(index);
       if (!this.tagA) {
         this.tagA = true;
+        this.hideMenu(index);
         anchor[1] = [res.changedTouches[0].pageX, new Date().getTime()];
-      } else if (new Date().getTime() - anchor[1][1] < 1000) {
+      } else {
         this.tagB = true;
         var pullOutDelete = this.data.note[index].style.pullOutDelete;
         var pullOutMenu = this.data.note[index].style.pullOutMenu;
         var moveDistance = (res.changedTouches[0].pageX - anchor[1][0]) * SWT;
-        if ((pullOutDelete >= 0 && pullOutDelete <= 120) && (moveDistance > 0 && Math.abs(moveDistance) < 120)) {
-          if (pullOutMenu !== 300) this.data.note[index].style.pullOutMenu = 300;
-          this.data.note[index].style.pullOutDelete = 120 - Math.abs(moveDistance);
+        if ((pullOutDelete >= 0 && pullOutDelete <= 120) 
+             && (moveDistance > 0 && Math.abs(moveDistance) < 120)) {
+          if (pullOutMenu !== 300) {
+            this.setData({ ["note[" + index + "].style.pullOutMenu"]: 300 });
+          }
+          this.setData({ ["note[" + index + "].style.pullOutDelete"]: 120 - Math.abs(moveDistance) });
         }
-        if ((pullOutMenu >= 0 && pullOutMenu <= 300) && (moveDistance < 0 && Math.abs(moveDistance) < 300)) {
-          if (pullOutDelete !== 120) this.data.note[index].style.pullOutDelete = 120;
-          this.data.note[index].style.pullOutMenu = 300 - Math.abs(moveDistance);
+        if ((pullOutMenu >= 0 && pullOutMenu <= 300) 
+             && (moveDistance < 0 && Math.abs(moveDistance) < 300)) {
+          if (pullOutDelete !== 120) {
+            this.setData({ ["note[" + index + "].style.pullOutDelete"]: 120 });
+          }
+          this.setData({ ["note[" + index + "].style.pullOutMenu"]: 300 - Math.abs(moveDistance) });
         }
-        this.setData({ note: this.data.note });
       }
     } else if (res.type === "touchend" && this.tagB) {
       this.tagA = false;
       this.tagB = false;
-      setTimeout(() => { that.hideMenu(index) }, 10);
-      var array = [];
-      intervalQueue.forEach((ele, id, origin) => {
-        clearInterval(ele);
-        array.push(ele);
-      });
-      array.forEach((ele, id, origin) => {
-        intervalQueue.splice(origin.indexOf(ele), 1);
-      });
-      var timer = setInterval(() => {
-        if (intervalQueue.indexOf(timer) === -1) intervalQueue.push(timer);
-        var style = that.data.note[index].style;
-        if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
-          that.data.note[index].style.pullOutDelete -= 20;
-          if (that.data.note[index].style.pullOutDelete <= 0) {
-            that.data.note[index].style.pullOutDelete = 0;
+      (function pullOutDel_Menu () {
+        setTimeout(() => {
+          var style = that.data.note[index].style;
+          if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
+            that.setData({ ["note[" + index + "].style.pullOutDelete"]: 
+                                   that.data.note[index].style.pullOutDelete -= 20 });
+            if (that.data.note[index].style.pullOutDelete < 0) {
+              that.setData({ ["note[" + index + "].style.pullOutDelete"]: 0 });
+            }
+          } else {
+            that.setData({ ["note[" + index + "].style.pullOutDelete"]:
+              that.data.note[index].style.pullOutDelete += 20
+            });
+            if (that.data.note[index].style.pullOutDelete > 120) {
+              that.setData({ ["note[" + index + "].style.pullOutDelete"]: 120 });
+            }
           }
-        } else {
-          that.data.note[index].style.pullOutDelete += 20;
-          if (that.data.note[index].style.pullOutDelete >= 120) {
-            that.data.note[index].style.pullOutDelete = 120;
+          if (style.pullOutMenu > 0 && style.pullOutMenu < 200) {
+            that.setData({ ["note[" + index + "].style.pullOutMenu"]:
+              that.data.note[index].style.pullOutMenu -= 50
+            });
+            if (that.data.note[index].style.pullOutMenu < 0) {
+              that.setData({ ["note[" + index + "].style.pullOutMenu"]: 0 });
+            }
+          } else {
+            that.setData({ ["note[" + index + "].style.pullOutMenu"]:
+              that.data.note[index].style.pullOutMenu += 50
+            });
+            if (that.data.note[index].style.pullOutMenu > 300) {
+              that.setData({ ["note[" + index + "].style.pullOutMenu"]: 300 });
+            }
           }
-        }
-        if (style.pullOutMenu > 0 && style.pullOutMenu < 200) {
-          that.data.note[index].style.pullOutMenu -= 50;
-          if (that.data.note[index].style.pullOutMenu <= 0) {
-            that.data.note[index].style.pullOutMenu = 0;
-          }
-          that.setData({ note: that.data.note });
-        } else {
-          that.data.note[index].style.pullOutMenu += 50;
-          if (that.data.note[index].style.pullOutMenu >= 300) {
-            that.data.note[index].style.pullOutMenu = 300;
-          }
-        }
-        that.setData({ note: that.data.note });
-        if ((that.data.note[index].style.pullOutMenu === 0 ||
-          that.data.note[index].style.pullOutMenu === 300) &&
-          (that.data.note[index].style.pullOutDelete === 0 ||
-            that.data.note[index].style.pullOutDelete === 120)) {
-          clearInterval(timer);
-          if (intervalQueue.indexOf(timer) !== -1) {
-            intervalQueue.splice(intervalQueue.indexOf(timer), 1);
-          }
-          console.log("interval in pullOutDel_Menu has been deleted");
-        }
-      }, 5);
+          var conditionA = (that.data.note[index].style.pullOutMenu === 0 ||
+                                      that.data.note[index].style.pullOutMenu === 300);
+          var conditionB = (that.data.note[index].style.pullOutDelete === 0 ||
+                                      that.data.note[index].style.pullOutDelete === 120)
+          if (!(conditionA && conditionB)) pullOutDel_Menu();
+        }, 5)
+      })();
     }
   },
   //删除相应记事(注：每次删除完成后都会检测当前是否仍有记事，没有则将返回写记事页)
@@ -742,48 +738,32 @@ Page({
         if (ele.style.pullOutMenu < 300) unhiddenQueue.push({ tag: "pullOutMenu", index: index });
       }
     });
-    function clearIntervalQueue() {
-      var deletedIntervalQueue = [];
-      intervalQueue.forEach((ele, id, origin) => {
-        clearInterval(ele);
-        deletedIntervalQueue.push(ele);
-      });
-      deletedIntervalQueue.forEach((ele, id, origin) => {
-        intervalQueue.splice(origin.indexOf(ele), 1);
-      });
-    }
     unhiddenQueue.forEach(ele => {
       if (ele.tag === "pullOutDelete") {
-        clearIntervalQueue();
-        var timer1 = setInterval(() => {
-          if (intervalQueue.indexOf(timer1) === -1) intervalQueue.push(timer1);
-          that.data.note[ele.index].style.pullOutDelete += 20;
-          if (that.data.note[ele.index].style.pullOutDelete >= 120) {
-            that.data.note[ele.index].style.pullOutDelete = 120;
-            clearInterval(timer1);
-            if (intervalQueue.indexOf(timer2) !== -1) {
-              intervalQueue.splice(intervalQueue.indexOf(timer2), 1);
-            }
-            console.log("interval for hiding Del button has been deleted");
-          }
-          that.setData({ note: that.data.note });
-        }, 5);
+        (function hideDel () {
+          setTimeout(() => {
+            that.setData({
+              ["note[" + ele.index + "]style.pullOutDelete"]:
+              that.data.note[ele.index].style.pullOutDelete += 20
+            });
+            if (that.data.note[ele.index].style.pullOutDelete >= 120) {
+              that.setData({ ["note[" + ele.index + "]style.pullOutDelete"]: 120 });
+            }else hideDel();
+          }, 5)
+        })()
       }
       if (ele.tag === "pullOutMenu") {
-        clearIntervalQueue();
-        var timer2 = setInterval(() => {
-          if (intervalQueue.indexOf(timer2) === -1) intervalQueue.push(timer2);
-          that.data.note[ele.index].style.pullOutMenu += 50;
-          if (that.data.note[ele.index].style.pullOutMenu >= 300) {
-            that.data.note[ele.index].style.pullOutMenu = 300;
-            clearInterval(timer2);
-            if (intervalQueue.indexOf(timer2) !== -1) {
-              intervalQueue.splice(intervalQueue.indexOf(timer2), 1);
-            }
-            console.log("interval for hiding Menu has been deleted");
-          }
-          that.setData({ note: that.data.note });
-        }, 5);
+        (function hideMenu() {
+          setTimeout(() => {
+            that.setData({
+              ["note[" + ele.index + "]style.pullOutMenu"]:
+              that.data.note[ele.index].style.pullOutMenu += 50
+            });
+            if (that.data.note[ele.index].style.pullOutMenu >= 300) {
+              that.setData({ ["note[" + ele.index + "]style.pullOutMenu"]: 300 });
+            } else hideMenu();
+          }, 5)
+        })()
       }
     });
   },
