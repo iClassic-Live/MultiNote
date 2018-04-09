@@ -267,6 +267,7 @@ Page({
             }
             that.setData({ ["note[" + index + "].style.pullOutDelete"]: 
                                    that.data.note[index].style.pullOutDelete });
+            if (that.data.note[index].style.pullOutDelete > 0) showOff();
           } else {
             that.data.note[index].style.pullOutDelete += 20
             if (that.data.note[index].style.pullOutDelete > 120) {
@@ -274,6 +275,7 @@ Page({
             }
             that.setData({ ["note[" + index + "].style.pullOutDelete"]:
                                    that.data.note[index].style.pullOutDelete });
+            if (that.data.note[index].style.pullOutDelete < 120) showOff();
           }
           if (style.pullOutMenu > 0 && style.pullOutMenu < 200) {
             that.data.note[index].style.pullOutMenu -= 50;
@@ -282,19 +284,16 @@ Page({
             }
             that.setData({ ["note[" + index + "].style.pullOutMenu"]:
                                    that.data.note[index].style.pullOutMenu });
+            if (that.data.note[index].style.pullOutMenu > 0) showOff();
           } else {
-            that.data.note[index].style.pullOutMenu -= 50;
+            that.data.note[index].style.pullOutMenu += 50;
             if (that.data.note[index].style.pullOutMenu > 300) {
               that.data.note[index].style.pullOutMenu = 300;
             }
             that.setData({ ["note[" + index + "].style.pullOutMenu"]:
                                   that.data.note[index].style.pullOutMenu });
+            if (that.data.note[index].style.pullOutMenu < 300) showOff();
           }
-          var condition_Del = (that.data.note[index].style.pullOutMenu === 0 ||
-                                           that.data.note[index].style.pullOutMenu === 300);
-          var condition_Menu = (that.data.note[index].style.pullOutDelete === 0 ||
-                                               that.data.note[index].style.pullOutDelete === 120)
-          if (!(condition_Del && condition_Menu)) showOff();
         }, 5)
       })();
     }
