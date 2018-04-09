@@ -257,43 +257,44 @@ Page({
     } else if (res.type === "touchend" && this.tagB) {
       this.tagA = false;
       this.tagB = false;
-      (function pullOutDel_Menu () {
+      (function showOff () {
         setTimeout(() => {
           var style = that.data.note[index].style;
           if (style.pullOutDelete > 0 && style.pullOutDelete < 80) {
-            that.setData({ ["note[" + index + "].style.pullOutDelete"]: 
-                                   that.data.note[index].style.pullOutDelete -= 20 });
+            that.data.note[index].style.pullOutDelete -= 20
             if (that.data.note[index].style.pullOutDelete < 0) {
-              that.setData({ ["note[" + index + "].style.pullOutDelete"]: 0 });
+              that.data.note[index].style.pullOutDelete = 0;
             }
+            that.setData({ ["note[" + index + "].style.pullOutDelete"]: 
+                                   that.data.note[index].style.pullOutDelete });
           } else {
-            that.setData({ ["note[" + index + "].style.pullOutDelete"]:
-              that.data.note[index].style.pullOutDelete += 20
-            });
+            that.data.note[index].style.pullOutDelete += 20
             if (that.data.note[index].style.pullOutDelete > 120) {
-              that.setData({ ["note[" + index + "].style.pullOutDelete"]: 120 });
+              that.data.note[index].style.pullOutDelete = 120;
             }
+            that.setData({ ["note[" + index + "].style.pullOutDelete"]:
+                                   that.data.note[index].style.pullOutDelete });
           }
           if (style.pullOutMenu > 0 && style.pullOutMenu < 200) {
-            that.setData({ ["note[" + index + "].style.pullOutMenu"]:
-              that.data.note[index].style.pullOutMenu -= 50
-            });
+            that.data.note[index].style.pullOutMenu -= 50;
             if (that.data.note[index].style.pullOutMenu < 0) {
-              that.setData({ ["note[" + index + "].style.pullOutMenu"]: 0 });
+              that.data.note[index].style.pullOutMenu = 0;
             }
-          } else {
             that.setData({ ["note[" + index + "].style.pullOutMenu"]:
-              that.data.note[index].style.pullOutMenu += 50
-            });
+                                   that.data.note[index].style.pullOutMenu });
+          } else {
+            that.data.note[index].style.pullOutMenu -= 50;
             if (that.data.note[index].style.pullOutMenu > 300) {
-              that.setData({ ["note[" + index + "].style.pullOutMenu"]: 300 });
+              that.data.note[index].style.pullOutMenu = 300;
             }
+            that.setData({ ["note[" + index + "].style.pullOutMenu"]:
+                                  that.data.note[index].style.pullOutMenu });
           }
-          var conditionA = (that.data.note[index].style.pullOutMenu === 0 ||
-                                      that.data.note[index].style.pullOutMenu === 300);
-          var conditionB = (that.data.note[index].style.pullOutDelete === 0 ||
-                                      that.data.note[index].style.pullOutDelete === 120)
-          if (!(conditionA && conditionB)) pullOutDel_Menu();
+          var condition_Del = (that.data.note[index].style.pullOutMenu === 0 ||
+                                           that.data.note[index].style.pullOutMenu === 300);
+          var condition_Menu = (that.data.note[index].style.pullOutDelete === 0 ||
+                                               that.data.note[index].style.pullOutDelete === 120)
+          if (!(condition_Del && condition_Menu)) showOff();
         }, 5)
       })();
     }
@@ -742,26 +743,26 @@ Page({
       if (ele.tag === "pullOutDelete") {
         (function hideDel () {
           setTimeout(() => {
-            that.setData({
-              ["note[" + ele.index + "]style.pullOutDelete"]:
-              that.data.note[ele.index].style.pullOutDelete += 20
-            });
-            if (that.data.note[ele.index].style.pullOutDelete >= 120) {
-              that.setData({ ["note[" + ele.index + "]style.pullOutDelete"]: 120 });
-            }else hideDel();
+            that.data.note[ele.index].style.pullOutDelete += 20;
+            if (that.data.note[ele.index].style.pullOutDelete > 120) {
+              that.data.note[ele.index].style.pullOutDelete = 120;
+            }
+            that.setData({ ["note[" + ele.index + "]style.pullOutDelete"]:
+                                   that.data.note[ele.index].style.pullOutDelete });
+            if (that.data.note[ele.index].style.pullOutDelete < 120)  hideDel();
           }, 5)
         })()
       }
       if (ele.tag === "pullOutMenu") {
         (function hideMenu() {
           setTimeout(() => {
-            that.setData({
-              ["note[" + ele.index + "]style.pullOutMenu"]:
-              that.data.note[ele.index].style.pullOutMenu += 50
-            });
-            if (that.data.note[ele.index].style.pullOutMenu >= 300) {
-              that.setData({ ["note[" + ele.index + "]style.pullOutMenu"]: 300 });
-            } else hideMenu();
+            that.data.note[ele.index].style.pullOutMenu += 50;
+            if (that.data.note[ele.index].style.pullOutMenu > 300) {
+              that.data.note[ele.index].style.pullOutMenu = 300;
+            }
+            that.setData({ ["note[" + ele.index + "]style.pullOutMenu"]:
+              that.data.note[ele.index].style.pullOutMenu });
+            if (that.data.note[ele.index].style.pullOutMenu < 300) hideMenu();
           }, 5)
         })()
       }
